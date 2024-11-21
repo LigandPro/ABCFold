@@ -312,7 +312,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_json', help='Output alphafold3 json file')
     parser.add_argument('--templates', action='store_true', help='Include templates in the output json')
     parser.add_argument('--num_templates', type=int, default=20, help='Number of templates to include in the output json')
-    parser.add_argument('--target_sequence', help='Target sequence - Only required if adding a custom template')
+    parser.add_argument('--target_id', help='Target id relating to the custom template')
     parser.add_argument('--custom_template', help='Custom template to include in the output json')
     parser.add_argument('--custom_template_chain', help='Custom template chain to include in the output json')
 
@@ -335,7 +335,8 @@ if __name__ == "__main__":
           if not os.path.exists(args.custom_template):
             raise FileNotFoundError(f"Custom template file {args.custom_template} not found")
           
-          if len(af3_json['sequences']) > 1 and not args.target_sequence:
+          # Can only add templates to protein sequences, so check if there are multiple protein sequences in the input json
+          if len([x for x in af3_json['sequences'] if 'protein' in x.keys()]) > 1 and not args.target_id:
             raise ValueError("Multiple sequences found in input json. Please specify target sequence so that custom template can be added to the correct sequence")
           
           chain_info = check_chains(args.custom_template)
@@ -344,6 +345,14 @@ if __name__ == "__main__":
           
           if args.custom_template_chain and args.custom_template_chain not in chain_info:
             raise ValueError(f"Custom template file {args.custom_template} does not contain chain {args.custom_template_chain}")
+          
+          seq_id = sequence['protein']['id']
+          if isinstance(seq_id, list):
+            if args.target_id and args.target_id not in seq_id:
+                continue
+          if isinstance(seq_id, str): 
+            if args.target_id and args.target_id != seq_id:
+              continue
           
           if not args.custom_template_chain:
             args.custom_template_chain = chain_info[0]

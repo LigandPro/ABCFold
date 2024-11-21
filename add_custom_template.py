@@ -45,7 +45,7 @@ def get_mmcif(cif, pdb_id, chain_id, start, end):
   # Save the filtered structure to a new CIF file
   io = Bio.PDB.MMCIFIO()
   io.set_structure(structure)
-  filtered_output = f"tmp/{pdb_id}_{chain_id}.cif"
+  filtered_output = f"{pdb_id}_{chain_id}.cif"
   io.save(filtered_output)
 
   # Parse the filtered structure to get the modified MMCIF with no metadata
@@ -59,6 +59,8 @@ def get_mmcif(cif, pdb_id, chain_id, start, end):
   string_io = StringIO()
   io.set_dict(mmcif_dict)
   io.save(string_io)
+
+  os.unlink(filtered_output)
 
   return string_io.getvalue()
 
@@ -112,7 +114,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--input_json', help='Input alphafold3 json file')
     parser.add_argument('--output_json', help='Output alphafold3 json file')
-    parser.add_argument('--target_sequence', help='Target sequence to search for in the custom template')
+    parser.add_argument('--target_id', help='Target id relating to the custom template')
     parser.add_argument('--custom_template', help='Custom template to include in the output json')
     parser.add_argument('--custom_template_chain', help='Custom template chain to include in the output json')
 
@@ -120,8 +122,8 @@ if __name__ == "__main__":
 
     af3_json = json.load(open(args.input_json))
 
-    if len(af3_json['sequences']) > 1 and not args.target_sequence:
-        raise ValueError("Multiple sequences found in input json. Please specify target sequence so that custom template can be added to the correct sequence")
+    if len([x for x in af3_json['sequences'] if 'protein' in x.keys()]) > 1 and not args.target_id:
+        raise ValueError("Multiple sequences found in input json. Please specify target id so that custom template can be added to the correct sequence")
        
     for sequence in af3_json['sequences']:
       if 'protein' in sequence:
@@ -133,9 +135,13 @@ if __name__ == "__main__":
            templates = sequence['protein']['templates']
             
         input_sequence = sequence['protein']['sequence']
-        if args.target_sequence and args.target_sequence != input_sequence:
-            continue
-
+        seq_id = sequence['protein']['id']
+        if isinstance(seq_id, list):
+           if args.target_id and args.target_id not in seq_id:
+              continue
+        if isinstance(seq_id, str): 
+          if args.target_id and args.target_id != seq_id:
+             continue
         if not os.path.exists(args.custom_template):
             raise FileNotFoundError(f"Custom template file {args.custom_template} not found")
         
@@ -173,6 +179,3 @@ if __name__ == "__main__":
       output_json = args.input_json.replace(".json", "_custom_template.json")
       with open(output_json, "w") as f:
           json.dump(af3_json, f)
-
-
-
