@@ -11,8 +11,17 @@ from typing import Tuple, List
 
 import requests
 from tqdm.autonotebook import tqdm
-import Bio.PDB
-from Bio import pairwise2
+
+import tempfile
+from af3_script_utils import (
+    custom_template_argpase_util,
+    mmseqs2_argparse_util,
+    align_and_map,
+    check_chains,
+    extract_sequence_from_mmcif,
+    get_mmcif,
+    get_custom_template,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +29,82 @@ logger = logging.getLogger(__name__)
 TQDM_BAR_FORMAT = (
     "{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]"
 )
+
+
+class MMseqs2Exception(Exception):
+    def __init__(self):
+        msg = "MMseqs2 API is giving errors. Please confirm your input is a valid \
+protein sequence. If error persists, please try again an hour later."
+        super().__init__(msg)
+
+
+def add_msa_to_json(
+    input_json,
+    templates,
+    num_templates,
+    custom_template,
+    custom_template_chain,
+    target_id,
+    af3_json=None,
+    output_json=None,
+    to_file=True,
+):
+    if af3_json is None:
+        with open(input_json, "r") as f:
+            af3_json = json.load(f)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        for sequence in af3_json["sequences"]:
+            if "protein" in sequence:
+                input_sequence = sequence["protein"]["sequence"]
+
+                # Run MMseqs2 to get unpaired MSA
+                if templates:
+                    a3m_lines, templates = run_mmseqs(
+                        input_sequence,
+                        tmpdir,
+                        use_templates=True,
+                        num_templates=num_templates,
+                    )
+                else:
+                    a3m_lines = run_mmseqs(input_sequence, tmpdir, use_templates=False)
+                    templates = []
+
+                if custom_template:
+                    if not os.path.exists(custom_template):
+                        msg = f"Custom template file {custom_template} not found"
+                        raise FileNotFoundError(msg)
+                    # Can only add templates to protein sequences, so check if there
+                    # are multiple protein sequences in the input json
+                    if (
+                        len([x for x in af3_json["sequences"] if "protein" in x.keys()])
+                        > 1
+                        and not target_id
+                    ):
+                        msg = "Multiple sequences found in input json. Please specify \
+target id so that custom template can be added to the correct sequence"
+                        raise ValueError(msg)
+
+                    sequence = get_custom_template(
+                        sequence,
+                        target_id,
+                        custom_template,
+                        custom_template_chain,
+                    )
+
+                # Add unpaired MSA to the json
+                sequence["protein"]["unpairedMsa"] = a3m_lines[0]
+                sequence["protein"]["pairedMsa"] = ""
+    if to_file:
+        if output_json:
+            with open(output_json, "w") as f:
+                json.dump(af3_json, f)
+        else:
+            output_json = af3_json.replace(".json", "_mmseqs.json")
+            with open(output_json, "w") as f:
+                json.dump(af3_json, f)
+
+    return af3_json
 
 
 def run_mmseqs(
@@ -114,14 +199,10 @@ def run_mmseqs(
                     out = submit(seqs_unique, mode, N)
 
                 if out["status"] == "ERROR":
-                    raise Exception(
-                        "MMseqs2 API is giving errors. Please confirm your input is a valid protein sequence. If error persists, please try again an hour later."
-                    )
+                    raise MMseqs2Exception()
 
                 if out["status"] == "MAINTENANCE":
-                    raise Exception(
-                        "MMseqs2 API is undergoing maintenance. Please try again in a few minutes."
-                    )
+                    raise MMseqs2Exception()
 
                 # wait for job to finish
                 ID, TIME = out["id"], 0
@@ -143,9 +224,7 @@ def run_mmseqs(
 
                 if out["status"] == "ERROR":
                     REDO = False
-                    raise Exception(
-                        f"MMseqs2 API is giving errors. Please confirm your input is a valid protein sequence. If error persists, please try again an hour later."
-                    )
+                    raise MMseqs2Exception()
 
             # Download results
             download(ID, tar_gz_file)
@@ -189,17 +268,13 @@ def run_mmseqs(
             template = {}
             if count < num_templates:
                 p = line.rstrip().split()
-                M, pdb, qid, alilen, qstart, qend, tstart, tend, e_value, cigar = (
+                M, pdb, qid, alilen, tstart, tend = (
                     p[0],
                     p[1],
                     p[2],
                     p[3],
-                    p[6],
-                    p[7],
                     p[8],
                     p[9],
-                    p[10],
-                    p[12],
                 )
                 coverage = float(alilen) / len(x)
                 pdb_id = pdb.split("_")[0]
@@ -214,7 +289,9 @@ def run_mmseqs(
                     continue
 
                 pdb_id = pdb.split("_")[0]
-                cif_str = get_mmcif(pdb_id, pdb.split("_")[1], int(tstart), int(tend))
+                cif_str = fetch_mmcif(
+                    pdb_id, pdb.split("_")[1], int(tstart), int(tend), prefix
+                )
                 template["mmcif"] = cif_str
 
                 template_seq = extract_sequence_from_mmcif(StringIO(cif_str))
@@ -229,252 +306,47 @@ def run_mmseqs(
     return (a3m_lines, templates) if use_templates else a3m_lines
 
 
-def get_mmcif(pdb_id, chain_id, start, end):
+def fetch_mmcif(
+    pdb_id,
+    chain_id,
+    start,
+    end,
+    tmpdir,
+):
     pdb_id = pdb_id.lower()
     url_base = "http://www.ebi.ac.uk/pdbe-srv/view/files/"
     url = url_base + pdb_id + ".cif"
     response = requests.get(url)
     text = response.text
 
-    output = "tmp/" + pdb_id + ".cif"
+    output = tmpdir + pdb_id + ".cif"
     with open(output, "w") as f:
         f.write(text)
 
-    return _get_mmcif(output, pdb_id, chain_id, start, end)
-
-
-def _get_mmcif(cif, pdb_id, chain_id, start, end):
-
-    parser = Bio.PDB.MMCIFParser(QUIET=True)
-    structure = parser.get_structure(pdb_id, cif)
-
-    # Extract release date from the CIF file
-    mmcif_dict = parser._mmcif_dict
-    headers_to_keep = [
-        "_entry.id",
-        "_entry.title",
-        "_entry.deposition_date",
-        "_pdbx_audit_revision_history.revision_date",
-    ]
-    filtered_metadata = {
-        key: mmcif_dict[key] for key in headers_to_keep if key in mmcif_dict
-    }
-
-    # Make metadata if missing
-    if "_pdbx_audit_revision_history.revision_date" not in filtered_metadata:
-        filtered_metadata["_pdbx_audit_revision_history.revision_date"] = time.strftime(
-            "%Y-%m-%d"
-        )
-
-    for model in structure:
-        chain_to_del = []
-        for chain in model:
-            if chain.id != chain_id:
-                chain_to_del.append(chain.id)
-                continue
-
-        for unwanted_chain in chain_to_del:
-            model.detach_child(unwanted_chain)
-
-        for chain in model:
-            res_to_del = []
-            for i, res in enumerate(chain):
-                rel_pos = i + 1
-                if rel_pos < start or rel_pos > end or res.id[0] != " ":
-                    res_to_del.append(res)
-
-            for res in res_to_del:
-                chain.detach_child(res.id)
-
-    # Save the filtered structure to a new CIF file
-    io = Bio.PDB.MMCIFIO()
-    io.set_structure(structure)
-    filtered_output = f"tmp/{pdb_id}_{chain_id}.cif"
-    io.save(filtered_output)
-
-    # Parse the filtered structure to get the modified MMCIF with no metadata
-    structure = parser.get_structure(pdb_id, filtered_output)
-    mmcif_dict = parser._mmcif_dict
-
-    # Add the filtered metadata to the MMCIF dictionary
-    mmcif_dict.update(filtered_metadata)
-
-    # Save the modified MMCIF with wanted metadata to a string
-    string_io = StringIO()
-    io.set_dict(mmcif_dict)
-    io.save(string_io)
-
-    return string_io.getvalue()
-
-
-def check_chains(mmcif_file):
-    parser = Bio.PDB.MMCIFParser(QUIET=True)
-    structure = parser.get_structure("template", mmcif_file)
-    chains = []
-    for model in structure:
-        for chain in model:
-            chains.append(chain.id)
-    return chains
-
-
-def extract_sequence_from_mmcif(mmcif_file):
-    parser = Bio.PDB.MMCIFParser(QUIET=True)
-    structure = parser.get_structure("template", mmcif_file)
-    sequence = ""
-    for model in structure:
-        for chain in model:  # Assuming one chain only
-            for residue in chain:
-                if residue.id[0] == " ":  # Exclude heteroatoms
-                    sequence += residue.resname[
-                        0
-                    ]  # Simplified to take the first letter
-    return sequence
-
-
-def align_and_map(query_seq, template_seq):
-    # Perform pairwise alignment
-    alignments = pairwise2.align.globalxx(query_seq, template_seq)
-    alignment = alignments[0]  # Take the best alignment
-    query_aligned, template_aligned, _, _, _ = alignment
-
-    # Map indices
-    query_indices = []
-    template_indices = []
-
-    query_pos, template_pos = -1, -1
-    for q_char, t_char in zip(query_aligned, template_aligned):
-        if q_char != "-":  # Not a gap in query
-            query_pos += 1
-            if t_char != "-":  # Not a gap in template
-                query_indices.append(query_pos)
-                template_indices.append(template_pos + 1)  # 1-based index for template
-        elif t_char != "-":  # Increment template position for gaps in query
-            template_pos += 1
-
-    return query_indices, template_indices
+    return get_mmcif(output, pdb_id, chain_id, start, end, tmpdir)
 
 
 if __name__ == "__main__":
     import argparse
-    import shutil
 
     parser = argparse.ArgumentParser(
         description="Add MMseqs2 unpaired MSA to AlphaFold3 json"
     )
     parser.add_argument("--input_json", help="Input alphafold3 json file")
     parser.add_argument("--output_json", help="Output alphafold3 json file")
-    parser.add_argument(
-        "--templates", action="store_true", help="Include templates in the output json"
-    )
-    parser.add_argument(
-        "--num_templates",
-        type=int,
-        default=20,
-        help="Number of templates to include in the output json",
-    )
-    parser.add_argument("--target_id", help="Target id relating to the custom template")
-    parser.add_argument(
-        "--custom_template", help="Custom template to include in the output json"
-    )
-    parser.add_argument(
-        "--custom_template_chain",
-        help="Custom template chain to include in the output json",
-    )
+
+    parser = mmseqs2_argparse_util(parser)
+    parser = custom_template_argpase_util(parser)
 
     args = parser.parse_args()
 
-    af3_json = json.load(open(args.input_json))
-
-    for sequence in af3_json["sequences"]:
-        if "protein" in sequence:
-            input_sequence = sequence["protein"]["sequence"]
-
-            # Run MMseqs2 to get unpaired MSA
-            if args.templates:
-                a3m_lines, templates = run_mmseqs(
-                    input_sequence,
-                    "tmp",
-                    use_templates=True,
-                    num_templates=args.num_templates,
-                )
-            else:
-                a3m_lines = run_mmseqs(input_sequence, "tmp", use_templates=False)
-                templates = []
-
-            if args.custom_template:
-                if not os.path.exists(args.custom_template):
-                    raise FileNotFoundError(
-                        f"Custom template file {args.custom_template} not found"
-                    )
-
-                # Can only add templates to protein sequences, so check if there are multiple protein sequences in the input json
-                if (
-                    len([x for x in af3_json["sequences"] if "protein" in x.keys()]) > 1
-                    and not args.target_id
-                ):
-                    raise ValueError(
-                        "Multiple sequences found in input json. Please specify target sequence so that custom template can be added to the correct sequence"
-                    )
-
-                chain_info = check_chains(args.custom_template)
-                if len(chain_info) != 1 and not args.custom_template_chain:
-                    raise ValueError(
-                        f"Custom template file {args.custom_template} contains {len(chain_info)} chains. Please specify the chain to use with --custom_template_chain"
-                    )
-
-                if (
-                    args.custom_template_chain
-                    and args.custom_template_chain not in chain_info
-                ):
-                    raise ValueError(
-                        f"Custom template file {args.custom_template} does not contain chain {args.custom_template_chain}"
-                    )
-
-                seq_id = sequence["protein"]["id"]
-                if isinstance(seq_id, list):
-                    if args.target_id and args.target_id not in seq_id:
-                        continue
-                if isinstance(seq_id, str):
-                    if args.target_id and args.target_id != seq_id:
-                        continue
-
-                if not args.custom_template_chain:
-                    args.custom_template_chain = chain_info[0]
-
-                template = {}
-                cif_str = _get_mmcif(
-                    args.custom_template,
-                    "custom",
-                    args.custom_template_chain,
-                    1,
-                    len(input_sequence),
-                )
-
-                template["mmcif"] = cif_str
-                template_seq = extract_sequence_from_mmcif(StringIO(cif_str))
-                query_indices, template_indices = align_and_map(
-                    input_sequence, template_seq
-                )
-
-                template["queryIndices"] = query_indices
-                template["templateIndices"] = template_indices
-
-                # Add the custom template to the start of the templates list
-                templates.insert(0, template)
-
-            # Add unpaired MSA to the json
-            sequence["protein"]["unpairedMsa"] = a3m_lines[0]
-            sequence["protein"]["pairedMsa"] = ""
-            sequence["protein"]["templates"] = templates
-
-            # Remove temporary files
-            shutil.rmtree("tmp")
-
-    # Save the output json
-    if args.output_json:
-        with open(args.output_json, "w") as f:
-            json.dump(af3_json, f)
-    else:
-        output_json = args.input_json.replace(".json", "_mmseqs.json")
-        with open(output_json, "w") as f:
-            json.dump(af3_json, f)
+    add_msa_to_json(
+        args.input_json,
+        args.templates,
+        args.num_templates,
+        args.custom_template,
+        args.custom_template_chain,
+        args.target_id,
+        output_json=args.output_json,
+        to_file=True,
+    )
