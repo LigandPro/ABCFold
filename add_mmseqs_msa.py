@@ -17,7 +17,6 @@ from af3_script_utils import (
     custom_template_argpase_util,
     mmseqs2_argparse_util,
     align_and_map,
-    check_chains,
     extract_sequence_from_mmcif,
     get_mmcif,
     get_custom_template,
@@ -66,6 +65,7 @@ def add_msa_to_json(
                         use_templates=True,
                         num_templates=num_templates,
                     )
+
                 else:
                     a3m_lines = run_mmseqs(input_sequence, tmpdir, use_templates=False)
                     templates = []
@@ -95,12 +95,13 @@ target id so that custom template can be added to the correct sequence"
                 # Add unpaired MSA to the json
                 sequence["protein"]["unpairedMsa"] = a3m_lines[0]
                 sequence["protein"]["pairedMsa"] = ""
+                sequence["protein"]["templates"] = templates
     if to_file:
         if output_json:
             with open(output_json, "w") as f:
                 json.dump(af3_json, f)
         else:
-            output_json = af3_json.replace(".json", "_mmseqs.json")
+            output_json = input_json.replace(".json", "_mmseqs.json")
             with open(output_json, "w") as f:
                 json.dump(af3_json, f)
 
@@ -178,9 +179,7 @@ def run_mmseqs(
     N, REDO = 101, True
 
     # deduplicate and keep track of order
-    seqs_unique = []
-    # TODO this might be slow for large sets
-    [seqs_unique.append(x) for x in seqs if x not in seqs_unique]
+    seqs_unique = list(set(seqs))
     Ms = [N + seqs_unique.index(seq) for seq in seqs]
     # lets do it!
     if not os.path.isfile(tar_gz_file):
