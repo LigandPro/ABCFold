@@ -164,7 +164,6 @@ def get_custom_template(
     custom_template,
     custom_template_chain,
 ):
-
     # add code here to run the custom template but move the res to output
     # Keep existing templates if they're present
     if "templates" not in sequence["protein"]:
@@ -220,5 +219,6 @@ contain chain {custom_template_chain}"
 
     # Add template to the json
     sequence["protein"]["templates"] = templates
+
     # Save the output json
     return sequence
