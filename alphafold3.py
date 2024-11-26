@@ -35,6 +35,7 @@ def alphafold3_directory_finder():
 
     print("Please enter the directory where the alphafold3 directory is located: ")
     directory = input()
+    #
     # get the current working directory
     cwd = os.getcwd()
     print("Current working directory: ", cwd)
