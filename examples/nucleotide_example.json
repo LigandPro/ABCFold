@@ -1,0 +1,34 @@
+{
+    "name": "2PV7",
+    "modelSeeds": [1],
+    "sequences": [
+      {
+        "protein": {
+          "id": ["A", "B"],
+          "sequence": "GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG"
+        }
+      },
+      {
+        "dna": {
+          "id": "C",
+          "sequence": "AGCU",
+          "modifications": [
+          {"modificationType": "6OG", "basePosition": 1},
+          {"modificationType": "6MA", "basePosition": 2}
+          ]
+        }
+      },
+      {
+        "rna": {
+          "id": "D",
+          "sequence": "AGCU",
+          "modifications": [
+          {"modificationType": "2MG", "basePosition": 1},
+          {"modificationType": "5MC", "basePosition": 4}
+          ]
+        }
+      }
+    ],
+    "dialect": "alphafold3",
+    "version": 1
+  }

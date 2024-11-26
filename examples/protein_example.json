@@ -1,0 +1,21 @@
+{
+    "name": "2PV7",
+    "modelSeeds": [1],
+    "sequences": [
+      {
+        "protein": {
+          "id": ["A", "B"],
+          "sequence": "GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG",
+          "modifications": [ 
+            {"ptmType": "HY3", "ptmPosition": 1},
+            {"ptmType": "P1L", "ptmPosition": 5}
+            ]
+        }
+      }
+    ],
+    "bondedAtomPairs": [
+    [["A", 1, "CA"], ["B", 1, "CA"]]
+  ],
+    "dialect": "alphafold3",
+    "version": 1
+  }
