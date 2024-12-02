@@ -52,8 +52,8 @@ def add_msa_to_json(
         with open(input_json, "r") as f:
             af3_json = json.load(f)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        for sequence in af3_json["sequences"]:
+    for sequence in af3_json["sequences"]:
+        with tempfile.TemporaryDirectory() as tmpdir:        
             if "protein" in sequence:
                 input_sequence = sequence["protein"]["sequence"]
 
@@ -107,7 +107,7 @@ target id so that custom template can be added to the correct sequence"
 
     return af3_json
 
-
+# Code from https://github.com/sokrypton/ColabFold
 def run_mmseqs(
     x,
     prefix,
@@ -312,13 +312,14 @@ def fetch_mmcif(
     end,
     tmpdir,
 ):
+    """Fetch the mmcif file for a given PDB ID and chain ID and prepare it for use in AlphaFold3"""
     pdb_id = pdb_id.lower()
     url_base = "http://www.ebi.ac.uk/pdbe-srv/view/files/"
     url = url_base + pdb_id + ".cif"
     response = requests.get(url)
     text = response.text
 
-    output = tmpdir + pdb_id + ".cif"
+    output = os.path.join(tmpdir, pdb_id + ".cif")
     with open(output, "w") as f:
         f.write(text)
 

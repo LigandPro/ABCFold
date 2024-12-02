@@ -1,13 +1,13 @@
 # start by finding the directory where the alphafold3.py script is located
 
-from add_custom_template import get_custom_template, custom_template_argpase_util
+from add_custom_template import custom_template_argpase_util
 from add_mmseqs_msa import mmseqs2_argparse_util, add_msa_to_json
+from af3_script_utils import setup_logger
 import json
-import os
 from pathlib import Path
 import subprocess
-import re
 
+logger = setup_logger()
 
 def run_alphafold3(
     input_json: str | Path,
@@ -37,15 +37,15 @@ def run_alphafold3(
     ) as p:
         stdout, stderr = p.communicate()
         if p.returncode != 0:
-            print(stderr.decode())
-            print(stdout.decode())
+            logger.error(stderr.decode())
+            logger.debug(stdout.decode())
             raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
 
-    print(stdout.decode())
-    print(stderr.decode())
+    logger.info(stdout.decode())
+    logger.error(stderr.decode())
 
-    print("Alphafold3 run complete")
-    print("Output files are in", output_dir)
+    logger.info("Alphafold3 run complete")
+    logger.info("Output files are in", output_dir)
 
 
 def af3_argparse_main(parser):
@@ -78,9 +78,9 @@ def af3_argparse_main(parser):
     return parser
 
 
-if __name__ == "__main__":
+def main():
+    """Run AlphaFold3"""
     import argparse
-
     parser = argparse.ArgumentParser(description="Run AlphaFold3")
 
     parser = af3_argparse_main(parser)
@@ -116,3 +116,7 @@ if __name__ == "__main__":
         model_params=args.model_params,
         database_dir=args.database_dir,
     )
+
+
+if __name__ == "__main__":
+    main()
