@@ -53,10 +53,10 @@ def add_msa_to_json(
             af3_json = json.load(f)
 
     for sequence in af3_json["sequences"]:
-        with tempfile.TemporaryDirectory() as tmpdir:        
-            if "protein" in sequence:
-                input_sequence = sequence["protein"]["sequence"]
-
+        if "protein" in sequence:
+            input_sequence = sequence["protein"]["sequence"]
+            with tempfile.TemporaryDirectory() as tmpdir:
+                
                 # Run MMseqs2 to get unpaired MSA
                 if templates:
                     a3m_lines, templates = run_mmseqs(
