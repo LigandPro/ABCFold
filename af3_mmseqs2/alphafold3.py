@@ -1,8 +1,8 @@
 # start by finding the directory where the alphafold3.py script is located
 
-from add_custom_template import custom_template_argpase_util
-from add_mmseqs_msa import mmseqs2_argparse_util, add_msa_to_json
-from af3_script_utils import setup_logger
+from af3_mmseqs2.add_custom_template import custom_template_argpase_util
+from af3_mmseqs2.add_mmseqs_msa import mmseqs2_argparse_util, add_msa_to_json
+from af3_mmseqs2.af3_script_utils import setup_logger
 import json
 from pathlib import Path
 import subprocess

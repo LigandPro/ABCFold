@@ -13,7 +13,7 @@ import requests
 from tqdm.autonotebook import tqdm
 
 import tempfile
-from af3_script_utils import (
+from af3_mmseqs2.af3_script_utils import (
     custom_template_argpase_util,
     mmseqs2_argparse_util,
     align_and_map,

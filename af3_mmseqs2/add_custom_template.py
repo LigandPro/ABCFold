@@ -4,7 +4,7 @@ import os
 import json
 from io import StringIO
 
-from af3_script_utils import (
+from af3_mmseqs2.af3_script_utils import (
     custom_template_argpase_util,
     get_custom_template,
 )
