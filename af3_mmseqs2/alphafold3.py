@@ -54,8 +54,8 @@ def af3_argparse_main(parser):
     parser.add_argument(
         "--database",
         help="The Database directory for the generation of the MSA.",
-        required=True,
         dest="database_dir",
+        default=None,
     )
     parser.add_argument(
         "--mmseqs2",
@@ -66,7 +66,7 @@ def af3_argparse_main(parser):
     parser.add_argument(
         "--model_params",
         help="The directory containing the model parameters",
-        required=True,
+        default=None,
     )
 
     mmseqs2_argparse_util(parser)
@@ -82,7 +82,7 @@ def main():
 
     # Load defaults from config file
     defaults = {}
-    config_file = Path(__file__).joinpath("..", "data", "config.ini")
+    config_file = Path(__file__).parent.joinpath("..", "config.ini")
     config = configparser.SafeConfigParser()
 
     if config_file.exists():
@@ -103,6 +103,13 @@ def main():
     if updated_config:
         with open(config_file, "w") as f:
             config.write(f)
+
+    if not args.database_dir or not Path(args.database_dir).exists():
+        logger.error(f"Database directory not found: {args.database_dir}")
+        sys.exit(1)
+    elif not args.model_params or not Path(args.model_params).exists():
+        logger.error(f"Model parameters directory not found: {args.model_params}")
+        sys.exit(1)
 
     with open(args.input_json, "r") as f:
         af3_json = json.load(f)

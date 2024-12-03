@@ -92,6 +92,7 @@ setup(
     url=URL,
     packages=PACKAGES,
     package_dir={PACKAGE_NAME: PACKAGE_DIR},
+    data_files = ['data/config.ini'],
     platforms=PLATFORMS,
     classifiers=CLASSIFIERS,
     install_requires=DEPENDENCIES,
