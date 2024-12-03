@@ -23,7 +23,7 @@ from af3_mmseqs2.af3_script_utils import (
 )
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('logger')
 
 TQDM_BAR_FORMAT = (
     "{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]"
@@ -57,6 +57,7 @@ def add_msa_to_json(
             input_sequence = sequence["protein"]["sequence"]
             with tempfile.TemporaryDirectory() as tmpdir:
                 
+                logger.info(f'Running MMseqs2 on sequence: {input_sequence}')
                 # Run MMseqs2 to get unpaired MSA
                 if templates:
                     a3m_lines, templates = run_mmseqs(
@@ -262,6 +263,7 @@ def run_mmseqs(
     tested_pdbs = []
     templates = []
     if use_templates:
+        logger.info('Finding and preparing templates')
         count = 0
         for line in open(f"{path}/pdb70.m8", "r"):
             template = {}
@@ -301,6 +303,7 @@ def run_mmseqs(
                 templates.append(template)
                 tested_pdbs.append(pdb_id)
                 count += 1
+        logger.info(f'Found the following templates: {tested_pdbs}')
 
     return (a3m_lines, templates) if use_templates else a3m_lines
 

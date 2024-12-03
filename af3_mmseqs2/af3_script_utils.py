@@ -4,6 +4,7 @@ from colorama import Fore, Style
 from io import StringIO
 from typing import Mapping
 
+import configparser
 import logging
 import os
 import time
@@ -14,7 +15,7 @@ class ColoredFormatter(logging.Formatter):
     # Define color codes for each log level
     LEVEL_COLORS = {
         logging.DEBUG: Fore.BLUE,
-        logging.INFO: Fore.GREEN,
+        logging.INFO: Fore.WHITE,
         logging.WARNING: Fore.YELLOW,
         logging.ERROR: Fore.RED,
         logging.CRITICAL: Fore.RED + Style.BRIGHT,
@@ -30,7 +31,7 @@ class ColoredFormatter(logging.Formatter):
 
 # Set up logging
 def setup_logger():
-    logger = logging.getLogger("multicolored_logger")
+    logger = logging.getLogger("logger")
     logger.setLevel(logging.DEBUG)  # Set the minimum logging level
 
     # Create a stream handler (output to console)
@@ -38,7 +39,7 @@ def setup_logger():
     handler.setLevel(logging.DEBUG)
 
     # Set the custom formatter
-    formatter = ColoredFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s")
     handler.setFormatter(formatter)
 
     # Add the handler to the logger
@@ -64,12 +65,13 @@ def extract_sequence_from_mmcif(mmcif_file):
     parser = MMCIFParser(QUIET=True)
     structure = parser.get_structure("template", mmcif_file)
     sequence = ""
-    chain = structure[0][0] # Assuming one model/chain only
-    for residue in chain:
-        if residue.id[0] == " ":  # Exclude heteroatoms
-            sequence += residue.resname[
-                0
-            ]  # Simplified to take the first letter
+    model = structure[0] # Assuming one model/chain only
+    for chain in model:
+        for residue in chain:
+            if residue.id[0] == " ":  # Exclude heteroatoms
+                sequence += residue.resname[
+                    0
+                ]  # Simplified to take the first letter
     return sequence
 
 # Code from https://github.com/google-deepmind/alphafold3
@@ -105,7 +107,7 @@ def align_and_map(query_seq, template_seq):
     
     query_indices = []
     template_indices = []
-    for query_index, template_index in aligned_mapping.items():
+    for template_index, query_index in aligned_mapping.items():
         query_indices.append(query_index)
         template_indices.append(template_index)
 

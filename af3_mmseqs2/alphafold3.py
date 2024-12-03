@@ -3,9 +3,11 @@
 from af3_mmseqs2.add_custom_template import custom_template_argpase_util
 from af3_mmseqs2.add_mmseqs_msa import mmseqs2_argparse_util, add_msa_to_json
 from af3_mmseqs2.af3_script_utils import setup_logger
+import configparser
 import json
 from pathlib import Path
 import subprocess
+import sys
 
 logger = setup_logger()
 
@@ -15,7 +17,6 @@ def run_alphafold3(
     model_params: str | Path,
     database_dir: str | Path,
 ) -> None:
-    print(input_json)
     input_json = Path(input_json)
     output_dir = Path(output_dir)
     cmd = rf"""
@@ -31,21 +32,17 @@ def run_alphafold3(
     --model_dir=/root/models \
     --output_dir=/root/af_output
     """
-
+    
+    logger.info("Running Alphafold3")
     with subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        cmd, shell=True, stdout=sys.stdout, stderr=subprocess.PIPE
     ) as p:
         stdout, stderr = p.communicate()
         if p.returncode != 0:
             logger.error(stderr.decode())
-            logger.debug(stdout.decode())
             raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
-
-    logger.info(stdout.decode())
-    logger.error(stderr.decode())
-
     logger.info("Alphafold3 run complete")
-    logger.info("Output files are in", output_dir)
+    logger.info("Output files are in %s", output_dir)
 
 
 def af3_argparse_main(parser):
@@ -83,9 +80,29 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Run AlphaFold3")
 
-    parser = af3_argparse_main(parser)
+    # Load defaults from config file
+    defaults = {}
+    config_file = Path(__file__).joinpath("..", "data", "config.ini")
+    config = configparser.SafeConfigParser()
 
+    if config_file.exists():
+        config.read(str(config_file))
+        defaults.update(dict(config.items("Databases")))
+
+    parser = af3_argparse_main(parser)
+    parser.set_defaults(**defaults)
     args = parser.parse_args()
+
+    updated_config = False
+    if args.model_params != defaults["model_params"]:
+        config.set("Databases", "model_params", args.model_params)
+        updated_config = True
+    if args.database_dir != defaults["database_dir"]:
+        config.set("Databases", "database_dir", args.database_dir)
+        updated_config = True
+    if updated_config:
+        with open(config_file, "w") as f:
+            config.write(f)
 
     with open(args.input_json, "r") as f:
         af3_json = json.load(f)
