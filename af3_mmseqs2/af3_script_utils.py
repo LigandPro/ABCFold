@@ -1,12 +1,12 @@
-from Bio.PDB import MMCIFParser, MMCIFIO
-from Bio import pairwise2
-from colorama import Fore, Style
-from io import StringIO
-from typing import Mapping
-
 import logging
 import os
 import time
+from io import StringIO
+from typing import Mapping
+
+from Bio import pairwise2
+from Bio.PDB import MMCIFIO, MMCIFParser
+from colorama import Fore, Style
 
 
 # Custom formatter for colored logging
@@ -122,7 +122,10 @@ def get_mmcif(
     end,
     tmpdir=None,
 ):
-    """Extract a chain from a CIF file and return a new CIF string with only the specified chain, residues and metadata."""
+    """
+    Extract a chain from a CIF file and return a new CIF string with only the
+    specified chain, residues and metadata.
+    """
 
     parser = MMCIFParser(QUIET=True)
     structure = parser.get_structure(pdb_id, cif)
