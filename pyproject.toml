@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "af3_mmseqs2"
-version = "0.1.0"  
+version = "0.1.0"
 description = "Alphafold3 input processing tools"
 readme = "README.md"
 license = { text = "BSD License" }
@@ -18,20 +18,18 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
     "numpy",
     "colorama",
     "tqdm",
-    "biopython",
+    "biopython==1.84",
     "requests",
+    "types-requests",
 ]
 
 [project.urls]
@@ -48,3 +46,16 @@ af3_mmseqs2 = ["data/config.ini"]
 alphafold3 = "af3_mmseqs2.alphafold3:main"
 mmseqs2msa = "af3_mmseqs2.add_mmseqs_msa:main"
 custom_templates = "af3_mmseqs2.add_custom_template:main"
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203"]
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+ignore_missing_imports = true
