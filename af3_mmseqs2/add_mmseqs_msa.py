@@ -23,7 +23,7 @@ from af3_mmseqs2.af3_script_utils import (
 )
 
 
-logger = logging.getLogger('logger')
+logger = logging.getLogger("logger")
 
 TQDM_BAR_FORMAT = (
     "{l_bar}{bar}| {n_fmt}/{total_fmt} [elapsed: {elapsed} remaining: {remaining}]"
@@ -56,8 +56,8 @@ def add_msa_to_json(
         if "protein" in sequence:
             input_sequence = sequence["protein"]["sequence"]
             with tempfile.TemporaryDirectory() as tmpdir:
-                
-                logger.info(f'Running MMseqs2 on sequence: {input_sequence}')
+
+                logger.info(f"Running MMseqs2 on sequence: {input_sequence}")
                 # Run MMseqs2 to get unpaired MSA
                 if templates:
                     a3m_lines, templates = run_mmseqs(
@@ -107,6 +107,7 @@ target id so that custom template can be added to the correct sequence"
                 json.dump(af3_json, f)
 
     return af3_json
+
 
 # Code from https://github.com/sokrypton/ColabFold
 def run_mmseqs(
@@ -263,7 +264,7 @@ def run_mmseqs(
     tested_pdbs = []
     templates = []
     if use_templates:
-        logger.info('Finding and preparing templates')
+        logger.info("Finding and preparing templates")
         count = 0
         for line in open(f"{path}/pdb70.m8", "r"):
             template = {}
@@ -303,7 +304,7 @@ def run_mmseqs(
                 templates.append(template)
                 tested_pdbs.append(pdb_id)
                 count += 1
-        logger.info(f'Found the following templates: {tested_pdbs}')
+        logger.info(f"Found the following templates: {tested_pdbs}")
 
     return (a3m_lines, templates) if use_templates else a3m_lines
 
@@ -329,7 +330,7 @@ def fetch_mmcif(
     return get_mmcif(output, pdb_id, chain_id, start, end, tmpdir)
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -353,3 +354,7 @@ if __name__ == "__main__":
         output_json=args.output_json,
         to_file=True,
     )
+
+
+if __name__ == "__main__":
+    main()

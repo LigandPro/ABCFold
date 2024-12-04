@@ -4,7 +4,6 @@ from colorama import Fore, Style
 from io import StringIO
 from typing import Mapping
 
-import configparser
 import logging
 import os
 import time
@@ -29,6 +28,7 @@ class ColoredFormatter(logging.Formatter):
         # Return the message with the color added
         return f"{level_color}{formatted_message}{Style.RESET_ALL}"
 
+
 # Set up logging
 def setup_logger():
     logger = logging.getLogger("logger")
@@ -48,7 +48,6 @@ def setup_logger():
     return logger
 
 
-
 def check_chains(mmcif_file):
     """Return a list of chains in a MMCIF file."""
     parser = MMCIFParser(QUIET=True)
@@ -65,27 +64,28 @@ def extract_sequence_from_mmcif(mmcif_file):
     parser = MMCIFParser(QUIET=True)
     structure = parser.get_structure("template", mmcif_file)
     sequence = ""
-    model = structure[0] # Assuming one model/chain only
+    model = structure[0]  # Assuming one model/chain only
     for chain in model:
         for residue in chain:
             if residue.id[0] == " ":  # Exclude heteroatoms
-                sequence += residue.resname[
-                    0
-                ]  # Simplified to take the first letter
+                sequence += residue.resname[0]  # Simplified to take the first letter
     return sequence
 
+
 # Code from https://github.com/google-deepmind/alphafold3
-def query_to_hit_mapping(query_aligned: str, template_aligned: str) -> Mapping[int, int]:
+def query_to_hit_mapping(
+    query_aligned: str, template_aligned: str
+) -> Mapping[int, int]:
     """0-based query index to hit index mapping."""
     query_to_hit_mapping_out = {}
     hit_index = 0
     query_index = 0
     for q_char, t_char in zip(query_aligned, template_aligned):
         # Gap inserted in the template
-        if q_char == '-':
+        if q_char == "-":
             query_index += 1
         # Deleted residue in the template (would be a gap in the query).
-        elif t_char == '-':
+        elif t_char == "-":
             hit_index += 1
         # Normal aligned residue, in both query and template. Add to mapping.
         else:
@@ -104,7 +104,7 @@ def align_and_map(query_seq, template_seq):
 
     # Map the aligned sequences
     aligned_mapping = query_to_hit_mapping(query_aligned, template_aligned)
-    
+
     query_indices = []
     template_indices = []
     for template_index, query_index in aligned_mapping.items():
@@ -145,7 +145,6 @@ def get_mmcif(
             "%Y-%m-%d"
         )
 
-    
     # For multimodel templates (e.g. NMR) pick a single representative model
     if len(structure) > 1:
         for model_index in range(1, len(structure)):
