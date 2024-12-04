@@ -30,6 +30,15 @@ jobs:
     - name: Run pre-commit hooks
       run: |
         pre-commit run --all-files
-    - name: Test with pytest
+    - name: Test with pytest and coverage
       run: |
-        pytest
+        pytest --cov=your_project --cov-report=xml
+    - name: Generate coverage badge
+      run: |
+        pip install coverage-badge
+        coverage-badge -o coverage.svg -f
+    - name: Upload coverage badge
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-badge
+        path: coverage.svg

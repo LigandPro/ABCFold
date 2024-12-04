@@ -11,3 +11,5 @@ pytest
 flake8
 black
 mypy
+coverage-badge
+coverage

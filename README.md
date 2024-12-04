@@ -1,4 +1,9 @@
 # AlphaFold3 MMseqs2 Scripts
+
+![Build Status](https://github.com/rigdenlab/af3_mmseqs_scripts/actions/workflows/python-package.yml/badge.svg)
+![Coverage](https://github.com/rigdenlab/af3_mmseqs_scripts/blob/main/coverage.svg)
+
+
 Scripts to add MMseqs2 MSA/templates to an AlphaFold3 input JSON and/or add custom template files
 
 ## Table of Contents

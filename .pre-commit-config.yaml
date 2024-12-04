@@ -33,3 +33,11 @@ repos:
           (?x)^(
               .*/migrations/.*
           )
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest with coverage
+        entry: pytest --cov=your_project --cov-report=xml
+        language: system
+        types: [python]
