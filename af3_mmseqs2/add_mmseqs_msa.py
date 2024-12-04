@@ -1,27 +1,23 @@
 #!/usr/bin/env python
 
-import os
-import time
-import tarfile
-import random
-import logging
 import json
+import logging
+import os
+import random
+import tarfile
+import tempfile
+import time
 from io import StringIO
-from typing import Tuple, List
+from typing import Sequence
 
-import requests
+import requests  # type: ignore
 from tqdm.autonotebook import tqdm
 
-import tempfile
-from af3_mmseqs2.af3_script_utils import (
-    custom_template_argpase_util,
-    mmseqs2_argparse_util,
-    align_and_map,
-    extract_sequence_from_mmcif,
-    get_mmcif,
-    get_custom_template,
-)
-
+from af3_mmseqs2.af3_script_utils import (align_and_map,
+                                          custom_template_argpase_util,
+                                          extract_sequence_from_mmcif,
+                                          get_custom_template, get_mmcif,
+                                          mmseqs2_argparse_util)
 
 logger = logging.getLogger("logger")
 
@@ -120,7 +116,7 @@ def run_mmseqs(
     use_pairing=False,
     host_url="https://a3m.mmseqs.com",
     num_templates=20,
-) -> Tuple[List[str], List[str]]:
+) -> Sequence[object]:
     submission_endpoint = "ticket/pair" if use_pairing else "ticket/msa"
 
     def submit(seqs, mode, N=101):
@@ -244,7 +240,7 @@ def run_mmseqs(
             tar_gz.extractall(path)
 
     # gather a3m lines
-    a3m_lines = {}
+    a3m_lines: dict = {}
     for a3m_file in a3m_files:
         update_M, M = True, None
         for line in open(a3m_file, "r"):
@@ -259,7 +255,7 @@ def run_mmseqs(
                         a3m_lines[M] = []
                 a3m_lines[M].append(line)
 
-    a3m_lines = ["".join(a3m_lines[n]) for n in Ms]
+    a3m_lines_list = ["".join(a3m_lines[n]) for n in Ms]
 
     tested_pdbs = []
     templates = []
@@ -270,20 +266,19 @@ def run_mmseqs(
             template = {}
             if count < num_templates:
                 p = line.rstrip().split()
-                M, pdb, qid, alilen, tstart, tend = (
-                    p[0],
+                pdb, qid, alilen, tstart, tend = (
                     p[1],
-                    p[2],
-                    p[3],
-                    p[8],
-                    p[9],
+                    float(p[2]),
+                    float(p[3]),
+                    int(p[8]),
+                    int(p[9]),
                 )
-                coverage = float(alilen) / len(x)
+                coverage = alilen / len(x)
                 pdb_id = pdb.split("_")[0]
 
                 # Use the same template filters as AF3 and only use 1 template per PDB
                 if (
-                    float(qid) == 1.0
+                    qid == 1.0
                     and coverage >= 0.95
                     or coverage < 0.1
                     or pdb_id in tested_pdbs
@@ -291,9 +286,7 @@ def run_mmseqs(
                     continue
 
                 pdb_id = pdb.split("_")[0]
-                cif_str = fetch_mmcif(
-                    pdb_id, pdb.split("_")[1], int(tstart), int(tend), prefix
-                )
+                cif_str = fetch_mmcif(pdb_id, pdb.split("_")[1], tstart, tend, prefix)
                 template["mmcif"] = cif_str
 
                 template_seq = extract_sequence_from_mmcif(StringIO(cif_str))
@@ -306,7 +299,7 @@ def run_mmseqs(
                 count += 1
         logger.info(f"Found the following templates: {tested_pdbs}")
 
-    return (a3m_lines, templates) if use_templates else a3m_lines
+    return (a3m_lines_list, templates) if use_templates else a3m_lines_list
 
 
 def fetch_mmcif(
@@ -316,7 +309,10 @@ def fetch_mmcif(
     end,
     tmpdir,
 ):
-    """Fetch the mmcif file for a given PDB ID and chain ID and prepare it for use in AlphaFold3"""
+    """
+    Fetch the mmcif file for a given PDB ID
+    and chain ID and prepare it for use in AlphaFold3
+    """
     pdb_id = pdb_id.lower()
     url_base = "http://www.ebi.ac.uk/pdbe-srv/view/files/"
     url = url_base + pdb_id + ".cif"
