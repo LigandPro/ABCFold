@@ -24,19 +24,19 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install pre-commit
+        python -m pip install pre-commit coverage
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
         python -m pip install .
     - name: Run pre-commit hooks
       run: |
         pre-commit run --all-files
-    - name: Test with pytest and coverage
+    - name: Test with coverage
       run: |
-        pytest --cov=your_project --cov-report=xml
+        coverage run --source=af3_mmseqs2 --module pytest --verbose tests && coverage report --show-missing
     - name: Generate coverage badge
       run: |
         pip install coverage-badge
-        coverage-badge -o coverage.svg -f
+        coverage-badge -o .blob/coverage.svg -f
     - name: Upload coverage badge
       uses: actions/upload-artifact@v3
       with:
