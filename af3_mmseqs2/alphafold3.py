@@ -1,15 +1,17 @@
 # start by finding the directory where the alphafold3.py script is located
 
-from af3_mmseqs2.add_custom_template import custom_template_argpase_util
-from af3_mmseqs2.add_mmseqs_msa import mmseqs2_argparse_util, add_msa_to_json
-from af3_mmseqs2.af3_script_utils import setup_logger
 import configparser
 import json
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
+
+from af3_mmseqs2.add_custom_template import custom_template_argpase_util
+from af3_mmseqs2.add_mmseqs_msa import add_msa_to_json, mmseqs2_argparse_util
+from af3_mmseqs2.af3_script_utils import setup_logger
 
 logger = setup_logger()
+
 
 def run_alphafold3(
     input_json: str | Path,
@@ -32,7 +34,7 @@ def run_alphafold3(
     --model_dir=/root/models \
     --output_dir=/root/af_output
     """
-    
+
     logger.info("Running Alphafold3")
     with subprocess.Popen(
         cmd, shell=True, stdout=sys.stdout, stderr=subprocess.PIPE
@@ -78,6 +80,7 @@ def af3_argparse_main(parser):
 def main():
     """Run AlphaFold3"""
     import argparse
+
     parser = argparse.ArgumentParser(description="Run AlphaFold3")
 
     # Load defaults from config file

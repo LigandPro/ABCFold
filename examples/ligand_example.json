@@ -17,12 +17,12 @@
     {
         "ligand":{
             "id": "E",
-            "smiles": "CC(=O)OC1C[NH+]2CCC1CC2" 
+            "smiles": "CC(=O)OC1C[NH+]2CCC1CC2"
 
       }
     }
     ],
-    
+
     "dialect": "alphafold3",
     "version": 1
   }

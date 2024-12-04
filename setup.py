@@ -1,4 +1,5 @@
-from distutils.command.build import build
+from distutils.command.build import build  # type: ignore
+
 from setuptools import setup
 
 
