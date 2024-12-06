@@ -1,0 +1,15 @@
+{
+    "name": "RNA_example",
+    "modelSeeds": [1],
+    "sequences": [
+      {
+        "dna": {
+          "id": "A",
+          "sequence": "AGCU"
+        }
+      }
+    ],
+
+    "dialect": "alphafold3",
+    "version": 1
+  }
