@@ -5,6 +5,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Union
 
 from af3_mmseqs2.add_custom_template import custom_template_argpase_util
 from af3_mmseqs2.add_mmseqs_msa import add_msa_to_json, mmseqs2_argparse_util
@@ -14,10 +15,10 @@ logger = setup_logger()
 
 
 def run_alphafold3(
-    input_json: str | Path,
-    output_dir: str | Path,
-    model_params: str | Path,
-    database_dir: str | Path,
+    input_json: Union[str, Path],
+    output_dir: Union[str, Path],
+    model_params: Union[str, Path],
+    database_dir: Union[str, Path],
     interactive: bool = True,
 ) -> None:
     input_json = Path(input_json)
@@ -43,10 +44,10 @@ def run_alphafold3(
 
 
 def generate_af3_cmd(
-    input_json: str | Path,
-    output_dir: str | Path,
-    model_params: str | Path,
-    database_dir: str | Path,
+    input_json: Union[str, Path],
+    output_dir: Union[str, Path],
+    model_params: Union[str, Path],
+    database_dir: Union[str, Path],
     interactive: bool = True,
 ) -> str:
     input_json = Path(input_json)
