@@ -9,3 +9,8 @@ def test_logging():
         assert logger is not None
     except Exception as e:
         assert False, f"Exception: {e}"
+    logger.debug("Debug message")
+    logger.info("Info message")
+    logger.warning("Warning message")
+    logger.error("Error message")
+    logger.critical("Critical message")

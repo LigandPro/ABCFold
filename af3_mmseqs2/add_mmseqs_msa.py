@@ -340,7 +340,7 @@ def main():
 
     args = parser.parse_args()
 
-    add_msa_to_json(
+    add_msa_to_json(  # pragma: no cover
         args.input_json,
         args.templates,
         args.num_templates,
@@ -352,5 +352,5 @@ def main():
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

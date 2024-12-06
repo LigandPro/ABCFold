@@ -48,7 +48,7 @@ def setup_logger():
     return logger
 
 
-def check_chains(mmcif_file):
+def get_chains(mmcif_file):
     """Return a list of chains in a MMCIF file."""
     parser = MMCIFParser(QUIET=True)
     structure = parser.get_structure("template", mmcif_file)
@@ -149,6 +149,8 @@ def get_mmcif(
         )
 
     # For multimodel templates (e.g. NMR) pick a single representative model
+    # add a copy of the first model to the structure
+
     if len(structure) > 1:
         for model_index in range(1, len(structure)):
             structure.detach_child(structure[model_index].get_id())
@@ -255,7 +257,7 @@ def get_custom_template(
         msg = f"Custom template file {custom_template} not found"
         raise FileNotFoundError(msg)
 
-    chain_info = check_chains(custom_template)
+    chain_info = get_chains(custom_template)
     if len(chain_info) != 1 and not custom_template_chain:
         msg = f"Custom template file {custom_template} contains \
 {len(chain_info)} chains. Please specify the chain to use with --custom_template_chain"
