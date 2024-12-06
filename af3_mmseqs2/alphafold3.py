@@ -5,6 +5,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Union
 
 from af3_mmseqs2.add_custom_template import custom_template_argpase_util
 from af3_mmseqs2.add_mmseqs_msa import add_msa_to_json, mmseqs2_argparse_util
@@ -14,26 +15,21 @@ logger = setup_logger()
 
 
 def run_alphafold3(
-    input_json: str | Path,
-    output_dir: str | Path,
-    model_params: str | Path,
-    database_dir: str | Path,
+    input_json: Union[str, Path],
+    output_dir: Union[str, Path],
+    model_params: Union[str, Path],
+    database_dir: Union[str, Path],
+    interactive: bool = True,
 ) -> None:
     input_json = Path(input_json)
     output_dir = Path(output_dir)
-    cmd = rf"""
-    docker run -it \
-    --volume {input_json.parent.resolve()}:/root/af_input \
-    --volume {output_dir.resolve()}:/root/af_output \
-    --volume {model_params}:/root/models \
-    --volume {database_dir}:/root/public_databases \
-    --gpus all \
-    alphafold3 \
-    python run_alphafold.py \
-    --json_path=/root/af_input/{input_json.name} \
-    --model_dir=/root/models \
-    --output_dir=/root/af_output
-    """
+    cmd = generate_af3_cmd(
+        input_json=input_json,
+        output_dir=output_dir,
+        model_params=model_params,
+        database_dir=database_dir,
+        interactive=interactive,
+    )
 
     logger.info("Running Alphafold3")
     with subprocess.Popen(
@@ -45,6 +41,30 @@ def run_alphafold3(
             raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
     logger.info("Alphafold3 run complete")
     logger.info("Output files are in %s", output_dir)
+
+
+def generate_af3_cmd(
+    input_json: Union[str, Path],
+    output_dir: Union[str, Path],
+    model_params: Union[str, Path],
+    database_dir: Union[str, Path],
+    interactive: bool = True,
+) -> str:
+    input_json = Path(input_json)
+    output_dir = Path(output_dir)
+    return rf"""
+    docker run {'-it' if interactive else ''} \
+    --volume {input_json.parent.resolve()}:/root/af_input \
+    --volume {output_dir.resolve()}:/root/af_output \
+    --volume {model_params}:/root/models \
+    --volume {database_dir}:/root/public_databases \
+    --gpus all \
+    alphafold3 \
+    python run_alphafold.py \
+    --json_path=/root/af_input/{input_json.name} \
+    --model_dir=/root/models \
+    --output_dir=/root/af_output
+    """
 
 
 def af3_argparse_main(parser):

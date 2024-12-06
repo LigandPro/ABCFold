@@ -57,7 +57,7 @@ def main():
 
     args = parser.parse_args()
 
-    run_custom_template(
+    run_custom_template(  # pragma: no cover
         args.input_json,
         args.target_id,
         args.custom_template,
@@ -67,5 +67,5 @@ def main():
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
