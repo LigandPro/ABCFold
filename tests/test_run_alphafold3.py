@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 
@@ -39,6 +40,7 @@ def test_generate_af3_command(test_data):
     assert "docker run" in cmd
 
 
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="Skipping test in CI environment")
 def test_run_af3(test_data):
     input_json = Path(test_data.test_inputA_json)
     output_dir = Path("/road/to/nowhere")
