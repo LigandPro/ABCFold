@@ -105,7 +105,7 @@ def main():
 
     # Load defaults from config file
     defaults = {}
-    config_file = Path(__file__).parent.joinpath("..", "config.ini")
+    config_file = Path(__file__).parent.joinpath("data", "config.ini")
     config = configparser.SafeConfigParser()
 
     if config_file.exists():
