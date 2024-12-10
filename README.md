@@ -1,5 +1,10 @@
 # AlphaFold3 MMseqs2 Scripts
-Scripts to add MMseqs2 MSA/templates to an AlphaFold3 input JSON and/or add custom template files 
+
+![Build Status](https://github.com/rigdenlab/af3_mmseqs_scripts/actions/workflows/python-package.yml/badge.svg)
+![Coverage](./.blob/coverage.svg)
+
+
+Scripts to add MMseqs2 MSA/templates to an AlphaFold3 input JSON and/or add custom template files
 
 ## Table of Contents
 - [Installation](#installation)
@@ -12,7 +17,17 @@ Scripts to add MMseqs2 MSA/templates to an AlphaFold3 input JSON and/or add cust
 To install the required dependencies, run:
 
 ```bash
-pip install -r requirements.txt
+pip install .
+```
+
+## Development
+
+If you wish to help develop this package, you can install the development dependencies by running:
+
+```bash
+pip install -e .
+pip install -r requirements-dev.txt
+pre-commit install
 ```
 
 ## Usage
@@ -52,7 +67,7 @@ python add_mmseqs_msa.py --input_json <input_json> --output_json <output_json> -
 ```
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
-- `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_mmseqs.json). 
+- `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_mmseqs.json).
 - `<num_templates>`: [optional] The number of templates to use (default: 20)
 
 
@@ -65,7 +80,7 @@ python add_mmseqs_msa.py --input_json <input_json> --output_json <output_json>
 ```
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
-- `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_mmseqs.json). 
+- `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_mmseqs.json).
 
 
 ### Adding custom templates
@@ -82,8 +97,8 @@ python add_custom_template.py --input_json <input_json> --output_json <output_js
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
 - `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_custom_template.json).
-- `<custom_template>` : Path to the custom template file in mmCIF format. 
-- `<custom_template_chain>` : [conditionally required] The chain ID of the chain to use in your custom template, only required if using a multi-chain template. 
+- `<custom_template>` : Path to the custom template file in mmCIF format.
+- `<custom_template_chain>` : [conditionally required] The chain ID of the chain to use in your custom template, only required if using a multi-chain template.
 - `<target_id>` : [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex.
 
 
@@ -96,10 +111,10 @@ python add_mmseqs_msa.py --input_json <input_json> --output_json <output_json> -
 ```
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
-- `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_mmseqs.json). 
+- `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_mmseqs.json).
 - `<num_templates>`: [optional] The number of templates to use (default: 20)
-- `<custom_template>` : Path to the custom template file in mmCIF format. 
-- `<custom_template_chain>` : [conditionally required] The chain ID of the chain to use in your custom template, only required if using a multi-chain template. 
+- `<custom_template>` : Path to the custom template file in mmCIF format.
+- `<custom_template_chain>` : [conditionally required] The chain ID of the chain to use in your custom template, only required if using a multi-chain template.
 - `<target_id>` : [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex.
 
 ### Running AlphaFold3
@@ -110,7 +125,7 @@ This file has the functionality of the above two scripts above and runs alphafol
 you have the AlphaFold3 on your system (Instructions [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/installation.md) and have procured the model parameters and the databases.
 
 ```bash
-python alphafold3.py <input_json>  <output_dir> --model_params <model_params> --database <database> 
+python alphafold3.py <input_json>  <output_dir> --model_params <model_params> --database <database>
 --mmseqs2 --num_templates <num_templates> --custom_template <custom_template> --custom_template_chain <custom_template_chain> --target_id <target_id>
 ```
 
@@ -129,7 +144,7 @@ python alphafold3.py <input_json>  <output_dir> --model_params <model_params> --
 
 #### Using `--target_id` with homo-oligomer
 
-Below is an example of a hetero-3-mer. When modelling a homo-oligomer, id is given as a list, you should select 1 of the identifiers in the list. 
+Below is an example of a hetero-3-mer. When modelling a homo-oligomer, id is given as a list, you should select 1 of the identifiers in the list.
 
 ```json
 {

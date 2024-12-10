@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 
-import os
 import json
-from io import StringIO
 import logging
+import os
 
-logger = logging.getLogger('logger')
+from af3_mmseqs2.af3_script_utils import (custom_template_argpase_util,
+                                          get_custom_template)
 
-from af3_mmseqs2.af3_script_utils import (
-    custom_template_argpase_util,
-    get_custom_template,
-)
+logger = logging.getLogger("logger")
 
 
 def run_custom_template(
@@ -27,7 +24,7 @@ def run_custom_template(
         raise FileNotFoundError(msg)
 
     for sequence in af3_json["sequences"]:
-        if not "protein" in sequence:
+        if "protein" not in sequence:
             continue
 
         sequence = get_custom_template(
@@ -47,7 +44,7 @@ def run_custom_template(
     return af3_json
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -60,7 +57,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    run_custom_template(
+    run_custom_template(  # pragma: no cover
         args.input_json,
         args.target_id,
         args.custom_template,
@@ -68,3 +65,7 @@ if __name__ == "__main__":
         output_json=args.output_json,
         to_file=True,
     )
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()

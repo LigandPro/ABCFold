@@ -1,0 +1,16 @@
+# Production dependencies
+numpy
+colorama
+tqdm
+biopython==1.84
+requests
+
+# Development dependencies
+pre-commit
+pytest
+pytest-cov
+flake8
+black
+mypy
+coverage-badge
+coverage

@@ -4,23 +4,11 @@
     "sequences": [
       {
         "protein": {
-          "id": ["A", "B"],
+          "id": "A",
           "sequence": "GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG"
-        }
-    },
-    {
-        "ligand":{
-            "id": ["C", "D"],
-            "ccdCode": ["ATP"]
-        }
-    },
-    {
-        "ligand":{
-            "id": "E",
-            "smiles": "CC(=O)OC1C[NH+]2CCC1CC2"
 
+        }
       }
-    }
     ],
 
     "dialect": "alphafold3",
