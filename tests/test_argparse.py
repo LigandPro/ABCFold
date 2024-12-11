@@ -1,7 +1,8 @@
 import argparse
 
-from af3_mmseqs2.alphafold3 import af3_argparse_main
-from af3_mmseqs2.argparse_utils import (custom_template_argpase_util,
+from af3_mmseqs2.argparse_utils import (alphafold_argparse_util,
+                                        custom_template_argpase_util,
+                                        main_argpase_util,
                                         mmseqs2_argparse_util)
 
 
@@ -34,7 +35,9 @@ def test_custom_template_argpase_util():
 
 def test_af3_argparse_main(test_data):
     parser = argparse.ArgumentParser()
-    parser = af3_argparse_main(parser)
+    parser = main_argpase_util(parser)
+    parser = alphafold_argparse_util(parser)
+    parser = mmseqs2_argparse_util(parser)
     args = parser.parse_args(
         [
             test_data.test_inputA_json,

@@ -11,7 +11,7 @@
     {
         "ligand":{
             "id": ["C", "D"],
-            "ccdCode": ["ATP"]
+            "ccdCodes": ["ATP"]
         }
     },
     {
