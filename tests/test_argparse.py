@@ -6,6 +6,7 @@ from af3_mmseqs2.alphafold3 import af3_argparse_main
 
 
 def test_mmseqs2_argparse_util():
+
     parser = argparse.ArgumentParser()
     parser = mmseqs2_argparse_util(parser)
     args = parser.parse_args(["--templates", "--num_templates", "20"])

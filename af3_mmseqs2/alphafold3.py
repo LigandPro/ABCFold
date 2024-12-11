@@ -21,6 +21,7 @@ def run_alphafold3(
     database_dir: Union[str, Path],
     interactive: bool = True,
 ) -> None:
+
     input_json = Path(input_json)
     output_dir = Path(output_dir)
     cmd = generate_af3_cmd(
