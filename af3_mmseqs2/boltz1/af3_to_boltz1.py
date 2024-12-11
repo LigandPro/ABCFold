@@ -2,7 +2,9 @@ import json
 import random
 import string
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
+
+DELIM = "      "
 
 
 class BoltzYaml:
@@ -12,6 +14,8 @@ class BoltzYaml:
 
     def __init__(self, temp_dir: Union[str, Path]):
         self.temp_dir = temp_dir
+        self.yaml_string: str = ""
+        self.msa_file: Optional[Union[str, Path]] = None
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
         """
@@ -43,20 +47,33 @@ class BoltzYaml:
         else:
             json_dict = json_file_or_dict
 
-        yaml_string = ""
+        self.yaml_string = ""
 
-        yaml_string += self.add_version_number("1")
+        self.yaml_string += self.add_version_number("1")
         for key, value in json_dict.items():
             if key == "sequences":
-                if "sequences" not in yaml_string:
-                    yaml_string += self.add_sequence_string()
+                if "sequences" not in self.yaml_string:
+                    self.yaml_string += self.add_non_indented_string("sequences")
                 for sequence_dict in value:
                     if any([key in sequence_dict for key in ["protein", "rna", "dna"]]):
-                        yaml_string += self.sequence_to_yaml(sequence_dict)
+                        self.yaml_string += self.sequence_to_yaml(sequence_dict)
                     if any([key in sequence_dict for key in ["ligand"]]):
-                        yaml_string += self.add_ligand_information(
+                        self.yaml_string += self.add_ligand_information(
                             sequence_dict["ligand"]
                         )
+            if key == "bondedAtomPairs":
+                if "constraints" not in self.yaml_string:
+                    self.yaml_string += self.add_non_indented_string("constraints")
+                self.yaml_string += self.bonded_atom_pairs_to_yaml(value)
+
+        return self.yaml_string
+
+    def bonded_atom_pairs_to_yaml(self, bonded_atom_pairs: list):
+        yaml_string = ""
+        for pair in bonded_atom_pairs:
+            yaml_string += self.add_title("bond")
+            yaml_string += self.add_key_and_value("atom1", pair[0])
+            yaml_string += self.add_key_and_value("atom2", pair[1])
 
         return yaml_string
 
@@ -72,14 +89,14 @@ class BoltzYaml:
         """
         return f"version: {version}\n"
 
-    def add_sequence_string(self):
+    def add_non_indented_string(self, string: str):
         """
         Adds the sequence string to the yaml string
 
         Returns:
             str: yaml string
         """
-        return "sequences:\n"
+        return f"{string}:\n"
 
     def add_id(self, id_: Union[str, list, int]):
         """
@@ -98,9 +115,9 @@ class BoltzYaml:
             new_id = str(id_).replace('"', "").replace("'", "")
 
         return (
-            f"\t\tid: {new_id}\n"
+            f"{DELIM}{DELIM}id: {new_id}\n"
             if not isinstance(id_, list)
-            else f"\t\tid: [{new_id}]\n"
+            else f"{DELIM}{DELIM}id: [{new_id}]\n"
         )
 
     def add_sequence(self, sequence: str):
@@ -114,11 +131,11 @@ class BoltzYaml:
             str: yaml string
 
         """
-        return f"\t\tsequence: {sequence}\n"
+        return f"{DELIM}{DELIM}sequence: {sequence}\n"
 
-    def add_msa(self, msa: str):
+    def add_msa(self, msa: Union[str, Path]):
         """
-        Adds the msa file_path to the yaml string
+        Adds the msa file_path to the yaml string, double tabbed
 
         Args:
             msa (str): msa file_path
@@ -128,20 +145,19 @@ class BoltzYaml:
         """
         if not Path(msa).exists():
             raise FileNotFoundError(f"File {msa} does not exist")
-        return f"\t\tmsa: {msa}\n"
+        return f"{DELIM}{DELIM}msa: {msa}\n"
 
-    def add_ligand(self, source: str, code: str):
+    def add_key_and_value(self, key: str, value: str):
         """
-        Adds the ligand information to the yaml string
+        Adds the key and value to the yaml string, double tabbed
 
         Args:
-            source (str): source of the ligand
-            code (str): code of the ligand
-
+            key (str): The key on the left of ':'
+            value (str): The value on the right of ':'
         Returns:
             str: yaml string
         """
-        return f"\t\t{source}: {code}\n"
+        return f"{DELIM}{DELIM}{key}: {value}\n"
 
     def add_ligand_information(self, ligand_dict: dict):
         """
@@ -158,16 +174,16 @@ class BoltzYaml:
         yaml_string += self.add_id(ligand_dict["id"])
 
         if "smiles" in ligand_dict:
-            yaml_string += self.add_ligand("smiles", ligand_dict["smiles"])
+            yaml_string += self.add_key_and_value("smiles", ligand_dict["smiles"])
         elif "ccdCode" in ligand_dict:
-            yaml_string += self.add_ligand("ccd", ligand_dict["ccdCode"])
+            yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCode"])
         else:
             msg = "Ligand must have either a smiles or ccdCode"
             raise ValueError(msg)
 
         return yaml_string
 
-    def add_sequence_information(self, sequence_dict: dict, msa_file=None):
+    def add_sequence_information(self, sequence_dict: dict):
         """
         Adds the sequence information of protein, rna, dna to the yaml string
 
@@ -185,10 +201,10 @@ class BoltzYaml:
             if "sequence" in sequence_dict
             else ""
         )
-        if msa_file is None:
+        if self.msa_file is None:
             return yaml_string
-        self.msa_to_file(sequence_dict["msa"], msa_file)
-        yaml_string += self.add_msa(msa_file)
+        self.msa_to_file(sequence_dict["unpairedMsa"], self.msa_file)
+        yaml_string += self.add_msa(self.msa_file)
         return yaml_string
 
     def add_title(self, name: str):
@@ -201,7 +217,7 @@ class BoltzYaml:
         Returns:
             str: yaml string
         """
-        return f"\t{name}:\n"
+        return f"{DELIM}- {name}:\n"
 
     def sequence_to_yaml(self, sequence_dict: dict, yaml_string: str = ""):
         """
@@ -216,21 +232,31 @@ class BoltzYaml:
         """
         for sequence_type, sequence_info_dict in sequence_dict.items():
             yaml_string += self.add_title(sequence_type)
-            msa_file = (
+            self.msa_file = (
                 (
                     Path(self.temp_dir)
                     / f"{''.join(random.choices(string.ascii_letters, k=5))}.a3m"
                 )
-                if "msa" not in sequence_info_dict
+                if "unpairedMsa" in sequence_info_dict
                 else None
             )
 
-            yaml_string += self.add_sequence_information(
-                sequence_info_dict, msa_file=msa_file
-            )
+            yaml_string += self.add_sequence_information(sequence_info_dict)
 
         return yaml_string
 
+    def write_yaml(self, file_path: Union[str, Path]):
+        """
+        Writes the yaml string to a file
 
-if __name__ == "__main__":
-    pass
+        Args:
+            file_path (Union[str, Path]): file path
+
+        Returns:
+            None
+        """
+
+        assert self.yaml_string, "No yaml string to write to file"
+        assert Path(file_path).suffix == ".yaml", "File must have a .yaml extension"
+        with open(file_path, "w") as f:
+            f.write(self.yaml_string)
