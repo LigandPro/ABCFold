@@ -4,8 +4,8 @@ import json
 import logging
 import os
 
-from af3_mmseqs2.af3_script_utils import (custom_template_argpase_util,
-                                          get_custom_template)
+from af3_mmseqs2.af3_script_utils import get_custom_template
+from af3_mmseqs2.argparse_utils import custom_template_argpase_util
 
 logger = logging.getLogger("logger")
 
