@@ -12,8 +12,8 @@ class BoltzYaml:
     Object to convert an AlphaFold3 json file to a boltzmann yaml file.
     """
 
-    def __init__(self, temp_dir: Union[str, Path]):
-        self.temp_dir = temp_dir
+    def __init__(self, working_dir: Union[str, Path]):
+        self.working_dir = working_dir
         self.yaml_string: str = ""
         self.msa_file: Optional[Union[str, Path]] = None
 
@@ -175,10 +175,10 @@ class BoltzYaml:
 
         if "smiles" in ligand_dict:
             yaml_string += self.add_key_and_value("smiles", ligand_dict["smiles"])
-        elif "ccdCode" in ligand_dict:
-            yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCode"])
+        elif "ccdCodes" in ligand_dict:
+            yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"])
         else:
-            msg = "Ligand must have either a smiles or ccdCode"
+            msg = "Ligand must have either a smiles or ccdCCodes"
             raise ValueError(msg)
 
         return yaml_string
@@ -234,7 +234,7 @@ class BoltzYaml:
             yaml_string += self.add_title(sequence_type)
             self.msa_file = (
                 (
-                    Path(self.temp_dir)
+                    Path(self.working_dir)
                     / f"{''.join(random.choices(string.ascii_letters, k=5))}.a3m"
                 )
                 if "unpairedMsa" in sequence_info_dict

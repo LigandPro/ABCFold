@@ -7,9 +7,14 @@ import sys
 from pathlib import Path
 from typing import Union
 
-from af3_mmseqs2.add_custom_template import custom_template_argpase_util
-from af3_mmseqs2.add_mmseqs_msa import add_msa_to_json, mmseqs2_argparse_util
+from af3_mmseqs2.add_mmseqs_msa import add_msa_to_json
 from af3_mmseqs2.af3_script_utils import setup_logger
+from af3_mmseqs2.argparse_utils import (alphafold_argparse_util,
+                                        boltz_argparse_util,
+                                        custom_template_argpase_util,
+                                        main_argpase_util,
+                                        mmseqs2_argparse_util)
+from af3_mmseqs2.run_boltz import run_boltz
 
 logger = setup_logger()
 
@@ -68,41 +73,11 @@ def generate_af3_cmd(
     """
 
 
-def af3_argparse_main(parser):
-    parser.add_argument("input_json", help="Input sequence file")
-
-    parser.add_argument("output_dir", help="Output directory")
-    parser.add_argument("--output_json", help="Output json file")
-    # make the vartible saved as database_dir
-    parser.add_argument(
-        "--database",
-        help="The Database directory for the generation of the MSA.",
-        dest="database_dir",
-        default=None,
-    )
-    parser.add_argument(
-        "--mmseqs2",
-        help="Use MMseqs2 for MSA",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "--model_params",
-        help="The directory containing the model parameters",
-        default=None,
-    )
-
-    mmseqs2_argparse_util(parser)
-    custom_template_argpase_util(parser)
-
-    return parser
-
-
 def main():
     """Run AlphaFold3"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run AlphaFold3")
+    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai_1")
 
     # Load defaults from config file
     defaults = {}
@@ -113,7 +88,12 @@ def main():
         config.read(str(config_file))
         defaults.update(dict(config.items("Databases")))
 
-    parser = af3_argparse_main(parser)
+    parser = main_argpase_util(parser)
+    parser = alphafold_argparse_util(parser)
+    parser = boltz_argparse_util(parser)
+    parser = mmseqs2_argparse_util(parser)
+    parser = custom_template_argpase_util(parser)
+
     parser.set_defaults(**defaults)
     args = parser.parse_args()
 
@@ -158,12 +138,24 @@ def main():
         )
     else:
         output_json = args.input_json
-    run_alphafold3(
-        input_json=output_json,
-        output_dir=args.output_dir,
-        model_params=args.model_params,
-        database_dir=args.database_dir,
-    )
+
+    args.chai_1 = False
+    if not args.alphafold3 and not args.boltz1 and not args.chai_1:  #
+        args.alphafold3 = True
+
+    if args.alphafold3:
+        run_alphafold3(
+            input_json=output_json,
+            output_dir=args.output_dir,
+            model_params=args.model_params,
+            database_dir=args.database_dir,
+        )
+    if args.boltz1:
+        run_boltz(
+            input_json=output_json,
+            output_dir=args.output_dir,
+            save_input=args.save_input,
+        )
 
 
 if __name__ == "__main__":
