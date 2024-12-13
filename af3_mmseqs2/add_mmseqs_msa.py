@@ -14,10 +14,10 @@ import requests  # type: ignore
 from tqdm.autonotebook import tqdm
 
 from af3_mmseqs2.af3_script_utils import (align_and_map,
-                                          custom_template_argpase_util,
                                           extract_sequence_from_mmcif,
-                                          get_custom_template, get_mmcif,
-                                          mmseqs2_argparse_util)
+                                          get_custom_template, get_mmcif)
+from af3_mmseqs2.argparse_utils import (custom_template_argpase_util,
+                                        mmseqs2_argparse_util)
 
 logger = logging.getLogger("logger")
 
