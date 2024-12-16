@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 
-from af3_mmseqs2.boltz1.process_boltz_output import BoltzOutput
+from af3_mmseqs2.processoutput.boltz import BoltzOutput
 
 
 def test_process_boltz_output(test_data):

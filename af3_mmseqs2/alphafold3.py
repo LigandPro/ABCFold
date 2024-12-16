@@ -13,7 +13,7 @@ from af3_mmseqs2.argparse_utils import (alphafold_argparse_util,
                                         custom_template_argpase_util,
                                         main_argpase_util,
                                         mmseqs2_argparse_util)
-from af3_mmseqs2.boltz1.process_boltz_output import BoltzOutput
+from af3_mmseqs2.processoutput.boltz import BoltzOutput
 from af3_mmseqs2.run_boltz import run_boltz
 
 logger = setup_logger()
