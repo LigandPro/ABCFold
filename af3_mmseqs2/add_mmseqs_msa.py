@@ -28,9 +28,11 @@ TQDM_BAR_FORMAT = (
 
 class MMseqs2Exception(Exception):
     def __init__(self):
+
         msg = "MMseqs2 API is giving errors. Please confirm your input is a valid \
 protein sequence. If error persists, please try again an hour later."
-        super().__init__(msg)
+        logger.error(msg)
+        super().__init__()
 
 
 def add_msa_to_json(
@@ -70,7 +72,8 @@ def add_msa_to_json(
                 if custom_template:
                     if not os.path.exists(custom_template):
                         msg = f"Custom template file {custom_template} not found"
-                        raise FileNotFoundError(msg)
+                        logger.critical(msg)
+                        raise FileNotFoundError()
                     # Can only add templates to protein sequences, so check if there
                     # are multiple protein sequences in the input json
                     if (

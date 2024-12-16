@@ -21,7 +21,8 @@ def run_custom_template(
     af3_json = json.load(open(input_json))
     if not os.path.exists(custom_template):
         msg = f"Custom template file {custom_template} not found"
-        raise FileNotFoundError(msg)
+        logger.critical(msg)
+        raise FileNotFoundError()
 
     for sequence in af3_json["sequences"]:
         if "protein" not in sequence:

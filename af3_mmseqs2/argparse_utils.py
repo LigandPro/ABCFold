@@ -1,3 +1,10 @@
+def main_argpase_util(parser):
+    parser.add_argument("input_json", help="Input sequence file")
+    parser.add_argument("output_dir", help="Output directory")
+
+    return parser
+
+
 def mmseqs2_argparse_util(parser):
     parser.add_argument(
         "--mmseqs2",
@@ -69,13 +76,12 @@ def alphafold_argparse_util(parser):
         action="store_true",
         help="Run Alphafold",
     )
+
+    parser.add_argument(
+        "--override",
+        help="Override the existing output directory, if it exists",
+        action="store_true",
+    )
     # add more arguments here
-
-    return parser
-
-
-def main_argpase_util(parser):
-    parser.add_argument("input_json", help="Input sequence file")
-    parser.add_argument("output_dir", help="Output directory")
 
     return parser

@@ -1,10 +1,13 @@
 import json
+import logging
 import random
 import string
 from pathlib import Path
 from typing import Optional, Union
 
 DELIM = "      "
+
+logger = logging.getLogger("logger")
 
 
 class BoltzYaml:
@@ -144,7 +147,9 @@ class BoltzYaml:
             str: yaml string
         """
         if not Path(msa).exists():
-            raise FileNotFoundError(f"File {msa} does not exist")
+            msg = f"File {msa} does not exist"
+            logger.critical(msg)
+            raise FileNotFoundError()
         return f"{DELIM}{DELIM}msa: {msa}\n"
 
     def add_key_and_value(self, key: str, value: str):
@@ -178,8 +183,10 @@ class BoltzYaml:
         elif "ccdCodes" in ligand_dict:
             yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"])
         else:
+
             msg = "Ligand must have either a smiles or ccdCCodes"
-            raise ValueError(msg)
+            logger.critical(msg)
+            raise ValueError()
 
         return yaml_string
 
