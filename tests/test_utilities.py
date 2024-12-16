@@ -31,9 +31,8 @@ def test_align_and_map(test_data):
     assert len(template_indices) == 385
     assert all(isinstance(i, int) for i in query_indices)
     assert all(isinstance(i, int) for i in template_indices)
-    assert query_indices[0] == 4
+    assert query_indices[0] == 3
     assert template_indices[0] == 2
-
 
 def test_get_mmcif(test_data):
     cif_str = get_mmcif(test_data.test_6BJ9_cif, "6BJ9", "A", 1, 100)

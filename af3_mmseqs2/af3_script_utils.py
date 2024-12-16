@@ -4,7 +4,7 @@ import time
 from io import StringIO
 from typing import Mapping
 
-from Bio import pairwise2
+from Bio import Align
 from Bio.PDB import MMCIFIO, MMCIFParser
 from colorama import Fore, Style
 
@@ -98,9 +98,11 @@ def query_to_hit_mapping(
 def align_and_map(query_seq, template_seq):
     """Align two sequences and map the indices."""
     # Perform pairwise alignment
-    alignments = pairwise2.align.globalxx(query_seq, template_seq)
+    aligner = Align.PairwiseAligner()
+    alignments = aligner.align(query_seq, template_seq)
     alignment = alignments[0]  # Take the best alignment
-    query_aligned, template_aligned, _, _, _ = alignment
+
+    query_aligned, _, template_aligned, _ = alignment._format_generalized().replace(" ", "").split("\n")
 
     # Map the aligned sequences
     aligned_mapping = query_to_hit_mapping(query_aligned, template_aligned)

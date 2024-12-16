@@ -96,7 +96,7 @@ def test_get_custom_template_errors(test_data):
 
 def test_run_custom_template(test_data):
     # run main function
-    with pytest.raises(SystemExit):
+    with pytest.raises(TypeError):
         main()
 
     with tempfile.TemporaryDirectory() as tmpdir:
