@@ -11,8 +11,8 @@ logger = logging.getLogger("logger")
 
 class BoltzOutput:
     def __init__(self, boltz_output_dir: Union[str, Path]):
-        self.boltz_dir = Path(boltz_output_dir)
-        self.name = re.sub(r"boltz_results_", "", self.boltz_dir.name, count=1)
+        self.output_dir = Path(boltz_output_dir)
+        self.name = re.sub(r"boltz_results_", "", self.output_dir.name, count=1)
 
         self.boltz_output = self.process_boltz_output()
 
@@ -26,7 +26,7 @@ class BoltzOutput:
         # find all the directories in the boltz output directory
         # process all the files
         file_groups = {}
-        for pathway in self.boltz_dir.rglob("*"):
+        for pathway in self.output_dir.rglob("*"):
             number = pathway.stem.split(f"{self.name}_model_")[-1]
             if not number.isdigit():
                 continue
