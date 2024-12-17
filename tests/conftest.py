@@ -1,7 +1,10 @@
+import logging
 from collections import namedtuple
 from pathlib import Path
 
 import pytest
+
+logger = logging.getLogger("logger")
 
 
 # Code taken from SliceNDice
@@ -22,7 +25,8 @@ def test_data():
     if not data_dir.exists():
         msg = "Could not find the test_data, Please make sure that you're running the \
 tests from the root of the repository or the tests directory"
-        raise FileNotFoundError(msg)
+        logger.critical(msg)
+        raise FileNotFoundError()
     d = {}
 
     for test_file in data_dir.glob("*"):

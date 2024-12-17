@@ -2,11 +2,14 @@ import logging
 import os
 import time
 from io import StringIO
-from typing import Mapping
+from pathlib import Path
+from typing import Mapping, Union
 
 from Bio import pairwise2
 from Bio.PDB import MMCIFIO, MMCIFParser
 from colorama import Fore, Style
+
+logger = logging.getLogger("logger")
 
 
 # Custom formatter for colored logging
@@ -229,7 +232,8 @@ def get_custom_template(
 
     if not os.path.exists(custom_template):
         msg = f"Custom template file {custom_template} not found"
-        raise FileNotFoundError(msg)
+        logger.critical(msg)
+        raise FileNotFoundError()
 
     chain_info = get_chains(custom_template)
     if len(chain_info) != 1 and not custom_template_chain:
@@ -269,3 +273,19 @@ contain chain {custom_template_chain}"
 
     # Save the output json
     return sequence
+
+
+def make_dir(dir_path: Union[str, Path], overwrite: bool = False):
+    dir_path = Path(dir_path)
+    if dir_path.exists():
+        if overwrite:
+            dir_path.rmdir()
+        else:
+            logger.error(
+                f"Directory {dir_path} already exists, use --override to replace it"
+            )
+            # msg = f"Directory {dir_path} already exists, use --override to replace it"
+            raise FileExistsError()
+
+    dir_path.mkdir(parents=True, exist_ok=True)
+    return dir_path

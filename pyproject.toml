@@ -30,6 +30,8 @@ dependencies = [
     "biopython==1.84",
     "requests",
     "types-requests",
+    "gemmi==0.7.0",
+    "pandas",
 ]
 
 [project.urls]
