@@ -5,7 +5,6 @@ tqdm
 biopython==1.84
 requests
 pandas
-chai_lab
 
 # Development dependencies
 pre-commit

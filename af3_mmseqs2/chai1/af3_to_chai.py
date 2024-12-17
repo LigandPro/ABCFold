@@ -7,9 +7,13 @@ from typing import Dict, Optional, Union
 
 import pandas as pd
 import requests
-from chai_lab.data.parsing.msas.aligned_pqt import \
-    merge_multi_a3m_to_aligned_dataframe
-from chai_lab.data.parsing.msas.data_source import MSADataSource
+
+try:
+    from chai_lab.data.parsing.msas.aligned_pqt import \
+        merge_multi_a3m_to_aligned_dataframe
+    from chai_lab.data.parsing.msas.data_source import MSADataSource
+except ImportError:
+    pass
 
 logger = logging.getLogger(__name__)
 
