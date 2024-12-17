@@ -102,7 +102,8 @@ def align_and_map(query_seq, template_seq):
     alignments = aligner.align(query_seq, template_seq)
     alignment = alignments[0]  # Take the best alignment
 
-    query_aligned, _, template_aligned, _ = alignment._format_generalized().replace(" ", "").split("\n")
+    formatted_alignment = alignment._format_generalized().replace(" ", "")
+    query_aligned, _, template_aligned, _ = formatted_alignment.split("\n")
 
     # Map the aligned sequences
     aligned_mapping = query_to_hit_mapping(query_aligned, template_aligned)
