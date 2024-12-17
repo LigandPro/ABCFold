@@ -13,6 +13,7 @@ from af3_mmseqs2.argparse_utils import (alphafold_argparse_util,
                                         custom_template_argpase_util,
                                         main_argpase_util,
                                         mmseqs2_argparse_util)
+from af3_mmseqs2.processoutput.alphafold3 import AlphafoldOutput
 from af3_mmseqs2.processoutput.boltz import BoltzOutput
 from af3_mmseqs2.run_boltz import run_boltz
 
@@ -120,6 +121,11 @@ def main():
     with open(args.input_json, "r") as f:
         af3_json = json.load(f)
 
+    name = af3_json.get("name")
+    if name is None:
+        logger.error("Input JSON must contain a 'name' field")
+        sys.exit(1)
+
     with tempfile.TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
         if args.mmseqs2:
@@ -158,6 +164,11 @@ def main():
                 model_params=args.model_params,
                 database_dir=args.database_dir,
             )
+
+            # Need to find the name of the af3_dir
+            af3_out_dir = list(Path(args.output_dir).glob(name))[0]
+            _ = AlphafoldOutput(af3_out_dir)
+
         if args.boltz1:
             run_boltz(
                 input_json=run_json,
