@@ -5,8 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Union
 
-import gemmi
 import numpy as np
+from Bio.PDB import MMCIFIO, MMCIFParser
 
 logger = logging.getLogger("logger")
 
@@ -53,29 +53,26 @@ class CifFile(FileBase):
 
     def load_cif_file(self):
         # load the cif file
-        return gemmi.read_structure(str(self.cif_file))
+        parser = MMCIFParser(QUIET=True)
+        return parser.get_structure(self.pathway.stem, self.pathway)
 
     def chain_lengths(self, mode=ModelCount.RESIDUES):
         chains = self.model[0]
         if mode == ModelCount.ALL:
-            return {chain.name: len([atom for atom in chain]) for chain in chains}
+            return {chain.id: len([atom for atom in chain]) for chain in chains}
 
         elif mode == ModelCount.RESIDUES:
 
-            return {chain.name: len(chain) for chain in chains}
+            return {chain.id: len(chain) for chain in chains}
         else:
             msg = "Invalid mode. Please use ModelCount.ALL or ModelCount.RESIDUES"
             logger.critical(msg)
             raise ValueError()
 
     def to_file(self, output_file: Union[str, Path]):
-        # Taken from ccpem_utils/mode/gemmi_model_utils
-        st_new = self.model.clone()
-        st_new.name = st_new.name[:78]
-        if "_entry.id" in st_new.info:
-            st_new.info["_entry.id"] = st_new.info["_entry.id"][:78]
-
-        st_new.make_mmcif_document().write_file(str(output_file))
+        io = MMCIFIO()
+        io.set_structure(self.model)
+        io.save(str(output_file))
 
 
 class ConfidenceJsonFile(FileBase):
