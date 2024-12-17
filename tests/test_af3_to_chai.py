@@ -1,10 +1,10 @@
-import json
 import tempfile
-import pandas as pd
 from pathlib import Path
 
+import pandas as pd
 
 from af3_mmseqs2.chai1.af3_to_chai import ChaiFasta
+
 
 def test_af3_to_chai(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -37,7 +37,7 @@ YSEQFLKESRQLLQQANDLKQG
         assert filename.exists()
         with open(filename, 'r') as f:
             data = f.read()
-        
+
         assert data == reference
 
 
@@ -129,9 +129,9 @@ def test_chai_output_constraints(test_data):
         df = pd.read_csv(filename)
 
         assert list(df.columns) == [
-            'chainA', 'res_idxA', 
-            'chainB', 'res_idxB', 
-            'connection_type', 'confidence', 
+            'chainA', 'res_idxA',
+            'chainB', 'res_idxB',
+            'connection_type', 'confidence',
             'min_distance_angstrom', 'max_distance_angstrom',
             'comment', 'restraint_id'
             ]
@@ -156,9 +156,8 @@ def test_chai_output_msa(test_data):
 
         chai_fasta.json_to_fasta(test_data.test_inputAmsa_json)
 
-        reference = []
-
-        filename = Path(temp_dir) / "1573f21c6a9eb5fb0727d8661eef242d8c09a481fc008b01ba22596b3bf31151.aligned.pqt"
+        filename = Path(temp_dir) / "1573f21c6a9eb5fb0727d8661eef242d8c09a481f\
+c008b01ba22596b3bf31151.aligned.pqt"
 
         assert filename.exists()
 
@@ -169,9 +168,11 @@ def test_chai_output_msa(test_data):
 
         assert len(df) == 4256
 
-        assert df.iloc[0]['sequence'] == "GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSV\
-PINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANG\
-LHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG"
+        assert df.iloc[0]['sequence'] == "GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGL\
+FARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHT\
+GAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLS\
+KQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKV\
+RDWFGDYSEQFLKESRQLLQQANDLKQG"
         assert df.iloc[0]['source_database'] == "query"
         assert df.iloc[0]['pairing_key'] == ""
         assert df.iloc[0]['comment'] == "101"
@@ -184,4 +185,4 @@ def test_ccd_to_smiles():
     assert smiles == "CCCCCCCCCCCC(O)=O"
 
     smiles = chai_fasta.ccd_to_smiles("NOT_A_CCD")
-    assert smiles == None
+    assert smiles is None
