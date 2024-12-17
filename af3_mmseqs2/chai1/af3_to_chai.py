@@ -2,15 +2,14 @@ import hashlib
 import json
 import logging
 import tempfile
-import pandas as pd
 from pathlib import Path
-import requests
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
+import pandas as pd
+import requests
 from chai_lab.data.parsing.msas.aligned_pqt import \
     merge_multi_a3m_to_aligned_dataframe
-from chai_lab.data.parsing.msas.data_source import \
-    MSADataSource
+from chai_lab.data.parsing.msas.data_source import MSADataSource
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ class ChaiFasta:
         self.constraints = Path(working_dir) / 'chai1_constraints.csv'
         self.msa_file: Optional[Union[str, Path]] = None
 
-    def bonded_pairs_to_file(self, bonded_pairs, fasta_data):
+    def bonded_pairs_to_file(self, bonded_pairs, fasta_data: dict):
         """
         Converts bonded pairs to a csv file compatible with CHAI-1
 
@@ -39,9 +38,9 @@ class ChaiFasta:
         """
 
         constraints_headers = [
-            "chainA", "res_idxA", "chainB", "res_idxB", 
-            "connection_type", "confidence", 
-            "min_distance_angstrom", "max_distance_angstrom", 
+            "chainA", "res_idxA", "chainB", "res_idxB",
+            "connection_type", "confidence",
+            "min_distance_angstrom", "max_distance_angstrom",
             "comment", "restraint_id"
         ]
         df = pd.DataFrame(columns=constraints_headers)
@@ -55,15 +54,15 @@ class ChaiFasta:
                 pair_data.append(chain_id)
                 pair_data.append(f"{res}{seq_idx}")
             row_data = [
-                pair_data[0], 
-                pair_data[1], 
-                pair_data[2], 
-                pair_data[3], 
-                'contact', 
-                1.0, 
-                0.0, 
-                5.5, 
-                'No comment', 
+                pair_data[0],
+                pair_data[1],
+                pair_data[2],
+                pair_data[3],
+                'contact',
+                1.0,
+                0.0,
+                5.5,
+                'No comment',
                 f'restraint_{i}']
             df.loc[i] = row_data
         df.to_csv(self.constraints, sep=',', index=False)
@@ -85,7 +84,7 @@ class ChaiFasta:
             f.write(msa)
             f.flush()
             df = merge_multi_a3m_to_aligned_dataframe(
-                msa_a3m_files={Path(f.name): MSADataSource.UNIPROT}, 
+                msa_a3m_files={Path(f.name): MSADataSource.UNIPROT},
                 insert_keys_for_sources='uniprot'
             )
 
@@ -94,11 +93,13 @@ class ChaiFasta:
 
     def json_to_fasta(self, json_file_or_dict: Union[dict, str, Path]):
         """
-        Main function to convert an AlphaFold3 json to a fasta file compatible with CHAI-1
+        Main function to convert an AlphaFold3 json to a fasta file
+        compatible with CHAI-1
 
         Args:
-            json_file_or_dict (Union[dict, str, Path]): json file or dictionary
-        
+            json_file_or_dict (Union[dict, str, Path]):
+            json file or dictionary
+
         Returns:
             None
         """
@@ -109,17 +110,28 @@ class ChaiFasta:
         else:
             json_dict = json_file_or_dict
 
-        fasta_data = {}
+        fasta_data: Dict[str, str] = {}
         with open(self.fasta, 'w') as f:
             for seq in json_dict['sequences']:
                 if 'protein' in seq:
-                    protein_str, fasta_data = self.add_protein(seq, fasta_data)
+                    protein_str, fasta_data = self.add_protein(
+                        seq,
+                        fasta_data
+                        )
                     f.write(protein_str)
                 if 'rna' in seq:
-                    nucleotide_str, fasta_data = self.add_nucleotide(seq, 'rna', fasta_data)
+                    nucleotide_str, fasta_data = self.add_nucleotide(
+                        seq,
+                        'rna',
+                        fasta_data
+                        )
                     f.write(nucleotide_str)
                 if 'dna' in seq:
-                    nucleotide_str, fasta_data = self.add_nucleotide(seq, 'dna', fasta_data)
+                    nucleotide_str, fasta_data = self.add_nucleotide(
+                        seq,
+                        'dna',
+                        fasta_data
+                        )
                     f.write(nucleotide_str)
                 if 'ligand' in seq:
                     ligand_str = self.add_ligand(seq)
@@ -135,10 +147,15 @@ class ChaiFasta:
         if isinstance(prot_id, list):
             protein_str = ""
             for i in seq['protein']['id']:
-               temp_prot_str, fasta_data = self._add_protein(seq, i, fasta_data)
-               protein_str += temp_prot_str
+                temp_prot_str, fasta_data = self._add_protein(
+                    seq,
+                    i,
+                    fasta_data)
+                protein_str += temp_prot_str
         else:
-            protein_str, fasta_data = self._add_protein(seq, prot_id, fasta_data)
+            protein_str, fasta_data = self._add_protein(seq,
+                                                        prot_id,
+                                                        fasta_data)
         return protein_str, fasta_data
 
     def _add_protein(self, seq: dict, prot_id: str, fasta_data: dict):
@@ -159,10 +176,16 @@ class ChaiFasta:
         if isinstance(nucl_id, list):
             nucleotide_str = ""
             for i in seq[seq_type]['id']:
-                temp_nucl_str, fasta_data = self._add_nucleotide(seq, seq_type, i, fasta_data)
+                temp_nucl_str, fasta_data = self._add_nucleotide(seq,
+                                                                 seq_type,
+                                                                 i,
+                                                                 fasta_data)
                 nucleotide_str += temp_nucl_str
         else:
-            nucleotide_str, fasta_data = self._add_nucleotide(seq, seq_type, nucl_id, fasta_data)
+            nucleotide_str, fasta_data = self._add_nucleotide(seq,
+                                                              seq_type,
+                                                              nucl_id,
+                                                              fasta_data)
 
         return nucleotide_str, fasta_data
 
@@ -171,7 +194,6 @@ class ChaiFasta:
         fasta_data[nucl_id] = seq[seq_type]['sequence']
         return nucleotide_str, fasta_data
 
-    
     def ccd_to_smiles(self, ccd_id: str):
         url = f"http://cactus.nci.nih.gov/chemical/structure/{ccd_id}/smiles"
         response = requests.get(url)
@@ -181,7 +203,6 @@ class ChaiFasta:
         else:
             logger.warning(f"Could not retrieve SMILES for {ccd_id}")
             return None
-
 
     def add_ligand(self, seq: dict):
         lig_id = seq['ligand']['id']
