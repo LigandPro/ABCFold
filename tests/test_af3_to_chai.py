@@ -6,8 +6,6 @@ import pytest
 
 from af3_mmseqs2.chai1.af3_to_chai import ChaiFasta
 
-chai_lab = pytest.importorskip("chai_lab")
-
 
 def test_af3_to_chai(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -153,8 +151,8 @@ def test_chai_output_constraints(test_data):
         assert df.iloc[0]['restraint_id'] == "restraint_0"
 
 
-@pytest.mark.skipif(not hasattr(pytest, 'chai_lab'), reason="chai_lab module not found")
 def test_chai_output_msa(test_data):
+    pytest.importorskip("chai_lab")
     with tempfile.TemporaryDirectory() as temp_dir:
         chai_fasta = ChaiFasta(temp_dir)
 
