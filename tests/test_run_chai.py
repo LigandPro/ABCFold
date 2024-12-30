@@ -21,7 +21,7 @@ def test_generate_chai_command():
         )
 
     assert "chai" in cmd
-    assert "lab" in cmd
+    assert "fold" in cmd
     assert input_fasta in cmd
     assert msa_dir in cmd
     assert constraints in cmd

@@ -67,7 +67,7 @@ def generate_chai_command(
     input_constraints: Union[str, Path],
     output_dir: Union[str, Path]
 ):
-    cmd = ['chai', 'lab', input_fasta]
+    cmd = ['chai', 'fold', input_fasta]
 
     if Path(msa_dir).exists():
         cmd += ["--msa-directory", str(msa_dir)]
@@ -82,6 +82,6 @@ def generate_chai_command(
 def generate_test_command():
     return [
         "chai",
-        "lab",
+        "fold",
         "--help",
     ]
