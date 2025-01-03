@@ -4,8 +4,9 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from af3_mmseqs2.add_custom_template import main, run_custom_template
-from af3_mmseqs2.af3_script_utils import get_custom_template
+
+from src.add_custom_template import main, run_custom_template
+from src.af3_script_utils import get_custom_template
 
 
 def test_get_custom_template(test_data):

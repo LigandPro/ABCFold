@@ -3,7 +3,7 @@ import subprocess
 
 def test_alphafold3_script():
     with subprocess.Popen(
-        "python -m af3_mmseqs2.alphafold3 --help",
+        "python -m src.alphafold3 --help",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -17,7 +17,7 @@ def test_alphafold3_script():
 
 def test_add_custom_template_script():
     with subprocess.Popen(
-        "python -m af3_mmseqs2.add_custom_template --help",
+        "python -m src.add_custom_template --help",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -31,7 +31,7 @@ def test_add_custom_template_script():
 
 def test_add_mmseqs_msa_script():
     with subprocess.Popen(
-        "python -m af3_mmseqs2.add_mmseqs_msa --help",
+        "python -m src.add_mmseqs_msa --help",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

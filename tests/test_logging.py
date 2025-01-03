@@ -1,5 +1,6 @@
 import pytest  # noqa: F401
-from af3_mmseqs2.af3_script_utils import setup_logger
+
+from src.af3_script_utils import setup_logger
 
 
 def test_logging():

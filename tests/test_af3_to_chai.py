@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from af3_mmseqs2.chai1.af3_to_chai import ChaiFasta
+
+from src.chai1.af3_to_chai import ChaiFasta
 
 
 def test_af3_to_chai(test_data):

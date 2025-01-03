@@ -2,7 +2,8 @@ import os
 import tempfile
 
 import pytest
-from af3_mmseqs2.run_chai1 import generate_chai_command, run_chai
+
+from src.run_chai1 import generate_chai_command, run_chai
 
 
 def test_generate_chai_command():
