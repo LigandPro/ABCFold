@@ -17,7 +17,7 @@ Scripts to add MMseqs2 MSA/templates to an AlphaFold3 input JSON and/or add cust
 To install the required dependencies, run:
 
 ```bash
-pip install .
+python -m pip install .
 ```
 
 ## Development
@@ -25,9 +25,9 @@ pip install .
 If you wish to help develop this package, you can install the development dependencies by running:
 
 ```bash
-pip install -e .
-pip install -r requirements-dev.txt
-pre-commit install
+python -m pip install -e .
+python -m pip install -r requirements-dev.txt
+python -m pre-commit install
 ```
 
 ## Usage

@@ -10,7 +10,9 @@
         }
       }
     ],
-
+    "bondedAtomPairs": [
+    [["A", 1, "CA"], ["A", 20, "CA"]]
+  ],
     "dialect": "alphafold3",
     "version": 1
   }

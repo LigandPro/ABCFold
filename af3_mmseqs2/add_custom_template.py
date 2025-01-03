@@ -4,8 +4,8 @@ import json
 import logging
 import os
 
-from af3_mmseqs2.af3_script_utils import (custom_template_argpase_util,
-                                          get_custom_template)
+from af3_mmseqs2.af3_script_utils import get_custom_template
+from af3_mmseqs2.argparse_utils import custom_template_argpase_util
 
 logger = logging.getLogger("logger")
 
@@ -21,7 +21,8 @@ def run_custom_template(
     af3_json = json.load(open(input_json))
     if not os.path.exists(custom_template):
         msg = f"Custom template file {custom_template} not found"
-        raise FileNotFoundError(msg)
+        logger.critical(msg)
+        raise FileNotFoundError()
 
     for sequence in af3_json["sequences"]:
         if "protein" not in sequence:

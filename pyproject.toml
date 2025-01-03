@@ -30,13 +30,18 @@ dependencies = [
     "biopython==1.84",
     "requests",
     "types-requests",
+    "pandas",
 ]
 
 [project.urls]
 homepage = "https://github.com/rigdenlab/af3_mmseqs_scripts"
 
 [tool.setuptools]
-packages = ["af3_mmseqs2"]
+packages = [
+    "af3_mmseqs2",
+    "af3_mmseqs2.boltz1",
+    "af3_mmseqs2.processoutput",
+]
 include-package-data = true
 
 [tool.setuptools.package-data]
