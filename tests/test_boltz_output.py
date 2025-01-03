@@ -6,7 +6,7 @@ from af3_mmseqs2.processoutput.boltz import BoltzOutput
 
 def test_process_boltz_output(test_data):
     boltz_output = BoltzOutput(test_data.test_boltz_results_boltz_test_)
-    assert str(boltz_output.boltz_dir) == test_data.test_boltz_results_boltz_test_
+    assert str(boltz_output.output_dir) == test_data.test_boltz_results_boltz_test_
 
     assert boltz_output.name == "boltz_test"
 
