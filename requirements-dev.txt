@@ -4,6 +4,7 @@ colorama
 tqdm
 biopython==1.84
 requests
+pandas
 
 # Development dependencies
 pre-commit

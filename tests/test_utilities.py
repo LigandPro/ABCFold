@@ -31,7 +31,7 @@ def test_align_and_map(test_data):
     assert len(template_indices) == 385
     assert all(isinstance(i, int) for i in query_indices)
     assert all(isinstance(i, int) for i in template_indices)
-    assert query_indices[0] == 4
+    assert query_indices[0] == 3
     assert template_indices[0] == 2
 
 

@@ -1,0 +1,42 @@
+{
+    "name": "2PV7",
+    "modelSeeds": [1],
+    "sequences": [
+      {
+        "protein": {
+          "id": ["A", "B"],
+          "sequence": "GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG"
+        }
+    },
+    {
+        "ligand":{
+            "id": ["C", "D"],
+            "ccdCode": ["ATP"]
+        }
+    },
+    {
+        "ligand":{
+            "id": "E",
+            "smiles": "CC(=O)OC1C[NH+]2CCC1CC2"
+
+      }
+    },
+    {
+        "ligand":{
+            "id": "F",
+            "ccdCode": "NA+"
+
+      }
+    },
+    {
+        "ligand":{
+            "id": ["G", "H"],
+            "smiles": "CCCCCCCCCCCC(O)=O"
+
+      }
+    }
+    ],
+
+    "dialect": "alphafold3",
+    "version": 1
+  }

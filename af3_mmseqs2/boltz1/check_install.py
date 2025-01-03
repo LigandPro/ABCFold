@@ -8,12 +8,12 @@ logger = logging.getLogger("logger")
 def check_boltz1():
     try:
         import boltz as _  # noqa F401
-    except ImportError or ModuleNotFoundError:
+    except (ImportError, ModuleNotFoundError):
         try:
             import chai_lab as _  # noqa F401
 
             no_deps = True
-        except ImportError or ModuleNotFoundError:
+        except (ImportError, ModuleNotFoundError):
             no_deps = False
         logger.info("Installing boltz package")
         logger.info("No dependencies will be installed") if no_deps else None
@@ -35,12 +35,12 @@ def check_boltz1():
 def check_chai1():
     try:
         import chai_lab as _  # noqa F401
-    except ImportError or ModuleNotFoundError:
+    except (ImportError, ModuleNotFoundError):
         try:
             import boltz1 as _  # noqa F401
 
             no_deps = True
-        except ImportError or ModuleNotFoundError:
+        except (ImportError, ModuleNotFoundError):
             no_deps = False
         logger.info("Installing chai_lab package")
         logger.info("No dependencies will be installed") if no_deps else None

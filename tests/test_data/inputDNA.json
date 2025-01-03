@@ -1,11 +1,11 @@
 {
-    "name": "RNA_example",
+    "name": "DNA_example",
     "modelSeeds": [1],
     "sequences": [
       {
-        "rna": {
-          "id": "A",
-          "sequence": "AGCU"
+        "dna": {
+          "id": ["A", "B"],
+          "sequence": "AGCT"
         }
       }
     ],
