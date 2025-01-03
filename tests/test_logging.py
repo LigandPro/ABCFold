@@ -1,5 +1,4 @@
 import pytest  # noqa: F401
-
 from af3_mmseqs2.af3_script_utils import setup_logger
 
 

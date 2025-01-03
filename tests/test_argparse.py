@@ -1,9 +1,8 @@
 import argparse
 
-from af3_mmseqs2.argparse_utils import (alphafold_argparse_util,
-                                        custom_template_argpase_util,
-                                        main_argpase_util,
-                                        mmseqs2_argparse_util)
+from src.argparse_utils import (alphafold_argparse_util,
+                                custom_template_argpase_util,
+                                main_argpase_util, mmseqs2_argparse_util)
 
 
 def test_mmseqs2_argparse_util():

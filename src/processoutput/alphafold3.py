@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 
-from af3_mmseqs2.processoutput.utils import CifFile, ConfidenceJsonFile
+from src.processoutput.utils import CifFile, ConfidenceJsonFile
 
 
 class AlphafoldOutput:

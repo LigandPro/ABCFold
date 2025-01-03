@@ -2,7 +2,6 @@ import os
 import tempfile
 
 import pytest
-
 from af3_mmseqs2.run_boltz import generate_boltz_command, run_boltz
 
 

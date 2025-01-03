@@ -5,8 +5,8 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
-from af3_mmseqs2.boltz1.check_install import check_chai1
-from af3_mmseqs2.chai1.af3_to_chai import ChaiFasta
+from src.boltz1.check_install import check_chai1
+from src.chai1.af3_to_chai import ChaiFasta
 
 logger = logging.getLogger("logger")
 
@@ -37,11 +37,7 @@ def run_chai(
         out_constraints = chai_fasta.constraints
 
         cmd = (
-            generate_chai_command(
-                out_fasta,
-                msa_dir,
-                out_constraints,
-                output_dir)
+            generate_chai_command(out_fasta, msa_dir, out_constraints, output_dir)
             if not test
             else generate_test_command()
         )
@@ -65,9 +61,9 @@ def generate_chai_command(
     input_fasta: Union[str, Path],
     msa_dir: Union[str, Path],
     input_constraints: Union[str, Path],
-    output_dir: Union[str, Path]
+    output_dir: Union[str, Path],
 ):
-    cmd = ['chai', 'fold', input_fasta]
+    cmd = ["chai", "fold", input_fasta]
 
     if Path(msa_dir).exists():
         cmd += ["--msa-directory", str(msa_dir)]

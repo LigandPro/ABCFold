@@ -1,4 +1,4 @@
-from af3_mmseqs2.processoutput.alphafold3 import AlphafoldOutput
+from src.processoutput.alphafold3 import AlphafoldOutput
 
 
 def test_process_boltz_output(test_data):

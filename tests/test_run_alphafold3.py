@@ -3,7 +3,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from af3_mmseqs2.alphafold3 import generate_af3_cmd, run_alphafold3
 
 

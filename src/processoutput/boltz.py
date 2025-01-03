@@ -3,8 +3,8 @@ import re
 from pathlib import Path
 from typing import Union
 
-from af3_mmseqs2.processoutput.utils import (CifFile, ConfidenceJsonFile,
-                                             FileTypes, ModelCount, NpzFile)
+from src.processoutput.utils import (CifFile, ConfidenceJsonFile, FileTypes,
+                                     ModelCount, NpzFile)
 
 logger = logging.getLogger("logger")
 

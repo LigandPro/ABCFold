@@ -13,11 +13,10 @@ from typing import Sequence
 import requests  # type: ignore
 from tqdm.autonotebook import tqdm
 
-from af3_mmseqs2.af3_script_utils import (align_and_map,
-                                          extract_sequence_from_mmcif,
-                                          get_custom_template, get_mmcif)
-from af3_mmseqs2.argparse_utils import (custom_template_argpase_util,
-                                        mmseqs2_argparse_util)
+from src.af3_script_utils import (align_and_map, extract_sequence_from_mmcif,
+                                  get_custom_template, get_mmcif)
+from src.argparse_utils import (custom_template_argpase_util,
+                                mmseqs2_argparse_util)
 
 logger = logging.getLogger("logger")
 

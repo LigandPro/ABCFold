@@ -1,6 +1,5 @@
-from af3_mmseqs2.af3_script_utils import (align_and_map,
-                                          extract_sequence_from_mmcif,
-                                          get_chains, get_mmcif)
+from src.af3_script_utils import (align_and_map, extract_sequence_from_mmcif,
+                                  get_chains, get_mmcif)
 
 
 def test_get_chains(test_data):
