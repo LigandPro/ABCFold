@@ -38,19 +38,19 @@ homepage = "https://github.com/rigdenlab/ABCFold"
 
 [tool.setuptools]
 packages = [
-    "src",
-    "src.boltz1",
-    "src.processoutput",
+    "abcfold",
+    "abcfold.boltz1",
+    "abcfold.processoutput",
 ]
 include-package-data = true
 
 [tool.setuptools.package-data]
-src = ["data/config.ini"]
+abcfold = ["data/config.ini"]
 
 [project.scripts]
-abcfold = "src.abcfold:main"
-mmseqs2msa = "src.add_mmseqs_msa:main"
-custom_templates = "src.add_custom_template:main"
+abcfold = "abcfold.abcfold:main"
+mmseqs2msa = "abcfold.add_mmseqs_msa:main"
+custom_templates = "abcfold.add_custom_template:main"
 
 [tool.flake8]
 max-line-length = 88

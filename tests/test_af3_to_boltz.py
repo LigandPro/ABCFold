@@ -2,7 +2,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from src.boltz1.af3_to_boltz1 import DELIM, BoltzYaml
+from abcfold.boltz1.af3_to_boltz1 import DELIM, BoltzYaml
 
 
 def test_af3_to_boltz(test_data):

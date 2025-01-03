@@ -32,7 +32,7 @@ jobs:
         pre-commit run --all-files
     - name: Test with coverage
       run: |
-        coverage run --source=src --module pytest --verbose tests && coverage report --show-missing
+        coverage run --source=abcfold --module pytest --verbose tests && coverage report --show-missing
     - name: Generate coverage badge
       run: |
         pip install coverage-badge

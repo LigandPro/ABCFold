@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 
-from src.processoutput.boltz import BoltzOutput
+from abcfold.processoutput.boltz import BoltzOutput
 
 
 def test_process_boltz_output(test_data):

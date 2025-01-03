@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from src.run_chai1 import generate_chai_command, run_chai
+from abcfold.run_chai1 import generate_chai_command, run_chai
 
 
 def test_generate_chai_command():
