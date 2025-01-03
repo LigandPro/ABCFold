@@ -1,6 +1,6 @@
 import pytest  # noqa: F401
 
-from src.af3_script_utils import setup_logger
+from abcfold.af3_script_utils import setup_logger
 
 
 def test_logging():

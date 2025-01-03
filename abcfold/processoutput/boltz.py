@@ -3,8 +3,8 @@ import re
 from pathlib import Path
 from typing import Union
 
-from src.processoutput.utils import (CifFile, ConfidenceJsonFile, FileTypes,
-                                     ModelCount, NpzFile)
+from abcfold.processoutput.utils import (CifFile, ConfidenceJsonFile,
+                                         FileTypes, ModelCount, NpzFile)
 
 logger = logging.getLogger("logger")
 

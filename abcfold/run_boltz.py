@@ -5,8 +5,8 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
-from src.boltz1.af3_to_boltz1 import BoltzYaml
-from src.boltz1.check_install import check_boltz1
+from abcfold.boltz1.af3_to_boltz1 import BoltzYaml
+from abcfold.boltz1.check_install import check_boltz1
 
 logger = logging.getLogger("logger")
 

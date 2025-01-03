@@ -6,14 +6,15 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
-from src.add_mmseqs_msa import add_msa_to_json
-from src.af3_script_utils import make_dir, setup_logger
-from src.argparse_utils import (alphafold_argparse_util, boltz_argparse_util,
-                                custom_template_argpase_util,
-                                main_argpase_util, mmseqs2_argparse_util)
-from src.processoutput.alphafold3 import AlphafoldOutput
-from src.processoutput.boltz import BoltzOutput
-from src.run_boltz import run_boltz
+from abcfold.add_mmseqs_msa import add_msa_to_json
+from abcfold.af3_script_utils import make_dir, setup_logger
+from abcfold.argparse_utils import (alphafold_argparse_util,
+                                    boltz_argparse_util,
+                                    custom_template_argpase_util,
+                                    main_argpase_util, mmseqs2_argparse_util)
+from abcfold.processoutput.alphafold3 import AlphafoldOutput
+from abcfold.processoutput.boltz import BoltzOutput
+from abcfold.run_boltz import run_boltz
 
 logger = setup_logger()
 

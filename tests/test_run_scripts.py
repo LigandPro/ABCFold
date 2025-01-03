@@ -3,7 +3,7 @@ import subprocess
 
 def test_alphafold3_script():
     with subprocess.Popen(
-        "python -m src.alphafold3 --help",
+        "python -m abcfold --help",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

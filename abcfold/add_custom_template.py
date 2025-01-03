@@ -4,8 +4,8 @@ import json
 import logging
 import os
 
-from src.af3_script_utils import get_custom_template
-from src.argparse_utils import custom_template_argpase_util
+from abcfold.af3_script_utils import get_custom_template
+from abcfold.argparse_utils import custom_template_argpase_util
 
 logger = logging.getLogger("logger")
 
