@@ -14,10 +14,10 @@ import requests  # type: ignore
 from tqdm.autonotebook import tqdm
 
 from af3_mmseqs2.af3_script_utils import (align_and_map,
-                                          custom_template_argpase_util,
                                           extract_sequence_from_mmcif,
-                                          get_custom_template, get_mmcif,
-                                          mmseqs2_argparse_util)
+                                          get_custom_template, get_mmcif)
+from af3_mmseqs2.argparse_utils import (custom_template_argpase_util,
+                                        mmseqs2_argparse_util)
 
 logger = logging.getLogger("logger")
 
@@ -28,9 +28,11 @@ TQDM_BAR_FORMAT = (
 
 class MMseqs2Exception(Exception):
     def __init__(self):
+
         msg = "MMseqs2 API is giving errors. Please confirm your input is a valid \
 protein sequence. If error persists, please try again an hour later."
-        super().__init__(msg)
+        logger.error(msg)
+        super().__init__()
 
 
 def add_msa_to_json(
@@ -70,7 +72,8 @@ def add_msa_to_json(
                 if custom_template:
                     if not os.path.exists(custom_template):
                         msg = f"Custom template file {custom_template} not found"
-                        raise FileNotFoundError(msg)
+                        logger.critical(msg)
+                        raise FileNotFoundError()
                     # Can only add templates to protein sequences, so check if there
                     # are multiple protein sequences in the input json
                     if (

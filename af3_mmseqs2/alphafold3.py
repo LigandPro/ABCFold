@@ -1,15 +1,21 @@
-# start by finding the directory where the alphafold3.py script is located
-
 import configparser
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Union
 
-from af3_mmseqs2.add_custom_template import custom_template_argpase_util
-from af3_mmseqs2.add_mmseqs_msa import add_msa_to_json, mmseqs2_argparse_util
-from af3_mmseqs2.af3_script_utils import setup_logger
+from af3_mmseqs2.add_mmseqs_msa import add_msa_to_json
+from af3_mmseqs2.af3_script_utils import make_dir, setup_logger
+from af3_mmseqs2.argparse_utils import (alphafold_argparse_util,
+                                        boltz_argparse_util,
+                                        custom_template_argpase_util,
+                                        main_argpase_util,
+                                        mmseqs2_argparse_util)
+from af3_mmseqs2.processoutput.alphafold3 import AlphafoldOutput
+from af3_mmseqs2.processoutput.boltz import BoltzOutput
+from af3_mmseqs2.run_boltz import run_boltz
 
 logger = setup_logger()
 
@@ -21,6 +27,7 @@ def run_alphafold3(
     database_dir: Union[str, Path],
     interactive: bool = True,
 ) -> None:
+
     input_json = Path(input_json)
     output_dir = Path(output_dir)
     cmd = generate_af3_cmd(
@@ -35,7 +42,7 @@ def run_alphafold3(
     with subprocess.Popen(
         cmd, shell=True, stdout=sys.stdout, stderr=subprocess.PIPE
     ) as p:
-        stdout, stderr = p.communicate()
+        _, stderr = p.communicate()
         if p.returncode != 0:
             logger.error(stderr.decode())
             raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
@@ -67,41 +74,11 @@ def generate_af3_cmd(
     """
 
 
-def af3_argparse_main(parser):
-    parser.add_argument("input_json", help="Input sequence file")
-
-    parser.add_argument("output_dir", help="Output directory")
-    parser.add_argument("--output_json", help="Output json file")
-    # make the vartible saved as database_dir
-    parser.add_argument(
-        "--database",
-        help="The Database directory for the generation of the MSA.",
-        dest="database_dir",
-        default=None,
-    )
-    parser.add_argument(
-        "--mmseqs2",
-        help="Use MMseqs2 for MSA",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "--model_params",
-        help="The directory containing the model parameters",
-        default=None,
-    )
-
-    mmseqs2_argparse_util(parser)
-    custom_template_argpase_util(parser)
-
-    return parser
-
-
 def main():
     """Run AlphaFold3"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run AlphaFold3")
+    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai_1")
 
     # Load defaults from config file
     defaults = {}
@@ -112,9 +89,16 @@ def main():
         config.read(str(config_file))
         defaults.update(dict(config.items("Databases")))
 
-    parser = af3_argparse_main(parser)
+    parser = main_argpase_util(parser)
+    parser = alphafold_argparse_util(parser)
+    parser = boltz_argparse_util(parser)
+    parser = mmseqs2_argparse_util(parser)
+    parser = custom_template_argpase_util(parser)
+
     parser.set_defaults(**defaults)
     args = parser.parse_args()
+
+    make_dir(args.output_dir)
 
     updated_config = False
     if args.model_params != defaults["model_params"]:
@@ -137,32 +121,62 @@ def main():
     with open(args.input_json, "r") as f:
         af3_json = json.load(f)
 
-    if args.mmseqs2:
-        af3_json = add_msa_to_json(
-            input_json=args.input_json,
-            templates=args.templates,
-            num_templates=args.num_templates,
-            custom_template=args.custom_template,
-            custom_template_chain=args.custom_template_chain,
-            target_id=args.target_id,
-            af3_json=af3_json,
-            output_json=args.output_json,
-            to_file=True,
-        )
+    name = af3_json.get("name")
+    if name is None:
+        logger.error("Input JSON must contain a 'name' field")
+        sys.exit(1)
 
-        output_json = (
-            args.input_json.replace(".json", "_mmseqs.json")
-            if args.output_json is None
-            else args.output_json
-        )
-    else:
-        output_json = args.input_json
-    run_alphafold3(
-        input_json=output_json,
-        output_dir=args.output_dir,
-        model_params=args.model_params,
-        database_dir=args.database_dir,
-    )
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        temp_dir = Path(temp_dir_str)
+        if args.mmseqs2:
+            if not args.output_json:
+                input_json = Path(args.input_json)
+                run_json = temp_dir.joinpath(
+                    input_json.name.replace(".json", "_mmseqs.json")
+                )
+            else:
+                run_json = Path(args.output_json)
+
+            af3_json = add_msa_to_json(
+                input_json=input_json,
+                templates=args.templates,
+                num_templates=args.num_templates,
+                custom_template=args.custom_template,
+                custom_template_chain=args.custom_template_chain,
+                target_id=args.target_id,
+                af3_json=af3_json,
+                output_json=run_json,
+                to_file=True,
+            )
+
+        else:
+            run_json = Path(args.input_json)
+
+        args.chai_1 = False
+        if not args.alphafold3 and not args.boltz1 and not args.chai_1:  #
+            args.alphafold3 = True
+
+        if args.alphafold3:
+
+            run_alphafold3(
+                input_json=run_json,
+                output_dir=args.output_dir,
+                model_params=args.model_params,
+                database_dir=args.database_dir,
+            )
+
+            # Need to find the name of the af3_dir
+            af3_out_dir = list(Path(args.output_dir).glob(name))[0]
+            _ = AlphafoldOutput(af3_out_dir)
+
+        if args.boltz1:
+            run_boltz(
+                input_json=run_json,
+                output_dir=args.output_dir,
+                save_input=args.save_input,
+            )
+            bolt_out_dir = list(Path(args.output_dir).glob("boltz_results*"))[0]
+            _ = BoltzOutput(bolt_out_dir)
 
 
 if __name__ == "__main__":

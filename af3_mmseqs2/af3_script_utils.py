@@ -2,11 +2,14 @@ import logging
 import os
 import time
 from io import StringIO
-from typing import Mapping
+from pathlib import Path
+from typing import Mapping, Union
 
 from Bio import pairwise2
 from Bio.PDB import MMCIFIO, MMCIFParser
 from colorama import Fore, Style
+
+logger = logging.getLogger("logger")
 
 
 # Custom formatter for colored logging
@@ -202,32 +205,6 @@ def get_mmcif(
     return string_io.getvalue()
 
 
-def mmseqs2_argparse_util(parser):
-    parser.add_argument(
-        "--templates", action="store_true", help="Include templates in the output json"
-    )
-    parser.add_argument(
-        "--num_templates",
-        type=int,
-        default=20,
-        help="Number of templates to include in the output json",
-    )
-    return parser
-
-
-def custom_template_argpase_util(parser):
-    parser.add_argument("--target_id", help="Target id relating to the custom template")
-    parser.add_argument(
-        "--custom_template", help="Custom template to include in the output json"
-    )
-    parser.add_argument(
-        "--custom_template_chain",
-        help="Custom template chain to include in the output json",
-    )
-
-    return parser
-
-
 # runs for each sequence in the input json
 def get_custom_template(
     sequence,
@@ -255,7 +232,8 @@ def get_custom_template(
 
     if not os.path.exists(custom_template):
         msg = f"Custom template file {custom_template} not found"
-        raise FileNotFoundError(msg)
+        logger.critical(msg)
+        raise FileNotFoundError()
 
     chain_info = get_chains(custom_template)
     if len(chain_info) != 1 and not custom_template_chain:
@@ -295,3 +273,19 @@ contain chain {custom_template_chain}"
 
     # Save the output json
     return sequence
+
+
+def make_dir(dir_path: Union[str, Path], overwrite: bool = False):
+    dir_path = Path(dir_path)
+    if dir_path.exists():
+        if overwrite:
+            dir_path.rmdir()
+        else:
+            logger.error(
+                f"Directory {dir_path} already exists, use --override to replace it"
+            )
+            # msg = f"Directory {dir_path} already exists, use --override to replace it"
+            raise FileExistsError()
+
+    dir_path.mkdir(parents=True, exist_ok=True)
+    return dir_path
