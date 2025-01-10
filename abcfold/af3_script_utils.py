@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import time
 from io import StringIO
 from pathlib import Path
@@ -282,12 +283,11 @@ def make_dir(dir_path: Union[str, Path], overwrite: bool = False):
     dir_path = Path(dir_path)
     if dir_path.exists():
         if overwrite:
-            dir_path.rmdir()
+            shutil.rmtree(dir_path)
         else:
             logger.error(
                 f"Directory {dir_path} already exists, use --override to replace it"
             )
-            # msg = f"Directory {dir_path} already exists, use --override to replace it"
             raise FileExistsError()
 
     dir_path.mkdir(parents=True, exist_ok=True)
