@@ -18,7 +18,7 @@ from abcfold.run_alphafold3 import run_alphafold3
 logger = setup_logger()
 
 
-def main(args, config):
+def run(args, config, defaults, config_file):
     """Run AlphaFold3"""
 
     args.output_dir = Path(args.output_dir)
@@ -122,7 +122,7 @@ def main(args, config):
             # add chai output processing here
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai_1")
@@ -146,4 +146,13 @@ if __name__ == "__main__":
     parser.set_defaults(**defaults)
     args = parser.parse_args()
 
-    main(args, config)
+    run(
+        args,
+        config,
+        defaults,
+        config_file,
+    )
+
+
+if __name__ == "__main__":
+    main()
