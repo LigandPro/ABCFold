@@ -26,6 +26,7 @@ def check_boltz1():
             stdout=sys.stdout,
             stderr=subprocess.PIPE,
         ) as proc:
+            proc.wait()
             if proc.returncode != 0:
                 if proc.stderr:
                     logger.error(proc.stderr.read().decode())
@@ -34,7 +35,7 @@ def check_boltz1():
 
 def check_chai1():
     try:
-        import chai_lab as _  # noqa F401
+        import chai_lab as _  # noqa F40
     except (ImportError, ModuleNotFoundError):
         try:
             import boltz1 as _  # noqa F401
@@ -52,6 +53,7 @@ def check_chai1():
             stdout=sys.stdout,
             stderr=subprocess.PIPE,
         ) as proc:
+            proc.wait()
             if proc.returncode != 0:
                 if proc.stderr:
                     logger.error(proc.stderr.read().decode())
