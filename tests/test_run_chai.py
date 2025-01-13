@@ -3,10 +3,19 @@ import tempfile
 
 import pytest
 
-from abcfold.run_chai1 import generate_chai_command, run_chai
+try:
+    import chai_lab  # noqa F401
+
+    run_chai1 = True
+
+except ImportError:
+    run_chai1 = False
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_generate_chai_command():
+    from abcfold.run_chai1 import generate_chai_command
+
     input_fasta = "/road/to/nowhere.fasta"
     msa_dir = "/road/to/nowhere"
     with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as fp:
@@ -28,9 +37,13 @@ def test_generate_chai_command():
     assert output_dir in cmd
 
 
-@pytest.mark.skipif(os.getenv("CI") == "true", reason="Skipping test in CI environment")
+@pytest.mark.skipif(
+    os.getenv("CI") == "true" and not run_chai1,
+    reason="Skipping test in CI environment",
+)
 def test_run_chai(test_data):
     pytest.importorskip("chai_lab")
+    from abcfold.run_chai1 import run_chai
 
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
