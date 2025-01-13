@@ -9,14 +9,20 @@ import numpy as _  # noqa F401
 import pandas as pd
 import requests
 
+logger = logging.getLogger(__name__)
+
 try:
     from chai_lab.data.parsing.msas.aligned_pqt import \
         merge_multi_a3m_to_aligned_dataframe
     from chai_lab.data.parsing.msas.data_source import MSADataSource
 except ImportError:
-    pass
 
-logger = logging.getLogger(__name__)
+    logger.error(
+        "Chai_lab didn't install correctly and the module is not available, \
+please try running the job again or install chai_lab directly using 'pip install \
+chai_lab'"
+    )
+    raise ImportError()
 
 
 class ChaiFasta:
