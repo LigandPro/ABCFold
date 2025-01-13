@@ -10,7 +10,6 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util)
-from abcfold.boltz1.check_install import check_boltz1, check_chai1
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.run_alphafold3 import run_alphafold3
@@ -52,8 +51,12 @@ def run(args, config, defaults, config_file):
         sys.exit(1)
 
     if args.boltz1:
+        from abcfold.boltz1.check_install import check_boltz1
+
         check_boltz1()
     if args.chai1:
+        from abcfold.chai1.check_install import check_chai1
+
         check_chai1()
 
     with tempfile.TemporaryDirectory() as temp_dir_str:
