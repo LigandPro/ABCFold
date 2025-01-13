@@ -17,7 +17,7 @@ def check_boltz1():
             no_deps = False
         logger.info("Installing boltz package")
         logger.info("No dependencies will be installed") if no_deps else None
-        cmd = [sys.executable, "-m", "pip", "install", "boltz"]
+        cmd = [sys.executable, "-m", "pip", "install", "boltz", "--no-cache-dir"]
 
         cmd.append("--no-deps") if no_deps else None
         logger.info("Running %s", " ".join(cmd))
@@ -45,7 +45,7 @@ def check_chai1():
             no_deps = False
         logger.info("Installing chai_lab package")
         logger.info("No dependencies will be installed") if no_deps else None
-        cmd = [sys.executable, "-m", "pip", "install", "chai_lab"]
+        cmd = [sys.executable, "-m", "pip", "install", "chai_lab", "--no-cache-dir"]
         cmd.append("--no-deps") if no_deps else None
         logger.info("Running %s", " ".join(cmd))
         with subprocess.Popen(
