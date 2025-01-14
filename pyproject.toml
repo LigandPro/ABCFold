@@ -40,6 +40,7 @@ homepage = "https://github.com/rigdenlab/ABCFold"
 packages = [
     "abcfold",
     "abcfold.boltz1",
+    "abcfold.chai1",
     "abcfold.processoutput",
 ]
 include-package-data = true

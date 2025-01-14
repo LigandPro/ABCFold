@@ -1,103 +1,28 @@
 import configparser
 import json
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Union
 
 from abcfold.add_mmseqs_msa import add_msa_to_json
 from abcfold.af3_script_utils import make_dir, setup_logger
 from abcfold.argparse_utils import (alphafold_argparse_util,
-                                    boltz_argparse_util,
+                                    boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util)
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
-from abcfold.run_boltz import run_boltz
+from abcfold.run_alphafold3 import run_alphafold3
 
 logger = setup_logger()
 
 
-def run_alphafold3(
-    input_json: Union[str, Path],
-    output_dir: Union[str, Path],
-    model_params: Union[str, Path],
-    database_dir: Union[str, Path],
-    interactive: bool = True,
-) -> None:
-
-    input_json = Path(input_json)
-    output_dir = Path(output_dir)
-    cmd = generate_af3_cmd(
-        input_json=input_json,
-        output_dir=output_dir,
-        model_params=model_params,
-        database_dir=database_dir,
-        interactive=interactive,
-    )
-
-    logger.info("Running Alphafold3")
-    with subprocess.Popen(
-        cmd, shell=True, stdout=sys.stdout, stderr=subprocess.PIPE
-    ) as p:
-        _, stderr = p.communicate()
-        if p.returncode != 0:
-            logger.error(stderr.decode())
-            raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
-    logger.info("Alphafold3 run complete")
-    logger.info("Output files are in %s", output_dir)
-
-
-def generate_af3_cmd(
-    input_json: Union[str, Path],
-    output_dir: Union[str, Path],
-    model_params: Union[str, Path],
-    database_dir: Union[str, Path],
-    interactive: bool = True,
-) -> str:
-    input_json = Path(input_json)
-    output_dir = Path(output_dir)
-    return rf"""
-    docker run {'-it' if interactive else ''} \
-    --volume {input_json.parent.resolve()}:/root/af_input \
-    --volume {output_dir.resolve()}:/root/af_output \
-    --volume {model_params}:/root/models \
-    --volume {database_dir}:/root/public_databases \
-    --gpus all \
-    alphafold3 \
-    python run_alphafold.py \
-    --json_path=/root/af_input/{input_json.name} \
-    --model_dir=/root/models \
-    --output_dir=/root/af_output
-    """
-
-
-def main():
+def run(args, config, defaults, config_file):
     """Run AlphaFold3"""
-    import argparse
 
-    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai_1")
+    args.output_dir = Path(args.output_dir)
 
-    # Load defaults from config file
-    defaults = {}
-    config_file = Path(__file__).parent.joinpath("data", "config.ini")
-    config = configparser.SafeConfigParser()
-
-    if config_file.exists():
-        config.read(str(config_file))
-        defaults.update(dict(config.items("Databases")))
-
-    parser = main_argpase_util(parser)
-    parser = alphafold_argparse_util(parser)
-    parser = boltz_argparse_util(parser)
-    parser = mmseqs2_argparse_util(parser)
-    parser = custom_template_argpase_util(parser)
-
-    parser.set_defaults(**defaults)
-    args = parser.parse_args()
-
-    make_dir(args.output_dir)
+    make_dir(args.output_dir, overwrite=args.override)
 
     updated_config = False
     if args.model_params != defaults["model_params"]:
@@ -125,6 +50,15 @@ def main():
         logger.error("Input JSON must contain a 'name' field")
         sys.exit(1)
 
+    if args.boltz1:
+        from abcfold.boltz1.check_install import check_boltz1
+
+        check_boltz1()
+    if args.chai1:
+        from abcfold.chai1.check_install import check_chai1
+
+        check_chai1()
+
     with tempfile.TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
         if args.mmseqs2:
@@ -151,8 +85,7 @@ def main():
         else:
             run_json = Path(args.input_json)
 
-        args.chai_1 = False
-        if not args.alphafold3 and not args.boltz1 and not args.chai_1:  #
+        if not args.alphafold3 and not args.boltz1 and not args.chai1:  #
             args.alphafold3 = True
 
         if args.alphafold3:
@@ -165,17 +98,63 @@ def main():
             )
 
             # Need to find the name of the af3_dir
-            af3_out_dir = list(Path(args.output_dir).glob(name))[0]
+            af3_out_dir = list(args.output_dir.iterdir())[0]
             _ = AlphafoldOutput(af3_out_dir)
 
         if args.boltz1:
+            from abcfold.run_boltz import run_boltz
+
             run_boltz(
                 input_json=run_json,
                 output_dir=args.output_dir,
                 save_input=args.save_input,
             )
-            bolt_out_dir = list(Path(args.output_dir).glob("boltz_results*"))[0]
+            bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
             _ = BoltzOutput(bolt_out_dir)
+
+        if args.chai1:
+            from abcfold.run_chai1 import run_chai
+
+            chai_output_dir = args.output_dir.joinpath("chai1")
+            run_chai(
+                input_json=run_json,
+                output_dir=chai_output_dir,
+                save_input=args.save_input,
+            )
+
+            # add chai output processing here
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai_1")
+
+    # Load defaults from config file
+    defaults = {}
+    config_file = Path(__file__).parent.joinpath("data", "config.ini")
+    config = configparser.SafeConfigParser()
+
+    if config_file.exists():
+        config.read(str(config_file))
+        defaults.update(dict(config.items("Databases")))
+
+    parser = main_argpase_util(parser)
+    parser = alphafold_argparse_util(parser)
+    parser = boltz_argparse_util(parser)
+    parser = chai_argparse_util(parser)
+    parser = mmseqs2_argparse_util(parser)
+    parser = custom_template_argpase_util(parser)
+
+    parser.set_defaults(**defaults)
+    args = parser.parse_args()
+
+    run(
+        args,
+        config,
+        defaults,
+        config_file,
+    )
 
 
 if __name__ == "__main__":

@@ -67,7 +67,8 @@ def generate_boltz_command(
         "--out_dir",
         str(output_dir),
         "--override",
-        # Add more options here
+        "--write_full_pae",
+        "--write_full_pde",
     ]
 
 

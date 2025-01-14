@@ -5,10 +5,14 @@ from abcfold.processoutput.boltz import BoltzOutput
 
 
 def test_process_boltz_output(test_data):
-    boltz_output = BoltzOutput(test_data.test_boltz_results_boltz_test_)
-    assert str(boltz_output.output_dir) == test_data.test_boltz_results_boltz_test_
+    boltz_output = BoltzOutput(test_data.test_boltz_1_boltz_test_)
+    assert str(boltz_output.output_dir) == str(
+        Path(test_data.test_boltz_1_boltz_test_).parent.joinpath("boltz-1_boltz_test")
+    )
 
     assert boltz_output.name == "boltz_test"
+
+    print(boltz_output.output_dir)
 
     assert 0 in boltz_output.boltz_output
     assert 1 in boltz_output.boltz_output
