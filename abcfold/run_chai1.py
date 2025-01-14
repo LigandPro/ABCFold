@@ -63,7 +63,9 @@ def generate_chai_command(
     input_constraints: Union[str, Path],
     output_dir: Union[str, Path],
 ):
-    cmd = ["chai", "fold", input_fasta]
+
+    chai_exe = Path(__file__).parent / "chai1" / "chai.py"
+    cmd = ["python", chai_exe, "fold", input_fasta]
 
     if Path(msa_dir).exists():
         cmd += ["--msa-directory", str(msa_dir)]
@@ -76,8 +78,10 @@ def generate_chai_command(
 
 
 def generate_test_command():
+    chai_exe = Path(__file__).parent / "chai1" / "chai.py"
     return [
-        "chai",
+        "python",
+        chai_exe,
         "fold",
         "--help",
     ]

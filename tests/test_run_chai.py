@@ -20,7 +20,7 @@ def test_generate_chai_command():
             output_dir=output_dir,
         )
 
-    assert "chai" in cmd
+    assert "chai.py" in cmd
     assert "fold" in cmd
     assert input_fasta in cmd
     assert msa_dir in cmd
