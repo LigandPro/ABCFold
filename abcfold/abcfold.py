@@ -9,7 +9,8 @@ from abcfold.af3_script_utils import make_dir, setup_logger
 from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
-                                    main_argpase_util, mmseqs2_argparse_util)
+                                    main_argpase_util, mmseqs2_argparse_util,
+                                    prediction_argparse_util)
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.run_alphafold3 import run_alphafold3
@@ -95,6 +96,7 @@ def run(args, config, defaults, config_file):
                 output_dir=args.output_dir,
                 model_params=args.model_params,
                 database_dir=args.database_dir,
+                number_of_models=args.number_of_models,
             )
 
             # Need to find the name of the af3_dir
@@ -120,6 +122,7 @@ def run(args, config, defaults, config_file):
                 input_json=run_json,
                 output_dir=chai_output_dir,
                 save_input=args.save_input,
+                number_of_models=args.number_of_models,
             )
 
             # add chai output processing here
@@ -145,6 +148,7 @@ def main():
     parser = chai_argparse_util(parser)
     parser = mmseqs2_argparse_util(parser)
     parser = custom_template_argpase_util(parser)
+    parser = prediction_argparse_util(parser)
 
     parser.set_defaults(**defaults)
     args = parser.parse_args()
