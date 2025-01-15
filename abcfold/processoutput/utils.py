@@ -61,6 +61,7 @@ class CifFile(FileBase):
         super().__init__(cif_file)
         self.cif_file = Path(cif_file)
         self.model = self.load_cif_file()
+        self.plddt = self.get_plddt()
 
     def load_cif_file(self):
         # load the cif file
@@ -79,6 +80,14 @@ class CifFile(FileBase):
             msg = "Invalid mode. Please use ModelCount.ALL or ModelCount.RESIDUES"
             logger.critical(msg)
             raise ValueError()
+
+    def get_plddt(self):
+        plddt = []
+        for chain in self.model[0]:
+            for residue in chain:
+                for atom in residue:
+                    plddt.append(atom.bfactor)
+        return plddt
 
     def to_file(self, output_file: Union[str, Path]):
         io = MMCIFIO()

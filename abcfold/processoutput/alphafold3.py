@@ -16,10 +16,7 @@ class AlphafoldOutput:
         self.output = self.process_af3_output()
         self.seeds = list(self.output.keys())
         self.cif_files = {
-            seed: {
-                model_number: value["cif"]
-                for model_number, value in self.output[seed].items()
-            }
+            seed: [value["cif"] for value in self.output[seed].values()]
             for seed in self.seeds
         }
         self.scores_files = {
