@@ -8,10 +8,14 @@ logger = logging.getLogger("logger")
 
 
 class ChaiOutput:
-    def __init__(self, chai_output_dir: Union[str, Path]):
+    def __init__(self, chai_output_dir: Union[str, Path], name):
         self.output_dir = Path(chai_output_dir)
+        self.name = name
 
-        self.name = self.output_dir.name
+        if not self.output_dir.name.startswith("chai1_" + self.name):
+            self.output_dir = self.output_dir.rename(
+                self.output_dir.parent / f"chai1_{self.name}"
+            )
 
         self.output = self.process_chai_output()
         self.pae_files = [
