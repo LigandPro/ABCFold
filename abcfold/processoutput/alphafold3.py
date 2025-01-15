@@ -17,19 +17,19 @@ class AlphafoldOutput:
         else:
             self.name = self.output_dir.name
 
-        self.af3_output = self.process_af3_output()
-        self.seeds = list(self.af3_output.keys())
+        self.output = self.process_af3_output()
+        self.seeds = list(self.output.keys())
         self.cif_files = {
             seed: {
                 model_number: value["cif"]
-                for model_number, value in self.af3_output[seed].items()
+                for model_number, value in self.output[seed].items()
             }
             for seed in self.seeds
         }
-        self.json_files = {
+        self.scores_files = {
             seed: {
                 model_number: value["json"]
-                for model_number, value in self.af3_output[seed].items()
+                for model_number, value in self.output[seed].items()
             }
             for seed in self.seeds
         }

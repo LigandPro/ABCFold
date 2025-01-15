@@ -7,9 +7,9 @@ def test_process_boltz_output(test_data):
 
     assert af3_output.name == "alphafold3_af3test"
 
-    assert "seed-1" in af3_output.af3_output
+    assert "seed-1" in af3_output.output
 
-    files = af3_output.af3_output["seed-1"]
+    files = af3_output.output["seed-1"]
 
     assert 0 in files
     assert 1 in files
@@ -23,7 +23,7 @@ def test_process_boltz_output(test_data):
     assert "cif" in files[4]
     assert "json" in files[4]
 
-    json_file = af3_output.json_files["seed-1"][0]
+    json_file = af3_output.scores_files["seed-1"][0]
 
     assert "atom_plddts" in json_file.data
     assert "pae" in json_file.data

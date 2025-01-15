@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 
 from abcfold.processoutput.boltz import BoltzOutput
+from abcfold.processoutput.utils import CifFile, ConfidenceJsonFile, NpzFile
 
 
 def test_process_boltz_output(test_data):
@@ -12,25 +13,34 @@ def test_process_boltz_output(test_data):
 
     assert boltz_output.name == "boltz_test"
 
-    print(boltz_output.output_dir)
+    assert 0 in boltz_output.output
+    assert 1 in boltz_output.output
+    assert 2 in boltz_output.output
+    assert 3 in boltz_output.output
+    assert 4 in boltz_output.output
 
-    assert 0 in boltz_output.boltz_output
-    assert 1 in boltz_output.boltz_output
-    assert 2 in boltz_output.boltz_output
-    assert 3 in boltz_output.boltz_output
-    assert 4 in boltz_output.boltz_output
+    assert "plddt" in boltz_output.output[0]
+    assert "pae" in boltz_output.output[0]
+    assert "pde" in boltz_output.output[0]
+    assert "cif" in boltz_output.output[0]
+    assert "json" in boltz_output.output[0]
 
-    assert "plddt" in boltz_output.boltz_output[0]
-    assert "pae" in boltz_output.boltz_output[0]
-    assert "pde" in boltz_output.boltz_output[0]
-    assert "cif" in boltz_output.boltz_output[0]
-    assert "json" in boltz_output.boltz_output[0]
+    assert "plddt" in boltz_output.output[1]
+    assert "pae" in boltz_output.output[1]
+    assert "pde" in boltz_output.output[1]
+    assert "cif" in boltz_output.output[4]
+    assert "json" in boltz_output.output[4]
 
-    assert "plddt" in boltz_output.boltz_output[1]
-    assert "pae" in boltz_output.boltz_output[1]
-    assert "pde" in boltz_output.boltz_output[1]
-    assert "cif" in boltz_output.boltz_output[4]
-    assert "json" in boltz_output.boltz_output[4]
+    assert all(isinstance(pae_file, NpzFile) for pae_file in boltz_output.pae_files)
+    assert all(
+        isinstance(plddt_file, NpzFile) for plddt_file in boltz_output.plddt_files
+    )
+    assert all(isinstance(pde_file, NpzFile) for pde_file in boltz_output.pde_files)
+    assert all(isinstance(cif_file, CifFile) for cif_file in boltz_output.cif_files)
+    assert all(
+        isinstance(scores_file, ConfidenceJsonFile)
+        for scores_file in boltz_output.scores_files
+    )
 
     assert boltz_output.cif_files[0].chain_lengths() == {"A": 20, "B": 16}
 
