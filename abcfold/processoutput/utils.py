@@ -13,6 +13,7 @@ logger = logging.getLogger("logger")
 
 class FileTypes(Enum):
     NPZ = "npz"
+    NPY = "npy"
     CIF = "cif"
     JSON = "json"
 
@@ -43,6 +44,16 @@ class NpzFile(FileBase):
 
     def load_npz_file(self):
         return dict(np.load(self.npz_file))
+
+
+class NpyFile(FileBase):
+    def __init__(self, npy_file: Union[str, Path]):
+        super().__init__(npy_file)
+        self.npy_file = Path(npy_file)
+        self.data = self.load_npy_file()
+
+    def load_npy_file(self) -> np.ndarray:
+        return np.load(self.npy_file)
 
 
 class CifFile(FileBase):
