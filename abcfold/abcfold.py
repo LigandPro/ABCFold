@@ -13,6 +13,7 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     prediction_argparse_util)
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
+from abcfold.processoutput.chai import ChaiOutput
 from abcfold.run_alphafold3 import run_alphafold3
 
 logger = setup_logger()
@@ -101,7 +102,7 @@ def run(args, config, defaults, config_file):
 
             # Need to find the name of the af3_dir
             af3_out_dir = list(args.output_dir.iterdir())[0]
-            _ = AlphafoldOutput(af3_out_dir)
+            _ = AlphafoldOutput(af3_out_dir, name)
 
         if args.boltz1:
             from abcfold.run_boltz import run_boltz
@@ -112,7 +113,7 @@ def run(args, config, defaults, config_file):
                 save_input=args.save_input,
             )
             bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
-            _ = BoltzOutput(bolt_out_dir)
+            _ = BoltzOutput(bolt_out_dir, name)
 
         if args.chai1:
             from abcfold.run_chai1 import run_chai
@@ -125,7 +126,7 @@ def run(args, config, defaults, config_file):
                 number_of_models=args.number_of_models,
             )
 
-            # add chai output processing here
+            _ = ChaiOutput(chai_output_dir, name)
 
 
 def main():
