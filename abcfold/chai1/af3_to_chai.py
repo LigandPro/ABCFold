@@ -121,7 +121,7 @@ class ChaiFasta:
         Returns:
             None
         """
-
+        logger.info("Converting input json to a Chai-1 compatible fasta file")
         if isinstance(json_file_or_dict, str) or isinstance(json_file_or_dict, Path):
             with open(json_file_or_dict, "r") as f:
                 json_dict = json.load(f)
@@ -199,10 +199,14 @@ class ChaiFasta:
         return nucleotide_str, fasta_data
 
     def ccd_to_smiles(self, ccd_id: str):
+        logger.info(f"CCD code found in input: {ccd_id}")
+        logger.info("Chai-1 currently only supports SMILES strings for ligands")
+        logger.info("Attempting to retrieve SMILES from CCD")
         url = f"http://cactus.nci.nih.gov/chemical/structure/{ccd_id}/smiles"
         response = requests.get(url)
         if response.status_code == 200:
             ccd_data = response.text
+            logger.info(f"SMILES retrieved: {ccd_data}")
             return ccd_data
         else:
             logger.warning(f"Could not retrieve SMILES for {ccd_id}")

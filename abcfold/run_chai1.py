@@ -20,8 +20,7 @@ def run_chai(
 ):
     input_json = Path(input_json)
     output_dir = Path(output_dir)
-    logger.info("Running CHAI-1")
-    logger.debug("Checking if CHAI-1 is installed")
+    logger.debug("Checking if Chai-1 is installed")
     check_chai1()
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -45,6 +44,7 @@ def run_chai(
             else generate_test_command()
         )
 
+        logger.info("Running Chai-1")
         with subprocess.Popen(
             cmd,
             stdout=sys.stdout,
@@ -56,8 +56,7 @@ def run_chai(
                     logger.error(stderr.decode())
                 raise subprocess.CalledProcessError(proc.returncode, proc.args)
 
-        logger.info("CHAI-1 run complete")
-        logger.info("Output files are in %s", output_dir)
+        logger.info("Chai-1 run complete")
 
 
 def generate_chai_command(

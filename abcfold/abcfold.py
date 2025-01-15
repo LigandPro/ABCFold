@@ -132,7 +132,7 @@ def run(args, config, defaults, config_file):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai_1")
+    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai-1")
 
     # Load defaults from config file
     defaults = {}

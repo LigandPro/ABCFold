@@ -68,7 +68,7 @@ def chai_argparse_util(parser):
         "-c",
         "--chai1",
         action="store_true",
-        help="Run Chai1",
+        help="Run Chai-1",
     )
     # check if save input is in the parser
     if "--save_input" not in parser._option_string_actions:

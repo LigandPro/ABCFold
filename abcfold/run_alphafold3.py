@@ -4,7 +4,25 @@ import sys
 from pathlib import Path
 from typing import Union
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("logger")
+
+
+def check_af3_install(interactive):
+    logger.debug("Checking if Alphafold3 is installed")
+    cmd = generate_test_command(interactive)
+    with subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ) as p:
+        _, stderr = p.communicate()
+        p.wait()
+        if p.returncode != 1:
+            logger.error(
+                "Alphafold3 is not installed, please go to \
+https://github.com/google-deepmind/alphafold3 and follow the instructions to install"
+            )
+
+            raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
+    logger.info("Alphafold3 is installed")
 
 
 def run_alphafold3(
@@ -15,6 +33,8 @@ def run_alphafold3(
     interactive: bool = True,
     number_of_models: int = 5,
 ) -> None:
+
+    check_af3_install(interactive)
 
     input_json = Path(input_json)
     output_dir = Path(output_dir)
@@ -63,3 +83,12 @@ def generate_af3_cmd(
     --output_dir=/root/af_output \
     --num_diffusion_samples {number_of_models}
     """
+
+
+def generate_test_command(interactive: bool = True) -> str:
+    return f"""
+    docker run {'-it' if interactive else ''} \
+    alphafold3 \
+    python run_alphafold.py \
+    --help
+"""
