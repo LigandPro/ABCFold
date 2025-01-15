@@ -3,8 +3,8 @@ from abcfold.processoutput.alphafold3 import AlphafoldOutput
 
 def test_process_boltz_output(test_data):
     name = "af3test"
-    af3_output = AlphafoldOutput(test_data.test_alphafold3_af3test_, name)
-    assert str(af3_output.output_dir) == test_data.test_alphafold3_af3test_
+    af3_output = AlphafoldOutput(test_data.test_alphafold3_6BJ9_, name)
+    assert str(af3_output.output_dir) == test_data.test_alphafold3_6BJ9_
 
     assert "seed-1" in af3_output.output
 

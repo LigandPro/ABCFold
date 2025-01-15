@@ -111,9 +111,11 @@ def run(args, config, defaults, config_file):
                 input_json=run_json,
                 output_dir=args.output_dir,
                 save_input=args.save_input,
+                number_of_models=args.number_of_models,
             )
             bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
-            _ = BoltzOutput(bolt_out_dir, name)
+            bo = BoltzOutput(bolt_out_dir, name)
+            bo.add_plddt_to_cif()
 
         if args.chai1:
             from abcfold.run_chai1 import run_chai

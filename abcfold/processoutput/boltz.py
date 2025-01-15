@@ -83,3 +83,5 @@ class BoltzOutput:
                     for atom in residue:
                         atom.b_iso = plddt_scores[counter]
                     counter += 1
+
+            cif_file.to_file(cif_file.pathway)
