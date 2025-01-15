@@ -59,6 +59,7 @@ def run_boltz(
 def generate_boltz_command(
     input_yaml: Union[str, Path],
     output_dir: Union[str, Path],
+    number_of_models: int = 5,
 ):
     return [
         "boltz",
@@ -69,6 +70,8 @@ def generate_boltz_command(
         "--override",
         "--write_full_pae",
         "--write_full_pde",
+        "--diffusion_samples",
+        str(number_of_models),
     ]
 
 

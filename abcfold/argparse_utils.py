@@ -36,6 +36,16 @@ def custom_template_argpase_util(parser):
     return parser
 
 
+def prediction_argparse_util(parser):
+    parser.add_argument(
+        "--number_of_models",
+        type=int,
+        default=5,
+        help="Number of models to generate",
+    )
+    return parser
+
+
 def boltz_argparse_util(parser):
     parser.add_argument(
         "-b",
@@ -50,7 +60,6 @@ def boltz_argparse_util(parser):
             help="Save the input json file",
             default=False,
         )
-    # add more arguments here
     return parser
 
 

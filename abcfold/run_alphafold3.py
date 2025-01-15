@@ -42,6 +42,7 @@ def generate_af3_cmd(
     output_dir: Union[str, Path],
     model_params: Union[str, Path],
     database_dir: Union[str, Path],
+    number_of_models: int = 5,
     interactive: bool = True,
 ) -> str:
     input_json = Path(input_json)
@@ -58,4 +59,5 @@ def generate_af3_cmd(
     --json_path=/root/af_input/{input_json.name} \
     --model_dir=/root/models \
     --output_dir=/root/af_output
+    --num_diffusion_samples={number_of_models}
     """

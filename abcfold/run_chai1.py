@@ -16,6 +16,7 @@ def run_chai(
     output_dir: Union[str, Path],
     save_input: bool = False,
     test: bool = False,
+    number_of_models: int = 5,
 ):
     input_json = Path(input_json)
     output_dir = Path(output_dir)
@@ -37,7 +38,9 @@ def run_chai(
         out_constraints = chai_fasta.constraints
 
         cmd = (
-            generate_chai_command(out_fasta, msa_dir, out_constraints, output_dir)
+            generate_chai_command(
+                out_fasta, msa_dir, out_constraints, output_dir, number_of_models
+            )
             if not test
             else generate_test_command()
         )
@@ -62,16 +65,18 @@ def generate_chai_command(
     msa_dir: Union[str, Path],
     input_constraints: Union[str, Path],
     output_dir: Union[str, Path],
+    number_of_models: int = 5,
 ):
 
     chai_exe = Path(__file__).parent / "chai1" / "chai.py"
-    cmd = ["python", chai_exe, "fold", input_fasta]
+    cmd = ["python", str(chai_exe), "fold", str(input_fasta)]
 
     if Path(msa_dir).exists():
         cmd += ["--msa-directory", str(msa_dir)]
     if Path(input_constraints).exists():
         cmd += ["--constraint-path", str(input_constraints)]
 
+    cmd += ["--num-diffn-samples", str(number_of_models)]
     cmd += [str(output_dir)]
 
     return cmd
