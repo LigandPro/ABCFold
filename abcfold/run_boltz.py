@@ -16,6 +16,7 @@ def run_boltz(
     output_dir: Union[str, Path],
     save_input: bool = False,
     test: bool = False,
+    number_of_models: int = 5,
 ):
     input_json = Path(input_json)
     output_dir = Path(output_dir)
@@ -36,7 +37,7 @@ def run_boltz(
         boltz_yaml.write_yaml(out_file)
         logger.info("Running Boltz1")
         cmd = (
-            generate_boltz_command(out_file, output_dir)
+            generate_boltz_command(out_file, output_dir, number_of_models)
             if not test
             else generate_test_command()
         )
