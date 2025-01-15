@@ -13,6 +13,7 @@ def run_alphafold3(
     model_params: Union[str, Path],
     database_dir: Union[str, Path],
     interactive: bool = True,
+    number_of_models: int = 5,
 ) -> None:
 
     input_json = Path(input_json)
@@ -23,6 +24,7 @@ def run_alphafold3(
         model_params=model_params,
         database_dir=database_dir,
         interactive=interactive,
+        number_of_models=number_of_models,
     )
 
     logger.info("Running Alphafold3")
@@ -47,7 +49,7 @@ def generate_af3_cmd(
 ) -> str:
     input_json = Path(input_json)
     output_dir = Path(output_dir)
-    return rf"""
+    return f"""
     docker run {'-it' if interactive else ''} \
     --volume {input_json.parent.resolve()}:/root/af_input \
     --volume {output_dir.resolve()}:/root/af_output \
@@ -58,6 +60,6 @@ def generate_af3_cmd(
     python run_alphafold.py \
     --json_path=/root/af_input/{input_json.name} \
     --model_dir=/root/models \
-    --output_dir=/root/af_output
-    --num_diffusion_samples={number_of_models}
+    --output_dir=/root/af_output \
+    --num_diffusion_samples {number_of_models}
     """

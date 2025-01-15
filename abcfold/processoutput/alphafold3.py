@@ -5,17 +5,13 @@ from abcfold.processoutput.utils import CifFile, ConfidenceJsonFile
 
 
 class AlphafoldOutput:
-    def __init__(self, af3_output_dir: Union[str, Path]):
+    def __init__(self, af3_output_dir: Union[str, Path], name):
         self.output_dir = Path(af3_output_dir)
 
         if not self.output_dir.name.startswith("alphafold3"):
-
-            self.name = self.output_dir.name
-            self.output_dir.rename(
-                self.output_dir.parent.joinpath(f"alphafold3{self.name}")
+            self.output_dir = self.output_dir.rename(
+                self.output_dir.parent.joinpath(f"alphafold3_{name}")
             )
-        else:
-            self.name = self.output_dir.name
 
         self.output = self.process_af3_output()
         self.seeds = list(self.output.keys())
