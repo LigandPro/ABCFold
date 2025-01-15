@@ -20,15 +20,16 @@ logging.basicConfig(level=logging.INFO)
 
 CITATION = """
 @article{Chai-1-Technical-Report,
-	title        = {Chai-1: Decoding the molecular interactions of life},
-	author       = {{Chai Discovery}},
-	year         = 2024,
-	journal      = {bioRxiv},
-	publisher    = {Cold Spring Harbor Laboratory},
-	doi          = {10.1101/2024.10.10.615955},
-	url          = {https://www.biorxiv.org/content/early/2024/10/11/2024.10.10.615955},
-	elocation-id = {2024.10.10.615955},
-	eprint       = {https://www.biorxiv.org/content/early/2024/10/11/2024.10.10.615955.full.pdf}
+    title        = {Chai-1: Decoding the molecular interactions of life},
+    author       = {{Chai Discovery}},
+    year         = 2024,
+    journal      = {bioRxiv},
+    publisher    = {Cold Spring Harbor Laboratory},
+    doi          = {10.1101/2024.10.10.615955},
+    url          = {https://www.biorxiv.org/content/early/2024/10/11/2024.10.10.615955},
+    elocation-id = {2024.10.10.615955},
+    eprint       = {https://www.biorxiv.org/content/early/2024/10/11/2024.10.1\
+0.615955.full.pdf}
 }
 """.strip()
 
@@ -47,35 +48,36 @@ def run_inference_wrapper(
     msa_server_url: str = "https://api.colabfold.com",
     msa_directory: Path | None = None,
     constraint_path: Path | None = None,
-    # expose some params for easy tweaking
     num_trunk_recycles: int = 3,
     num_diffn_timesteps: int = 200,
+    num_diffn_samples: int = 5,
     seed: int | None = None,
-        device: str | None = None):
-
+    device: str | None = None,
+):
+    # print(num_diffn_samples)
     result = run_inference(
-        fasta_file,
-        output_dir,
-        use_esm_embeddings,
-        use_msa_server,
-        msa_server_url,
-        msa_directory,
-        constraint_path,
-        # expose some params for easy tweaking
-        num_trunk_recycles,
-        num_diffn_timesteps,
-        seed,
-        device,
+        fasta_file=fasta_file,
+        output_dir=output_dir,
+        use_esm_embeddings=use_esm_embeddings,
+        use_msa_server=use_msa_server,
+        msa_server_url=msa_server_url,
+        msa_directory=msa_directory,
+        constraint_path=constraint_path,
+        num_trunk_recycles=num_trunk_recycles,
+        num_diffn_timesteps=num_diffn_timesteps,
+        num_diffn_samples=num_diffn_samples,
+        seed=seed,
+        device=device,
+        low_memory=True,
     )
-    # Access and save the pae_scores
+
     np.save(f"{output_dir}/pae_scores.npy", result.pae)
     return result
 
 
 def cli():
     app = typer.Typer()
-    app.command(
-        "fold", help="Run Chai-1 to fold a complex.")(run_inference_wrapper)
+    app.command("fold", help="Run Chai-1 to fold a complex.")(run_inference_wrapper)
     app.command("citation", help="Print citation information")(citation)
     app()
 
