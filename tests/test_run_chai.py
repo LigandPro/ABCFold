@@ -29,12 +29,14 @@ def test_generate_chai_command():
             output_dir=output_dir,
         )
 
-    assert "chai.py" in cmd
+    assert cmd[1].endswith("chai.py")
     assert "fold" in cmd
     assert input_fasta in cmd
     assert msa_dir in cmd
     assert constraints in cmd
     assert output_dir in cmd
+    assert "--num-diffn-samples" in cmd
+    assert "5" in cmd
 
 
 @pytest.mark.skipif(
