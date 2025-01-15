@@ -2,7 +2,7 @@ from abcfold.processoutput.alphafold3 import AlphafoldOutput
 
 
 def test_process_boltz_output(test_data):
-    name = "af3test"
+    name = "6BJ9"
     af3_output = AlphafoldOutput(test_data.test_alphafold3_6BJ9_, name)
     assert str(af3_output.output_dir) == test_data.test_alphafold3_6BJ9_
 

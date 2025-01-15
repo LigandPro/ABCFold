@@ -5,13 +5,11 @@ from abcfold.processoutput.chai import ChaiOutput
 
 
 def test_plddt_plot(test_data):
-    aname = "af3test"
-    bname = "boltz_test"
-    cname = "test"
+    name = "6BJ9"
 
-    af3_output = AlphafoldOutput(test_data.test_alphafold3_6BJ9_, aname)
-    boltz_output = BoltzOutput(test_data.test_boltz_1_6BJ9_, bname)
-    chai_output = ChaiOutput(test_data.test_chai1_6BJ9_, cname)
+    af3_output = AlphafoldOutput(test_data.test_alphafold3_6BJ9_, name)
+    boltz_output = BoltzOutput(test_data.test_boltz_1_6BJ9_, name)
+    chai_output = ChaiOutput(test_data.test_chai1_6BJ9_, name)
 
     af3_files = af3_output.cif_files["seed-1"][0:2]
     boltz_files = boltz_output.cif_files[0:2]

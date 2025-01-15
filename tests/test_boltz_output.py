@@ -6,13 +6,13 @@ from abcfold.processoutput.utils import CifFile, ConfidenceJsonFile, NpzFile
 
 
 def test_process_boltz_output(test_data):
-    name = "boltz_test"
+    name = "6BJ9"
     boltz_output = BoltzOutput(test_data.test_boltz_1_6BJ9_, name)
     assert str(boltz_output.output_dir) == str(
-        Path(test_data.test_boltz_1_6BJ9_).parent.joinpath("boltz-1_boltz_test")
+        Path(test_data.test_boltz_1_6BJ9_).parent.joinpath("boltz-1_6BJ9")
     )
 
-    assert boltz_output.name == "boltz_test"
+    assert boltz_output.name == "6BJ9"
 
     assert 0 in boltz_output.output
     assert 1 in boltz_output.output
