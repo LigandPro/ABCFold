@@ -16,11 +16,11 @@ def run_chai(
     output_dir: Union[str, Path],
     save_input: bool = False,
     test: bool = False,
+    number_of_models: int = 5,
 ):
     input_json = Path(input_json)
     output_dir = Path(output_dir)
-    logger.info("Running CHAI-1")
-    logger.debug("Checking if CHAI-1 is installed")
+    logger.debug("Checking if Chai-1 is installed")
     check_chai1()
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -37,11 +37,14 @@ def run_chai(
         out_constraints = chai_fasta.constraints
 
         cmd = (
-            generate_chai_command(out_fasta, msa_dir, out_constraints, output_dir)
+            generate_chai_command(
+                out_fasta, msa_dir, out_constraints, output_dir, number_of_models
+            )
             if not test
             else generate_test_command()
         )
 
+        logger.info("Running Chai-1")
         with subprocess.Popen(
             cmd,
             stdout=sys.stdout,
@@ -53,8 +56,7 @@ def run_chai(
                     logger.error(stderr.decode())
                 raise subprocess.CalledProcessError(proc.returncode, proc.args)
 
-        logger.info("CHAI-1 run complete")
-        logger.info("Output files are in %s", output_dir)
+        logger.info("Chai-1 run complete")
 
 
 def generate_chai_command(
@@ -62,22 +64,28 @@ def generate_chai_command(
     msa_dir: Union[str, Path],
     input_constraints: Union[str, Path],
     output_dir: Union[str, Path],
+    number_of_models: int = 5,
 ):
-    cmd = ["chai", "fold", input_fasta]
+
+    chai_exe = Path(__file__).parent / "chai1" / "chai.py"
+    cmd = ["python", str(chai_exe), "fold", str(input_fasta)]
 
     if Path(msa_dir).exists():
         cmd += ["--msa-directory", str(msa_dir)]
     if Path(input_constraints).exists():
         cmd += ["--constraint-path", str(input_constraints)]
 
+    cmd += ["--num-diffn-samples", str(number_of_models)]
     cmd += [str(output_dir)]
 
     return cmd
 
 
 def generate_test_command():
+    chai_exe = Path(__file__).parent / "chai1" / "chai.py"
     return [
-        "chai",
+        "python",
+        chai_exe,
         "fold",
         "--help",
     ]

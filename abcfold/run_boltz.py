@@ -19,7 +19,7 @@ def run_boltz(
 ):
     input_json = Path(input_json)
     output_dir = Path(output_dir)
-    logger.info("Running Boltz1")
+
     logger.debug("Checking if boltz1 is installed")
     check_boltz1()
 
@@ -34,7 +34,7 @@ def run_boltz(
         out_file = working_dir.joinpath(f"{input_json.stem}.yaml")
 
         boltz_yaml.write_yaml(out_file)
-
+        logger.info("Running Boltz1")
         cmd = (
             generate_boltz_command(out_file, output_dir)
             if not test
@@ -59,6 +59,7 @@ def run_boltz(
 def generate_boltz_command(
     input_yaml: Union[str, Path],
     output_dir: Union[str, Path],
+    number_of_models: int = 5,
 ):
     return [
         "boltz",
@@ -69,6 +70,8 @@ def generate_boltz_command(
         "--override",
         "--write_full_pae",
         "--write_full_pde",
+        "--diffusion_samples",
+        str(number_of_models),
     ]
 
 

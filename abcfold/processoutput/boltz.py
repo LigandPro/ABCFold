@@ -1,5 +1,4 @@
 import logging
-import re
 from pathlib import Path
 from typing import Union
 
@@ -10,27 +9,24 @@ logger = logging.getLogger("logger")
 
 
 class BoltzOutput:
-    def __init__(self, boltz_output_dir: Union[str, Path]):
+    def __init__(self, boltz_output_dir: Union[str, Path], name):
         self.output_dir = Path(boltz_output_dir)
+        self.name = name
 
         if self.output_dir.name.startswith("boltz_results_"):
-            self.name = re.sub(r"boltz_results_", "", self.output_dir.name, count=1)
             self.output_dir = self.output_dir.rename(
-                self.output_dir.parent / f"boltz-1_{self.name}"
+                self.output_dir.parent / f"boltz-1_{name}"
             )
-        else:
-            self.name = self.output_dir.name.replace("boltz-1_", "", 1)
-        self.boltz_output = self.process_boltz_output()
 
-        self.pae_files = [value["pae"] for value in self.boltz_output.values()]
-        self.plddt_files = [value["plddt"] for value in self.boltz_output.values()]
-        self.pde_files = [value["pde"] for value in self.boltz_output.values()]
-        self.cif_files = [value["cif"] for value in self.boltz_output.values()]
-        self.json_files = [value["json"] for value in self.boltz_output.values()]
+        self.output = self.process_boltz_output()
+
+        self.pae_files = [value["pae"] for value in self.output.values()]
+        self.plddt_files = [value["plddt"] for value in self.output.values()]
+        self.pde_files = [value["pde"] for value in self.output.values()]
+        self.cif_files = [value["cif"] for value in self.output.values()]
+        self.scores_files = [value["json"] for value in self.output.values()]
 
     def process_boltz_output(self):
-        # find all the directories in the boltz output directory
-        # process all the files
         file_groups = {}
         for pathway in self.output_dir.rglob("*"):
             number = pathway.stem.split(f"{self.name}_model_")[-1]

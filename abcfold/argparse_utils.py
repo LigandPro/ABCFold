@@ -36,6 +36,16 @@ def custom_template_argpase_util(parser):
     return parser
 
 
+def prediction_argparse_util(parser):
+    parser.add_argument(
+        "--number_of_models",
+        type=int,
+        default=5,
+        help="Number of models to generate",
+    )
+    return parser
+
+
 def boltz_argparse_util(parser):
     parser.add_argument(
         "-b",
@@ -50,7 +60,6 @@ def boltz_argparse_util(parser):
             help="Save the input json file",
             default=False,
         )
-    # add more arguments here
     return parser
 
 
@@ -59,7 +68,7 @@ def chai_argparse_util(parser):
         "-c",
         "--chai1",
         action="store_true",
-        help="Run Chai1",
+        help="Run Chai-1",
     )
     # check if save input is in the parser
     if "--save_input" not in parser._option_string_actions:

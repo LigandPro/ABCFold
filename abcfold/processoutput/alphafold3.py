@@ -5,31 +5,27 @@ from abcfold.processoutput.utils import CifFile, ConfidenceJsonFile
 
 
 class AlphafoldOutput:
-    def __init__(self, af3_output_dir: Union[str, Path]):
+    def __init__(self, af3_output_dir: Union[str, Path], name):
         self.output_dir = Path(af3_output_dir)
 
         if not self.output_dir.name.startswith("alphafold3"):
-
-            self.name = self.output_dir.name
-            self.output_dir.rename(
-                self.output_dir.parent.joinpath(f"alphafold3{self.name}")
+            self.output_dir = self.output_dir.rename(
+                self.output_dir.parent.joinpath(f"alphafold3_{name}")
             )
-        else:
-            self.name = self.output_dir.name
 
-        self.af3_output = self.process_af3_output()
-        self.seeds = list(self.af3_output.keys())
+        self.output = self.process_af3_output()
+        self.seeds = list(self.output.keys())
         self.cif_files = {
             seed: {
                 model_number: value["cif"]
-                for model_number, value in self.af3_output[seed].items()
+                for model_number, value in self.output[seed].items()
             }
             for seed in self.seeds
         }
-        self.json_files = {
+        self.scores_files = {
             seed: {
                 model_number: value["json"]
-                for model_number, value in self.af3_output[seed].items()
+                for model_number, value in self.output[seed].items()
             }
             for seed in self.seeds
         }
