@@ -87,7 +87,11 @@ def run(args, config, defaults, config_file):
         else:
             run_json = Path(args.input_json)
 
-        if not args.alphafold3 and not args.boltz1 and not args.chai1:  #
+        if not args.alphafold3 and not args.boltz1 and not args.chai1:
+            logger.info(
+                "Neither AlphaFold3, Boltz-1, or Chai-1 selected. Running AlphaFold3 \
+by default"
+            )
             args.alphafold3 = True
 
         if args.alphafold3:
