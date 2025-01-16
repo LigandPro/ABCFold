@@ -58,7 +58,7 @@ abcfold <input_json>  <output_dir> -abc --model_params <model_params> --database
 
 ## Extra Features
 
-Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 input JSON files.
+Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 input JSON files but does not run any ABCFold.
 
 
 These scripts are designed to take in a prepared [AlphaFold3](https://github.com/google-deepmind/alphafold3/tree/main) JSON files, e.g.:
