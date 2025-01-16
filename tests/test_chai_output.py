@@ -2,7 +2,7 @@ from abcfold.processoutput.chai import ChaiOutput
 from abcfold.processoutput.utils import CifFile, NpyFile, NpzFile
 
 
-def test_process_boltz_output(test_data):
+def test_process_chai_output(test_data):
     name = "test"
     chai_output = ChaiOutput(test_data.test_chai1_test_, name)
 
