@@ -4,9 +4,18 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from abcfold.chai1.af3_to_chai import ChaiFasta
+try:
+    import chai_lab  # noqa F401
+
+    from abcfold.chai1.af3_to_chai import ChaiFasta
+
+    run_chai1 = True
+
+except ImportError:
+    run_chai1 = False
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_af3_to_chai(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
         chai_fasta = ChaiFasta(temp_dir)
@@ -32,6 +41,7 @@ CC(=O)OC1C[NH+]2CCC1CC2
         assert data == reference
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_af3_to_chai_rna(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
         chai_fasta = ChaiFasta(temp_dir)
@@ -49,6 +59,7 @@ def test_af3_to_chai_rna(test_data):
         assert data == reference
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_af3_to_chai_dna(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
         chai_fasta = ChaiFasta(temp_dir)
@@ -66,6 +77,7 @@ def test_af3_to_chai_dna(test_data):
         assert data == reference
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_af3_to_chai_ligand(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
         chai_fasta = ChaiFasta(temp_dir)
@@ -107,6 +119,7 @@ CCCCCCCCCCCC(O)=O
         assert data == reference
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_chai_output_constraints(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
         chai_fasta = ChaiFasta(temp_dir)
@@ -146,6 +159,7 @@ def test_chai_output_constraints(test_data):
         assert df.iloc[0]["restraint_id"] == "restraint_0"
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_chai_output_msa(test_data):
     pytest.importorskip("chai_lab")
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -181,6 +195,7 @@ RDWFGDYSEQFLKESRQLLQQANDLKQG"
         assert df.iloc[0]["comment"] == "101"
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_ccd_to_smiles():
     chai_fasta = ChaiFasta(".")
 

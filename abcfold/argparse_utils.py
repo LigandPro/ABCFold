@@ -43,12 +43,33 @@ def boltz_argparse_util(parser):
         action="store_true",
         help="Run Boltz1",
     )
+    if "--save_input" not in parser._option_string_actions:
+        parser.add_argument(
+            "--save_input",
+            action="store_true",
+            help="Save the input json file",
+            default=False,
+        )
+    # add more arguments here
+    return parser
+
+
+def chai_argparse_util(parser):
     parser.add_argument(
-        "--save_input",
+        "-c",
+        "--chai1",
         action="store_true",
-        help="Save the input json file",
-        default=False,
+        help="Run Chai1",
     )
+    # check if save input is in the parser
+    if "--save_input" not in parser._option_string_actions:
+
+        parser.add_argument(
+            "--save_input",
+            action="store_true",
+            help="Save the input json file",
+            default=False,
+        )
     # add more arguments here
     return parser
 

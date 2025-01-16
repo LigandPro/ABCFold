@@ -5,8 +5,8 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
-from abcfold.boltz1.check_install import check_chai1
 from abcfold.chai1.af3_to_chai import ChaiFasta
+from abcfold.chai1.check_install import check_chai1
 
 logger = logging.getLogger("logger")
 
