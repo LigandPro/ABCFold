@@ -29,7 +29,7 @@ class BoltzOutput:
     def process_boltz_output(self):
         file_groups = {}
         for pathway in self.output_dir.rglob("*"):
-            number = pathway.stem.split(f"{self.name}_model_")[-1]
+            number = pathway.stem.split("_model_")[-1]
             if not number.isdigit():
                 continue
             number = int(number)

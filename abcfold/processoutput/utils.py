@@ -17,10 +17,27 @@ class FileTypes(Enum):
     CIF = "cif"
     JSON = "json"
 
+    @classmethod
+    def values(cls):
+        return [value.value for value in cls.__members__.values()]
 
-class ModelCount:
+
+class ModelCount(Enum):
     ALL = "all"
     RESIDUES = "residues"
+
+    @classmethod
+    def values(cls):
+        return [value.value for value in cls.__members__.values()]
+
+
+class ResidueCountType(Enum):
+    AVERAGE = "average"
+    CARBONALPHA = "carbonalpha"
+
+    @classmethod
+    def values(cls):
+        return [value.value for value in cls.__members__.values()]
 
 
 class FileBase(ABC):
@@ -61,7 +78,30 @@ class CifFile(FileBase):
         super().__init__(cif_file)
         self.cif_file = Path(cif_file)
         self.model = self.load_cif_file()
-        self.plddt = self.get_plddt()
+        self.atom_plddt_per_chain = self.get_plddt_per_atom()
+        self.residue_plddt_per_chain = self.get_plddt_per_residue()
+        self.__plddts = [
+            plddts for plddts in self.atom_plddt_per_chain.values() for plddts in plddts
+        ]
+        self.__residue_plddts = [
+            plddts
+            for plddts in self.residue_plddt_per_chain.values()
+            for plddts in plddts
+        ]
+
+    @property
+    def plddts(self):
+        """
+        The pLDDT scores for each atom in the model
+        """
+        return self.__plddts
+
+    @property
+    def residue_plddts(self):
+        """
+        The pLDDT scores for each residue in the model
+        """
+        return self.__residue_plddts
 
     def load_cif_file(self):
         # load the cif file
@@ -77,17 +117,52 @@ class CifFile(FileBase):
 
             return {chain.id: len(chain) for chain in chains}
         else:
-            msg = "Invalid mode. Please use ModelCount.ALL or ModelCount.RESIDUES"
+            msg = f"Invalid mode. Please use {', '.join(ModelCount.__members__)}"
             logger.critical(msg)
             raise ValueError()
 
-    def get_plddt(self):
-        plddt = []
+    def get_plddt_per_atom(self):
+        plddt = {}
         for chain in self.model[0]:
             for residue in chain:
                 for atom in residue:
-                    plddt.append(atom.bfactor)
+                    if chain.id in plddt:
+                        plddt[chain.id].append(atom.bfactor)
+                    else:
+                        plddt[chain.id] = [atom.bfactor]
+
         return plddt
+
+    def get_plddt_per_residue(self, method=ResidueCountType.AVERAGE.value):
+        plddts = {}
+
+        if method not in ResidueCountType.values():
+            logger.error(
+                f"Invalid method. Please use {', '.join(ResidueCountType.__members__)}"
+            )
+            raise ValueError()
+
+        for chain in self.model[0]:
+            for residue in chain:
+                if method == ResidueCountType.AVERAGE.value:
+                    scores = 0
+                    for atom in residue:
+                        scores += atom.bfactor
+                    score = scores / len(residue)
+
+                elif method == ResidueCountType.CARBONALPHA.value:
+                    for atom in residue:
+                        if atom.id == "CA":
+                            score = atom.bfactor
+                            break
+
+                if chain.id in plddts:
+                    plddts[chain.id].append(score)
+
+                else:
+                    plddts[chain.id] = [score]
+
+        return plddts
 
     def to_file(self, output_file: Union[str, Path]):
         io = MMCIFIO()
