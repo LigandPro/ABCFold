@@ -1,4 +1,4 @@
-from abcfold.plots.plddt_plots import plot_plddt_distribution
+from abcfold.plots.plddt_plots import plot_plddt_distribution_plotly
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.processoutput.chai import ChaiOutput
@@ -21,7 +21,7 @@ def test_plddt_plot(test_data):
     plot_files = [af3_files, boltz_files, chai_files]
 
     # plot_plddt_distribution(*af3_files, *boltz_files, *chai_files)
-    plot_plddt_distribution(*plot_files)
+    plot_plddt_distribution_plotly(*plot_files)
     assert False
 
     # Issues with plot:
