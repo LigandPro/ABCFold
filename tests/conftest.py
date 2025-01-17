@@ -1,8 +1,13 @@
+import json
 import logging
 from collections import namedtuple
 from pathlib import Path
 
 import pytest
+
+from abcfold.processoutput.alphafold3 import AlphafoldOutput
+from abcfold.processoutput.boltz import BoltzOutput
+from abcfold.processoutput.chai import ChaiOutput
 
 logger = logging.getLogger("logger")
 
@@ -34,6 +39,32 @@ tests from the root of the repository or the tests directory"
         stem, suffix = test_file.stem, test_file.suffix[1:]
         d[f"test_{stem.replace('-', '_')}_{suffix}"] = str(test_file)
 
-    nt = namedtuple("TestData", d)
+    name = "6BJ9"
+    input_params = d["test_inputAB_json"]
+    with open(input_params, "r") as f:
+        input_params = json.load(f)
 
-    return nt(**d)
+    af3_output = AlphafoldOutput(
+        d["test_alphafold3_6BJ9_"],
+        input_params,
+        name,
+    )
+    boltz_output = BoltzOutput(
+        d["test_boltz_1_6BJ9_"],
+        input_params,
+        name,
+    )
+    chai_output = ChaiOutput(
+        d["test_chai1_6BJ9_"],
+        input_params,
+        name,
+    )
+
+    d["af3_output"] = af3_output
+    d["boltz_output"] = boltz_output
+    d["chai_output"] = chai_output
+
+    nt = namedtuple("TestData", d)
+    n = nt(**d)
+
+    return n

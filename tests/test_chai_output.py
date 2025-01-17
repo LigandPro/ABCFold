@@ -1,10 +1,8 @@
-from abcfold.processoutput.chai import ChaiOutput
 from abcfold.processoutput.utils import CifFile, NpyFile, NpzFile
 
 
 def test_process_chai_output(test_data):
-    name = "test"
-    chai_output = ChaiOutput(test_data.test_chai1_test_, name)
+    chai_output = test_data.chai_output
 
     assert str(chai_output.output_dir) == str(test_data.test_chai1_6BJ9_)
 
