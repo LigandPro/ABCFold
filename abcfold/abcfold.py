@@ -45,9 +45,9 @@ def run(args, config, defaults, config_file):
         sys.exit(1)
 
     with open(args.input_json, "r") as f:
-        af3_json = json.load(f)
+        input_params = json.load(f)
 
-    name = af3_json.get("name")
+    name = input_params.get("name")
     if name is None:
         logger.error("Input JSON must contain a 'name' field")
         sys.exit(1)
@@ -72,14 +72,14 @@ def run(args, config, defaults, config_file):
             else:
                 run_json = Path(args.output_json)
 
-            af3_json = add_msa_to_json(
+            input_params = add_msa_to_json(
                 input_json=input_json,
                 templates=args.templates,
                 num_templates=args.num_templates,
                 custom_template=args.custom_template,
                 custom_template_chain=args.custom_template_chain,
                 target_id=args.target_id,
-                af3_json=af3_json,
+                input_params=input_params,
                 output_json=run_json,
                 to_file=True,
             )
@@ -106,7 +106,7 @@ by default"
 
             # Need to find the name of the af3_dir
             af3_out_dir = list(args.output_dir.iterdir())[0]
-            _ = AlphafoldOutput(af3_out_dir, name)
+            _ = AlphafoldOutput(af3_out_dir, input_params, name)
 
         if args.boltz1:
             from abcfold.run_boltz import run_boltz
@@ -118,7 +118,7 @@ by default"
                 number_of_models=args.number_of_models,
             )
             bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
-            bo = BoltzOutput(bolt_out_dir, name)
+            bo = BoltzOutput(bolt_out_dir, input_params, name)
             bo.add_plddt_to_cif()
 
         if args.chai1:
@@ -132,7 +132,7 @@ by default"
                 number_of_models=args.number_of_models,
             )
 
-            _ = ChaiOutput(chai_output_dir, name)
+            _ = ChaiOutput(chai_output_dir, input_params, name)
 
 
 def main():
