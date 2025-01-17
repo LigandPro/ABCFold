@@ -9,8 +9,14 @@ logger = logging.getLogger("logger")
 
 
 class BoltzOutput:
-    def __init__(self, boltz_output_dir: Union[str, Path], name):
+    def __init__(
+        self,
+        boltz_output_dir: Union[str, Path],
+        input_params: dict,
+        name: str,
+    ):
         self.output_dir = Path(boltz_output_dir)
+        self.input_params = input_params
         self.name = name
 
         if self.output_dir.name.startswith("boltz_results_"):
@@ -58,6 +64,9 @@ class BoltzOutput:
                     intermediate_dict["plddt"] = file_
                 elif file_.pathway.stem.startswith("pde"):
                     intermediate_dict["pde"] = file_
+                elif file_.pathway.suffix == ".cif":
+                    file_.name = f"Boltz-1_{model_number}"
+                    intermediate_dict["cif"] = file_
                 else:
                     intermediate_dict[file_.suffix] = file_
 

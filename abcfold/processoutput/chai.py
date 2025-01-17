@@ -8,7 +8,13 @@ logger = logging.getLogger("logger")
 
 
 class ChaiOutput:
-    def __init__(self, chai_output_dir: Union[str, Path], name):
+    def __init__(
+        self,
+        chai_output_dir: Union[str, Path],
+        input_params: dict,
+        name: str,
+    ):
+        self.input_params = input_params
         self.output_dir = Path(chai_output_dir)
         self.name = name
 
@@ -64,6 +70,7 @@ class ChaiOutput:
                 if file_.pathway.stem.startswith("scores.model"):
                     intermediate_dict["scores"] = file_
                 elif file_.pathway.stem.startswith("pred.model"):
+                    file_.name = f"Chai-1_{model_number}"
                     intermediate_dict["cif"] = file_
                 elif file_.pathway.stem.startswith("pae_scores"):
                     intermediate_dict["pae"] = file_

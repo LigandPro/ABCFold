@@ -59,7 +59,7 @@ class NpzFile(FileBase):
         self.npz_file = Path(npz_file)
         self.data = self.load_npz_file()
 
-    def load_npz_file(self):
+    def load_npz_file(self) -> dict:
         return dict(np.load(self.npz_file))
 
 
@@ -88,6 +88,19 @@ class CifFile(FileBase):
             for plddts in self.residue_plddt_per_chain.values()
             for plddts in plddts
         ]
+        self.__name = self.cif_file.stem
+
+    @property
+    def name(self):
+        return self.__name
+
+    # name setter
+    @name.setter
+    def name(self, name: str):
+        if not isinstance(name, str):
+            logger.error("Name must be a string")
+            raise ValueError()
+        self.__name = name
 
     @property
     def plddts(self):

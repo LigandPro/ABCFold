@@ -5,8 +5,14 @@ from abcfold.processoutput.utils import CifFile, ConfidenceJsonFile
 
 
 class AlphafoldOutput:
-    def __init__(self, af3_output_dir: Union[str, Path], name):
+    def __init__(
+        self,
+        af3_output_dir: Union[str, Path],
+        input_params: dict,
+        name: str,
+    ):
         self.output_dir = Path(af3_output_dir)
+        self.input_params = input_params
 
         if not self.output_dir.name.startswith("alphafold3"):
             self.output_dir = self.output_dir.rename(
@@ -42,7 +48,9 @@ class AlphafoldOutput:
                     file_groups[seed][sample] = {}
                 for file in pathway.iterdir():
                     if file.suffix == ".cif":
-                        file_groups[seed][sample]["cif"] = CifFile(str(file))
+                        cif_file = CifFile(str(file))
+                        cif_file.name = f"Alphafold3_{seed}_{sample}"
+                        file_groups[seed][sample]["cif"] = cif_file
                     elif file.suffix == ".json" and "summary" not in file.stem:
                         file_groups[seed][sample]["json"] = ConfidenceJsonFile(
                             str(file)

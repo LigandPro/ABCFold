@@ -49,6 +49,8 @@ def plot_plddt_distribution(*cif_models: CifFile, source_amount=3):
 
 def plot_plddt_distribution_plotly(*cif_models: CifFile, source_amount=3):
     fig = go.Figure()
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="LightGrey")
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="LightGrey")
 
     colours = list(px.colors.qualitative.T10)
     for i, cif_model in enumerate(cif_models):
@@ -74,7 +76,7 @@ def plot_plddt_distribution_plotly(*cif_models: CifFile, source_amount=3):
                 x=list(range(len(plddt))),
                 y=plddt,
                 mode="lines",
-                name=cif_model.cif_file.stem,
+                name=cif_model.name,
                 line=dict(dash="dot", width=1.2),
             )
         )
@@ -84,8 +86,7 @@ def plot_plddt_distribution_plotly(*cif_models: CifFile, source_amount=3):
         yaxis_title="pLDDT Score",
         title="pLDDT Distribution",
         legend_title="Models",
+        plot_bgcolor="white",
     )
-    # How can I change the colours of the plot to be seaborn colours?
-    # and a white background
 
     fig.show()
