@@ -48,7 +48,7 @@ class ChaiOutput:
                 file_ = NpzFile(str(pathway))
 
             elif file_type == FileTypes.CIF.value:
-                file_ = CifFile(str(pathway))
+                file_ = CifFile(str(pathway), self.input_params)
 
             elif file_type == FileTypes.NPY.value:
                 file_ = NpyFile(str(pathway))

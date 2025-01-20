@@ -48,7 +48,7 @@ class AlphafoldOutput:
                     file_groups[seed][sample] = {}
                 for file in pathway.iterdir():
                     if file.suffix == ".cif":
-                        cif_file = CifFile(str(file))
+                        cif_file = CifFile(str(file), self.input_params)
                         cif_file.name = f"Alphafold3_{seed}_{sample}"
                         file_groups[seed][sample]["cif"] = cif_file
                     elif file.suffix == ".json" and "summary" not in file.stem:

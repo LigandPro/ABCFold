@@ -3,7 +3,7 @@ import logging
 from abc import ABC
 from enum import Enum
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from Bio.PDB import MMCIFIO, MMCIFParser
@@ -74,7 +74,12 @@ class NpyFile(FileBase):
 
 
 class CifFile(FileBase):
-    def __init__(self, cif_file: Union[str, Path]):
+    def __init__(self, cif_file: Union[str, Path], input_params: Optional[dict] = None):
+        if input_params is None:
+            self.input_params = {}
+        else:
+            self.input_params = input_params
+
         super().__init__(cif_file)
         self.cif_file = Path(cif_file)
         self.model = self.load_cif_file()
@@ -137,6 +142,9 @@ class CifFile(FileBase):
     def get_plddt_per_atom(self):
         plddt = {}
         for chain in self.model[0]:
+            if self.input_params.get("sequences") is not None:
+                if self.check_ligand(chain, self.input_params["sequences"]):
+                    continue
             for residue in chain:
                 for atom in residue:
                     if chain.id in plddt:
@@ -156,6 +164,9 @@ class CifFile(FileBase):
             raise ValueError()
 
         for chain in self.model[0]:
+            if self.input_params.get("sequences") is not None:
+                if self.check_ligand(chain, self.input_params["sequences"]):
+                    continue
             for residue in chain:
                 if method == ResidueCountType.AVERAGE.value:
                     scores = 0
@@ -176,6 +187,23 @@ class CifFile(FileBase):
                     plddts[chain.id] = [score]
 
         return plddts
+
+    def check_ligand(self, chain, sequences):
+        """
+        Check if the chain is a ligand, if it is, return True
+        """
+        for sequence in sequences:
+            for sequence_type, sequence_data in sequence.items():
+                if sequence_type == "ligand":
+                    if "id" not in sequence_data:
+                        continue
+                    if isinstance(sequence_data["id"], str):
+                        if chain.id == sequence_data["id"]:
+                            return True
+                    elif isinstance(sequence_data["id"], list):
+                        if chain.id in sequence_data["id"]:
+                            return True
+        return False
 
     def to_file(self, output_file: Union[str, Path]):
         io = MMCIFIO()
