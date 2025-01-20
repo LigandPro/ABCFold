@@ -40,7 +40,7 @@ tests from the root of the repository or the tests directory"
         d[f"test_{stem.replace('-', '_')}_{suffix}"] = str(test_file)
 
     name = "6BJ9"
-    input_params = d["test_inputAB_json"]
+    input_params = Path(d["test_alphafold3_6BJ9_"]).joinpath("6bj9_data.json")
     with open(input_params, "r") as f:
         input_params = json.load(f)
 
