@@ -1,3 +1,6 @@
+import tempfile
+from pathlib import Path
+
 from abcfold.plots.plddt_plot import plot_plddt_distribution_plotly
 
 
@@ -17,11 +20,10 @@ def test_plddt_plot(test_data):
         "Chai-1": chai_files,
     }
 
-    # plot_plddt_distribution(*af3_files, *boltz_files, *chai_files)
-    plot_plddt_distribution_plotly(plot_files)
-    assert False
+    with tempfile.TemporaryDirectory() as temp_dir:
+        plot_plddt_distribution_plotly(
+            plot_files,
+            output_name=f"{temp_dir}/test.html",
+        )
 
-    # Issues with plot:
-    # - Too mnay residues so might be useful to plot per chain and do comparison
-    # - Make an option to plot full model with chain areas highlighted
-    # - Make an option to only take the top plddt scores
+        assert Path(f"{temp_dir}/test.html").exists()

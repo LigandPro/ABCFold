@@ -1,6 +1,7 @@
 # import numpy as np
 import logging
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Union
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -10,7 +11,36 @@ from abcfold.processoutput.utils import CifFile
 logger = logging.getLogger("logger")
 
 
-def plot_plddt_distribution_plotly(cif_models_dict: Dict[str, List[CifFile]]):
+def plot_plddt_distribution_plotly(
+    cif_models_dict: Dict[str, List[CifFile]],
+    output_name: Union[str, Path],
+    line_width: float = 1.6,
+    dash: str = "dot",
+    chain_line_occupancy: float = 0.8,
+    show: bool = False,
+) -> None:
+    """
+    Plots the pLDDT distribution of the models in the dictionary of cif models. Outputs
+    and html file with the plot.
+
+    Args:
+        cif_models_dict: Dictionary of cif models to plot. The keys are the source of
+            the models and the values are lists of CifFile objects.
+            e.g. {"Alphafold3": [CifFile, CifFile, ...], "Boltz-1": [CifFile, ...],
+            "Chai-1": [CifFile, ...]}
+
+        output_name: Path to the output html file.
+        line_width: Width of the lines in the plot.
+        dash: Dash style of the lines in the plot.
+        chain_line_occupancy: Opacity of the chain lines in the plot.
+        show: If True, the plot will be displayed in the browser.
+
+    Returns:
+        None
+
+    Outputs:
+        An html file with the plot.
+    """
 
     fig = go.Figure()
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="LightGrey")
@@ -36,7 +66,7 @@ def plot_plddt_distribution_plotly(cif_models_dict: Dict[str, List[CifFile]]):
                 fig.add_vline(
                     x=counter,
                     line=dict(color=colours[colour_index % len(colours)], dash="dash"),
-                    opacity=0.8,
+                    opacity=chain_line_occupancy,
                     annotation_text=f"Chain {chain}",
                     annotation_position="top left",
                 )
@@ -50,7 +80,7 @@ def plot_plddt_distribution_plotly(cif_models_dict: Dict[str, List[CifFile]]):
                     legendgroup=key,
                     legendgrouptitle_text=Bold(key),
                     name=int(cif_model.name.split("_")[-1]) + 1,
-                    line=dict(dash="dot", width=1.6),
+                    line=dict(dash=dash, width=line_width),
                 )
             )
     models_no = len(cif_models)
@@ -103,7 +133,15 @@ this if failing that means the computer wins."
         showlegend=True,
     )
 
-    fig.show()
+    if show:
+        fig.show()
+
+    output_name = Path(output_name)
+
+    if output_name.suffix == "":
+        output_name = output_name.with_suffix(".html")
+
+    fig.write_html(str(output_name))
 
 
 def Bold(string):
