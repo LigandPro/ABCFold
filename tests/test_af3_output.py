@@ -1,4 +1,4 @@
-def test_process_boltz_output(test_data):
+def test_process_af3_output(test_data):
     af3_output = test_data.af3_output
     assert str(af3_output.output_dir) == test_data.test_alphafold3_6BJ9_
 
@@ -8,15 +8,12 @@ def test_process_boltz_output(test_data):
 
     assert 0 in files
     assert 1 in files
-    assert 2 in files
-    assert 3 in files
-    assert 4 in files
 
     assert "cif" in files[0]
     assert "json" in files[0]
 
-    assert "cif" in files[4]
-    assert "json" in files[4]
+    assert "cif" in files[1]
+    assert "json" in files[1]
 
     json_file = af3_output.scores_files["seed-1"][0]
 
