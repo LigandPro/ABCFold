@@ -7,7 +7,17 @@ from typing import Union
 logger = logging.getLogger("logger")
 
 
-def check_af3_install(interactive):
+def check_af3_install(interactive: bool = True) -> None:
+    """
+    Check if Alphafold3 is installed by running the help command
+
+    Args:
+        interactive (bool): If True, run the docker container in interactive mode
+
+    Raises:
+        subprocess.CalledProcessError: If the Alphafold3 help command returns an error
+
+    """
     logger.debug("Checking if Alphafold3 is installed")
     cmd = generate_test_command(interactive)
     with subprocess.Popen(
@@ -33,6 +43,24 @@ def run_alphafold3(
     interactive: bool = True,
     number_of_models: int = 5,
 ) -> None:
+    """
+    Run Alphafold3 using the input JSON file
+
+    Args:
+        input_json (Union[str, Path]): Path to the input JSON file
+        output_dir (Union[str, Path]): Path to the output directory
+        model_params (Union[str, Path]): Path to the model parameters
+        database_dir (Union[str, Path]): Path to the database directory
+        interactive (bool): If True, run the docker container in interactive mode
+        number_of_models (int): Number of models to generate
+
+    Returns:
+        None
+
+    Raises:
+        subprocess.CalledProcessError: If the Alphafold3 command returns an error
+
+    """
 
     check_af3_install(interactive)
 
@@ -67,6 +95,20 @@ def generate_af3_cmd(
     number_of_models: int = 5,
     interactive: bool = True,
 ) -> str:
+    """
+    Generate the Alphafold3 command
+
+    Args:
+        input_json (Union[str, Path]): Path to the input JSON file
+        output_dir (Union[str, Path]): Path to the output directory
+        model_params (Union[str, Path]): Path to the model parameters
+        database_dir (Union[str, Path]): Path to the database directory
+        number_of_models (int): Number of models to generate
+        interactive (bool): If True, run the docker container in interactive mode
+
+    Returns:
+        str: The Alphafold3 command
+    """
     input_json = Path(input_json)
     output_dir = Path(output_dir)
     return f"""
@@ -86,6 +128,15 @@ def generate_af3_cmd(
 
 
 def generate_test_command(interactive: bool = True) -> str:
+    """
+    Generate the Alphafold3 help command
+
+    Args:
+        interactive (bool): If True, run the docker container in interactive mode
+
+    Returns:
+        str: The Alphafold3 help command
+    """
     return f"""
     docker run {'-it' if interactive else ''} \
     alphafold3 \

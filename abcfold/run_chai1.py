@@ -17,7 +17,22 @@ def run_chai(
     save_input: bool = False,
     test: bool = False,
     number_of_models: int = 5,
-):
+) -> None:
+    """
+    Run Chai-1 using the input JSON file
+
+    Args:
+        input_json (Union[str, Path]): Path to the input JSON file
+        output_dir (Union[str, Path]): Path to the output directory
+        save_input (bool): If True, save the input fasta file and MSA to the output
+        directory
+        test (bool): If True, run the test command
+        number_of_models (int): Number of models to generate
+
+    Returns:
+        None
+
+    """
     input_json = Path(input_json)
     output_dir = Path(output_dir)
     logger.debug("Checking if Chai-1 is installed")
@@ -41,7 +56,7 @@ def run_chai(
                 out_fasta, msa_dir, out_constraints, output_dir, number_of_models
             )
             if not test
-            else generate_test_command()
+            else generate_chai_test_command()
         )
 
         logger.info("Running Chai-1")
@@ -65,7 +80,21 @@ def generate_chai_command(
     input_constraints: Union[str, Path],
     output_dir: Union[str, Path],
     number_of_models: int = 5,
-):
+) -> list:
+    """
+    Generate the Chai-1 command
+
+    Args:
+        input_fasta (Union[str, Path]): Path to the input fasta file
+        msa_dir (Union[str, Path]): Path to the MSA directory
+        input_constraints (Union[str, Path]): Path to the input constraints file
+        output_dir (Union[str, Path]): Path to the output directory
+        number_of_models (int): Number of models to generate
+
+    Returns:
+        list: The Chai-1 command
+
+    """
 
     chai_exe = Path(__file__).parent / "chai1" / "chai.py"
     cmd = ["python", str(chai_exe), "fold", str(input_fasta)]
@@ -81,7 +110,16 @@ def generate_chai_command(
     return cmd
 
 
-def generate_test_command():
+def generate_chai_test_command() -> list:
+    """
+    Generate the Chai-1 test command
+
+    Args:
+        None
+
+    Returns:
+        list: The Chai-1 test command
+    """
     chai_exe = Path(__file__).parent / "chai1" / "chai.py"
     return [
         "python",
