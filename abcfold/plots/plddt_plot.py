@@ -6,7 +6,7 @@ from typing import Dict, List, Union
 import plotly.express as px
 import plotly.graph_objects as go
 
-from abcfold.processoutput.utils import CifFile
+from abcfold.processoutput.file_handlers import CifFile
 
 logger = logging.getLogger("logger")
 

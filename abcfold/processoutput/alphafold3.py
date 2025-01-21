@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.utils import CifFile, ConfidenceJsonFile
+from abcfold.processoutput.file_handlers import CifFile, ConfidenceJsonFile
 
 
 class AlphafoldOutput:
@@ -19,6 +19,29 @@ class AlphafoldOutput:
             input_params (dict): Dictionary containing the input parameters used for the
             AlphaFold3 run
             name (str): Name given to the AlphaFold3 run
+
+        Attributes:
+            output_dir (Path): Path to the AlphaFold3 output directory
+            input_params (dict): Dictionary containing the input parameters used for the
+            AlphaFold3 run
+            name (str): Name given to the AlphaFold3 run
+            output (dict): Dictionary containing the processed output the contents
+            of the AlphaFold3 output directory. The dictionary is structured as follows:
+
+            {
+                "seed-1": {
+                    1: {
+                        "cif": CifFile,
+                        "json": ConfidenceJsonFile
+                    },
+                    2: {
+                        "cif": CifFile,
+                        "json": ConfidenceJsonFile
+                    }
+                },
+                etc...
+            }
+            This is different to the boltz and chai equivalent as they do not have seeds
         """
         self.output_dir = Path(af3_output_dir)
         self.input_params = input_params
@@ -46,24 +69,6 @@ class AlphafoldOutput:
         """
         Process the output of an AlphaFold3 run
 
-        Returns:
-            file_groups (dict): Dictionary containing the processed output the contents
-            of the AlphaFold3 output directory. The dictionary is structured as follows:
-
-            {
-                "seed-1": {
-                    1: {
-                        "cif": CifFile,
-                        "json": ConfidenceJsonFile
-                    },
-                    2: {
-                        "cif": CifFile,
-                        "json": ConfidenceJsonFile
-                    }
-                },
-                etc...
-            }
-            This is different to the boltz and chai equivalent as they do not have seeds
         """
         file_groups = {}
         for pathway in self.output_dir.iterdir():

@@ -1,4 +1,4 @@
-from abcfold.processoutput.utils import CifFile, NpyFile, NpzFile
+from abcfold.processoutput.file_handlers import CifFile, NpyFile, NpzFile
 
 
 def test_process_chai_output(test_data):
