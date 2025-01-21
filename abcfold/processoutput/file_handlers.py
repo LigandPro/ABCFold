@@ -3,15 +3,19 @@ import logging
 from abc import ABC
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
-from Bio.PDB import MMCIFIO, MMCIFParser
+from Bio.PDB import MMCIFIO, Chain, MMCIFParser
 
 logger = logging.getLogger("logger")
 
 
 class FileTypes(Enum):
+    """
+    Enum class for the different file types
+    """
+
     NPZ = "npz"
     NPY = "npy"
     CIF = "cif"
@@ -23,6 +27,10 @@ class FileTypes(Enum):
 
 
 class ModelCount(Enum):
+    """
+    Enum class for the different model count types
+    """
+
     ALL = "all"
     RESIDUES = "residues"
 
@@ -32,6 +40,10 @@ class ModelCount(Enum):
 
 
 class ResidueCountType(Enum):
+    """
+    Enum class for the different residue count types
+    """
+
     AVERAGE = "average"
     CARBONALPHA = "carbonalpha"
 
@@ -41,6 +53,9 @@ class ResidueCountType(Enum):
 
 
 class FileBase(ABC):
+    """
+    Abstract base class for the different file types
+    """
 
     def __init__(self, pathway: Union[str, Path]):
         self.pathway = Path(pathway)
@@ -54,7 +69,19 @@ class FileBase(ABC):
 
 
 class NpzFile(FileBase):
+
     def __init__(self, npz_file: Union[str, Path]):
+        """
+        Object to handle npz files
+
+        Args:
+            npz_file (Union[str, Path]): Path to the npz file
+
+        Attributes:
+            npz_file (Path): Path to the npz file
+            data (dict): Dictionary containing the data from the npz file
+
+        """
         super().__init__(npz_file)
         self.npz_file = Path(npz_file)
         self.data = self.load_npz_file()
@@ -65,6 +92,17 @@ class NpzFile(FileBase):
 
 class NpyFile(FileBase):
     def __init__(self, npy_file: Union[str, Path]):
+        """
+        Object to handle npy files
+
+        Args:
+            npy_file (Union[str, Path]): Path to the npy file
+
+        Attributes:
+            npy_file (Path): Path to the npy file
+            data (np.ndarray): Numpy array containing the data from the np
+        """
+
         super().__init__(npy_file)
         self.npy_file = Path(npy_file)
         self.data = self.load_npy_file()
@@ -74,7 +112,28 @@ class NpyFile(FileBase):
 
 
 class CifFile(FileBase):
+
     def __init__(self, cif_file: Union[str, Path], input_params: Optional[dict] = None):
+        """
+        Object to handle cif files
+
+        Args:
+            cif_file (Union[str, Path]): Path to the cif file
+            input_params (Optional[dict]): Dictionary containing the input parameters
+            used for the model. This is used to distinguish between ligands and
+            sequences
+
+        Attributes:
+            cif_file (Path): Path to the cif file
+            model (Structure): BioPython structure object containing the model
+            atom_plddt_per_chain (dict): Dictionary containing the pLDDT scores for
+            each atom
+            residue_plddt_per_chain (dict): Dictionary containing the pLDDT scores for
+            each residue
+            plddts (list): List containing the pLDDT scores for each atom
+            residue_plddts (list): List containing the pLDDT scores for each residue
+            name (str): Name given to the model
+        """
         if input_params is None:
             self.input_params = {}
         else:
@@ -122,11 +181,25 @@ class CifFile(FileBase):
         return self.__residue_plddts
 
     def load_cif_file(self):
-        # load the cif file
+        """
+        Load the cif file using BioPython
+        """
         parser = MMCIFParser(QUIET=True)
         return parser.get_structure(self.pathway.stem, self.pathway)
 
     def chain_lengths(self, mode=ModelCount.RESIDUES):
+        """
+        Function to get the length of each chain in the model
+
+        Args:
+            mode (ModelCount): Enum class specifying the mode to use
+
+        Returns:
+            dict: Dictionary containing the chain id and the length of the chain
+
+        Raises:
+            ValueError: If the mode is not valid
+        """
         chains = self.model[0]
         if mode == ModelCount.ALL:
             return {chain.id: len([atom for atom in chain]) for chain in chains}
@@ -139,8 +212,14 @@ class CifFile(FileBase):
             logger.critical(msg)
             raise ValueError()
 
-    def get_plddt_per_atom(self):
-        plddt = {}
+    def get_plddt_per_atom(self) -> dict:
+        """
+        Get the pLDDT scores for each atom in the model
+
+        Returns:
+            dict: Dictionary containing the chain id and the pLDDT scores for each atom
+        """
+        plddt: Dict[str, list] = {}
         for chain in self.model[0]:
             if self.input_params.get("sequences") is not None:
                 if self.check_ligand(chain, self.input_params["sequences"]):
@@ -154,8 +233,18 @@ class CifFile(FileBase):
 
         return plddt
 
-    def get_plddt_per_residue(self, method=ResidueCountType.AVERAGE.value):
-        plddts = {}
+    def get_plddt_per_residue(self, method=ResidueCountType.AVERAGE.value) -> dict:
+        """
+        Get the pLDDT scores for each residue in the model
+
+        Args:
+            method (ResidueCountType): Enum class specifying the method to use
+
+        Returns:
+            dict: Dictionary containing the chain id and the pLDDT scores for each
+            residue
+        """
+        plddts: Dict[str, list] = {}
 
         if method not in ResidueCountType.values():
             logger.error(
@@ -188,9 +277,16 @@ class CifFile(FileBase):
 
         return plddts
 
-    def check_ligand(self, chain, sequences):
+    def check_ligand(self, chain: Chain, sequences: list) -> bool:
         """
-        Check if the chain is a ligand, if it is, return True
+        Check if the chain is a ligand
+
+        Args:
+            chain (Chain): BioPython chain object
+            sequences (list): List of dictionaries containing the sequences
+
+        Returns:
+            bool: True if the chain is a ligand, False otherwise
         """
         for sequence in sequences:
             for sequence_type, sequence_data in sequence.items():
@@ -205,7 +301,16 @@ class CifFile(FileBase):
                             return True
         return False
 
-    def to_file(self, output_file: Union[str, Path]):
+    def to_file(self, output_file: Union[str, Path]) -> None:
+        """
+        Save the cif file
+
+        Args:
+            output_file (Union[str, Path]): Path to save the cif file
+
+        Returns:
+            None
+        """
         io = MMCIFIO()
         io.set_structure(self.model)
         io.save(str(output_file))
@@ -213,6 +318,17 @@ class CifFile(FileBase):
 
 class ConfidenceJsonFile(FileBase):
     def __init__(self, json_file: Union[str, Path]):
+        """
+        Object to handle json files
+
+        Args:
+            json_file (Union[str, Path]): Path to the json file
+
+        Attributes:
+            json_file (Path): Path to the json file
+            data (dict): Dictionary containing the data from the json file
+
+        """
         super().__init__(json_file)
         self.data = self.load_json_file()
 
