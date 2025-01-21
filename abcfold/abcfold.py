@@ -20,7 +20,20 @@ logger = setup_logger()
 
 
 def run(args, config, defaults, config_file):
-    """Run AlphaFold3"""
+    """Run ABCFold
+
+    Args:
+        args (argparse.Namespace): Arguments from the command line
+        config (configparser.SafeConfigParser): Config parser object
+        defaults (dict): Default values from the config file
+        config_file (Path): Path to the config file
+
+
+    Raises:
+        SystemExit: If the database directory or model parameters directory is not found
+
+
+    """
 
     args.output_dir = Path(args.output_dir)
 
@@ -136,11 +149,13 @@ by default"
 
 
 def main():
+    """
+    Run AlphaFold3 / Boltz1 / Chai-1
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai-1")
 
-    # Load defaults from config file
     defaults = {}
     config_file = Path(__file__).parent.joinpath("data", "config.ini")
     config = configparser.SafeConfigParser()

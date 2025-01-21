@@ -2,8 +2,9 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.utils import (CifFile, ConfidenceJsonFile,
-                                         FileTypes, ModelCount, NpzFile)
+from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
+                                                 FileTypes, ModelCount,
+                                                 NpzFile)
 
 logger = logging.getLogger("logger")
 
@@ -15,6 +16,49 @@ class BoltzOutput:
         input_params: dict,
         name: str,
     ):
+        """
+        Object to process the output of an Boltz-1 run
+
+        Args:
+            boltz_output_dir (Union[str, Path]): Path to the Boltz-1 output directory
+            input_params (dict): Dictionary containing the input parameters used for the
+            Boltz-1 run
+            name (str): Name given to the Boltz-1 run
+
+        Attributes:
+            output_dir (Path): Path to the Boltz-1 output directory
+            input_params (dict): Dictionary containing the input parameters used for the
+            Boltz-1 run
+            name (str): Name given to the Boltz-1 run
+            output (dict): Dictionary containing the processed output the contents
+            of the Boltz-1 output directory. The dictionary is structured as follows:
+
+            {
+                1: {
+                    "pae": NpzFile,
+                    "plddt": NpzFile,
+                    "pde": NpzFile,
+                    "cif": CifFile,
+                    "json": ConfidenceJsonFile
+                },
+                2: {
+                    "pae": NpzFile,
+                    "plddt": NpzFile,
+                    "pde": NpzFile,
+                    "cif": CifFile,
+                    "json": ConfidenceJsonFile
+                },
+                ...
+            }
+            pae_files (list): Ordered list of NpzFile objects containing the PAE data
+            plddt_files (list): Ordered list of NpzFile objects containing the PLDDT
+            data
+            pde_files (list):  Ordered list of NpzFile objects containing the PDE data
+            cif_files (list): Ordered list of CifFile objects containing the model data
+            scores_files (list): Ordered list of ConfidenceJsonFile objects containing
+            the model scores
+
+        """
         self.output_dir = Path(boltz_output_dir)
         self.input_params = input_params
         self.name = name
@@ -33,6 +77,9 @@ class BoltzOutput:
         self.scores_files = [value["json"] for value in self.output.values()]
 
     def process_boltz_output(self):
+        """
+        Function to process the output of a Boltz-1 run
+        """
         file_groups = {}
         for pathway in self.output_dir.rglob("*"):
             number = pathway.stem.split("_model_")[-1]
@@ -79,6 +126,17 @@ class BoltzOutput:
         return model_number_file_type_file
 
     def add_plddt_to_cif(self):
+        """
+        Add the PLDDT scores to the B-factors of the CIF files as this is not done
+        natively by Boltz-1
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError: If the length of the PLDDT scores does not match the number
+            of residues in the CIF file
+        """
         for cif_file, plddt_scores in zip(self.cif_files, self.plddt_files):
             plddt_scores = plddt_scores.data["plddt"]
             if max(plddt_scores) <= 1:
