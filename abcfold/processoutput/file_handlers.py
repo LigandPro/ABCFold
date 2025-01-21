@@ -33,6 +33,7 @@ class ModelCount(Enum):
 
     ALL = "all"
     RESIDUES = "residues"
+    MIX = "mix"
 
     @classmethod
     def values(cls):
@@ -193,6 +194,7 @@ class CifFile(FileBase):
 
         Args:
             mode (ModelCount): Enum class specifying the mode to use
+            Note: For ligands the length will always be the number of atoms
 
         Returns:
             dict: Dictionary containing the chain id and the length of the chain
@@ -202,11 +204,30 @@ class CifFile(FileBase):
         """
         chains = self.model[0]
         if mode == ModelCount.ALL:
-            return {chain.id: len([atom for atom in chain]) for chain in chains}
+            return {
+                chain.id: len([atom for resiude in chain for atom in resiude])
+                for chain in chains
+            }
 
         elif mode == ModelCount.RESIDUES:
+            residue_counts = {}
+            for chain in chains:
+                if self.check_ligand(chain):
+                    residue_counts[chain.id] = 1
+                    continue
+                residue_counts[chain.id] = len([residue for residue in chain])
+            return residue_counts
 
-            return {chain.id: len(chain) for chain in chains}
+        elif mode == ModelCount.MIX:
+            residue_counts = {}
+            for chain in chains:
+                if self.check_ligand(chain):
+                    residue_counts[chain.id] = len(
+                        [atom for resiude in chain for atom in resiude]
+                    )
+                    continue
+                residue_counts[chain.id] = len([residue for residue in chain])
+            return residue_counts
         else:
             msg = f"Invalid mode. Please use {', '.join(ModelCount.__members__)}"
             logger.critical(msg)
@@ -221,9 +242,8 @@ class CifFile(FileBase):
         """
         plddt: Dict[str, list] = {}
         for chain in self.model[0]:
-            if self.input_params.get("sequences") is not None:
-                if self.check_ligand(chain, self.input_params["sequences"]):
-                    continue
+            if self.check_ligand(chain):
+                continue
             for residue in chain:
                 for atom in residue:
                     if chain.id in plddt:
@@ -253,9 +273,8 @@ class CifFile(FileBase):
             raise ValueError()
 
         for chain in self.model[0]:
-            if self.input_params.get("sequences") is not None:
-                if self.check_ligand(chain, self.input_params["sequences"]):
-                    continue
+            if self.check_ligand(chain):
+                continue
             for residue in chain:
                 if method == ResidueCountType.AVERAGE.value:
                     scores = 0
@@ -277,17 +296,20 @@ class CifFile(FileBase):
 
         return plddts
 
-    def check_ligand(self, chain: Chain, sequences: list) -> bool:
+    def check_ligand(self, chain: Chain) -> bool:
         """
         Check if the chain is a ligand
 
         Args:
             chain (Chain): BioPython chain object
-            sequences (list): List of dictionaries containing the sequences
 
         Returns:
             bool: True if the chain is a ligand, False otherwise
         """
+
+        sequences = self.input_params.get("sequences")
+        if sequences is None:
+            return False
         for sequence in sequences:
             for sequence_type, sequence_data in sequence.items():
                 if sequence_type == "ligand":

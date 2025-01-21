@@ -15,9 +15,6 @@ def test_process_boltz_output(test_data):
 
     assert 0 in boltz_output.output
     assert 1 in boltz_output.output
-    assert 2 in boltz_output.output
-    assert 3 in boltz_output.output
-    assert 4 in boltz_output.output
 
     assert "plddt" in boltz_output.output[0]
     assert "pae" in boltz_output.output[0]
@@ -28,8 +25,8 @@ def test_process_boltz_output(test_data):
     assert "plddt" in boltz_output.output[1]
     assert "pae" in boltz_output.output[1]
     assert "pde" in boltz_output.output[1]
-    assert "cif" in boltz_output.output[4]
-    assert "json" in boltz_output.output[4]
+    assert "cif" in boltz_output.output[1]
+    assert "json" in boltz_output.output[1]
 
     assert all(isinstance(pae_file, NpzFile) for pae_file in boltz_output.pae_files)
     assert all(
@@ -42,7 +39,12 @@ def test_process_boltz_output(test_data):
         for scores_file in boltz_output.scores_files
     )
 
-    assert boltz_output.cif_files[0].chain_lengths() == {"A": 20, "B": 16}
+    assert boltz_output.cif_files[0].chain_lengths() == {
+        "A": 393,
+        "B": 393,
+        "C": 1,
+        "D": 1,
+    }
 
     boltz_output.add_plddt_to_cif()
     with tempfile.TemporaryDirectory() as temp_dir_str:

@@ -138,17 +138,28 @@ class BoltzOutput:
             of residues in the CIF file
         """
         for cif_file, plddt_scores in zip(self.cif_files, self.plddt_files):
-            plddt_scores = plddt_scores.data["plddt"]
-            if max(plddt_scores) <= 1:
-                plddt_scores = (plddt_scores * 100).astype(float)
 
-            chain_lengths = cif_file.chain_lengths(mode=ModelCount.RESIDUES)
-            assert sum(chain_lengths.values()) == len(plddt_scores), "Length mismatch"
+            plddt_score = plddt_scores.data["plddt"]
+            if max(plddt_score) <= 1:
+                plddt_score = (plddt_score * 100).astype(float)
+
+            chain_lengths = cif_file.chain_lengths(mode=ModelCount.MIX)
+
+            assert sum(chain_lengths.values()) == len(plddt_score), "Length mismatch"
+
             counter = 0
             for chain in cif_file.model[0]:
+
+                # Boltz does ligand plddt per atom so we need to count them separately
+                ligand = cif_file.check_ligand(chain)
+
                 for residue in chain:
                     for atom in residue:
-                        atom.b_iso = plddt_scores[counter]
-                    counter += 1
+                        atom.b_iso = plddt_score[counter]
+                        if ligand:
+                            counter += 1
+                    if not ligand:
+                        counter += 1
 
+            assert counter == len(plddt_score), "Length mismatch"
             cif_file.to_file(cif_file.pathway)
