@@ -215,14 +215,14 @@ class ChaiFasta:
     def add_ligand(self, seq: dict):
         lig_id = seq["ligand"]["id"]
         ligand_str = ""
-        if "ccdCode" in seq["ligand"]:
+        if "ccdCodes" in seq["ligand"]:
             if isinstance(lig_id, list):
                 for i in seq["ligand"]["id"]:
-                    smile = self.ccd_to_smiles(seq["ligand"]["ccdCode"][0])
+                    smile = self.ccd_to_smiles(seq["ligand"]["ccdCodes"][0])
                     if smile:
                         ligand_str += f">ligand|{i}\n{smile}\n"
             else:
-                smile = self.ccd_to_smiles(seq["ligand"]["ccdCode"])
+                smile = self.ccd_to_smiles(seq["ligand"]["ccdCodes"])
                 if smile:
                     ligand_str = f">ligand|{lig_id}\n{smile}\n"
         if "smiles" in seq["ligand"]:
