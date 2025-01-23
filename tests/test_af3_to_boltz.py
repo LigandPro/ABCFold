@@ -96,3 +96,4 @@ def test_boltz_output_msa(test_data):
         assert boltz_yaml.msa_file is not None
         assert boltz_yaml.msa_file.exists()
         assert boltz_yaml.msa_file.is_file()
+

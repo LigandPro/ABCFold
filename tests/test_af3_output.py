@@ -1,3 +1,7 @@
+from abcfold.processoutput.utils import Af2Pae
+from abcfold.processoutput.file_handlers import CifFile
+
+
 def test_process_af3_output(test_data):
     af3_output = test_data.af3_output
     assert str(af3_output.output_dir) == test_data.test_alphafold3_6BJ9_

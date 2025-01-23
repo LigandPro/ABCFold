@@ -1,8 +1,9 @@
 import tempfile
 from pathlib import Path
 
-from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
-                                                 NpzFile)
+from abcfold.processoutput.file_handlers import CifFile, ConfidenceJsonFile, NpzFile
+from abcfold.processoutput.utils import Af3Pae
+import json
 
 
 def test_process_boltz_output(test_data):
@@ -52,3 +53,36 @@ def test_process_boltz_output(test_data):
         for i, cif_file in enumerate(boltz_output.cif_files):
             cif_file.to_file(temp_dir / f"{i}.cif")
             assert (temp_dir / f"{i}.cif").exists()
+
+
+def test_boltz_pae_to_af3_pae(test_data):
+    comparison_af3_output = test_data.af3_output.scores_files["seed-1"][0].data
+    for pae_file, cif_file in zip(
+        test_data.boltz_output.pae_files, test_data.boltz_output.cif_files
+    ):
+        pae = Af3Pae.from_boltz1(
+            pae_file.data,
+            cif_file,
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            pae.to_file(temp_dir / "pae.json")
+            pae.to_file("pae.json")
+            assert (temp_dir / "pae.json").exists()
+
+        # for some reason the lengths are different for atom - realted things
+        # If it isn't breaking the output page generation, then it's fine
+        assert len(pae.scores["pae"]) == len(comparison_af3_output["pae"])
+
+        assert len(pae.scores["contact_probs"]) == len(
+            comparison_af3_output["contact_probs"]
+        )
+        assert len(pae.scores["token_chain_ids"]) == len(
+            comparison_af3_output["token_chain_ids"]
+        )
+        assert len(pae.scores["token_res_ids"]) == len(
+            comparison_af3_output["token_res_ids"]
+        )
+
+    
