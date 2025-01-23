@@ -28,7 +28,7 @@ def check_af3_install(interactive: bool = True) -> None:
         if p.returncode != 1:
             logger.error(
                 "Alphafold3 is not installed, please go to \
-https://github.com/google-deepmind/alphafold3 and follow the instructions to install"
+https://github.com/google-deepmind/alphafold3 and follow install instructions"
             )
 
             raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
