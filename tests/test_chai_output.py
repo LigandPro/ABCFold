@@ -1,7 +1,8 @@
+import tempfile
+from pathlib import Path
+
 from abcfold.processoutput.file_handlers import CifFile, NpyFile, NpzFile
 from abcfold.processoutput.utils import Af3Pae
-from pathlib import Path
-import tempfile
 
 
 def test_process_chai_output(test_data):
@@ -30,23 +31,22 @@ def test_chai_pae_to_af3_pae(test_data):
             cif_file,
         )
 
-        # with tempfile.TemporaryDirectory() as temp_dir_str:
-        #     temp_dir = Path(temp_dir_str)
-        #     pae.to_file(temp_dir / "pae.json")
-        #     pae.to_file("pae.json")
-        #     assert (temp_dir / "pae.json").exists()
+        with tempfile.TemporaryDirectory() as temp_dir_str:
+            temp_dir = Path(temp_dir_str)
+            pae.to_file(temp_dir / "pae.json")
+            pae.to_file("pae.json")
+            assert (temp_dir / "pae.json").exists()
 
-        # # for some reason the lengths are different for atom - realted things
-        # # If it isn't breaking the output page generation, then it's fine
-        # assert len(pae.scores["pae"]) == len(comparison_af3_output["pae"])
+        # for some reason the lengths are different for atom - realted things
+        # If it isn't breaking the output page generation, then it's fine
+        assert len(pae.scores["pae"]) == len(comparison_af3_output["pae"])
 
-        # assert len(pae.scores["contact_probs"]) == len(
-        #     comparison_af3_output["contact_probs"]
-        # )
-        # assert len(pae.scores["token_chain_ids"]) == len(
-        #     comparison_af3_output["token_chain_ids"]
-        # )
-        # assert len(pae.scores["token_res_ids"]) == len(
-        #     comparison_af3_output["token_res_ids"]
-        # )
-    assert False
+        assert len(pae.scores["contact_probs"]) == len(
+            comparison_af3_output["contact_probs"]
+        )
+        assert len(pae.scores["token_chain_ids"]) == len(
+            comparison_af3_output["token_chain_ids"]
+        )
+        assert len(pae.scores["token_res_ids"]) == len(
+            comparison_af3_output["token_res_ids"]
+        )
