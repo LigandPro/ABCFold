@@ -33,7 +33,6 @@ class ModelCount(Enum):
 
     ALL = "all"
     RESIDUES = "residues"
-    MIX = "mix"
 
     @classmethod
     def values(cls):
@@ -188,7 +187,7 @@ class CifFile(FileBase):
         parser = MMCIFParser(QUIET=True)
         return parser.get_structure(self.pathway.stem, self.pathway)
 
-    def chain_lengths(self, mode=ModelCount.RESIDUES):
+    def chain_lengths(self, mode=ModelCount.RESIDUES, ligand_atoms=False) -> dict:
         """
         Function to get the length of each chain in the model
 
@@ -203,35 +202,55 @@ class CifFile(FileBase):
             ValueError: If the mode is not valid
         """
         chains = self.model[0]
-        if mode == ModelCount.ALL:
+        if mode == ModelCount.ALL or mode == ModelCount.ALL.value:
+
             return {
                 chain.id: len([atom for resiude in chain for atom in resiude])
                 for chain in chains
             }
 
-        elif mode == ModelCount.RESIDUES:
+        elif mode == ModelCount.RESIDUES or mode == ModelCount.RESIDUES.value:
             residue_counts = {}
             for chain in chains:
                 if self.check_ligand(chain):
-                    residue_counts[chain.id] = 1
+                    if ligand_atoms:
+                        residue_counts[chain.id] = len(
+                            [atom for resiude in chain for atom in resiude]
+                        )
+                    else:
+                        residue_counts[chain.id] = 1
                     continue
-                residue_counts[chain.id] = len([residue for residue in chain])
+                residue_counts[chain.id] = len(chain)
             return residue_counts
 
-        elif mode == ModelCount.MIX:
-            residue_counts = {}
-            for chain in chains:
-                if self.check_ligand(chain):
-                    residue_counts[chain.id] = len(
-                        [atom for resiude in chain for atom in resiude]
-                    )
-                    continue
-                residue_counts[chain.id] = len([residue for residue in chain])
-            return residue_counts
         else:
             msg = f"Invalid mode. Please use {', '.join(ModelCount.__members__)}"
             logger.critical(msg)
             raise ValueError()
+
+    def token_residue_ids(self) -> dict:
+        """
+        Function to get the residue ids for each chain in the model
+
+        Returns:
+            dict: Dictionary containing the chain id and the residue ids for each
+            chain
+        """
+        chains = self.model[0]
+        residue_ids = {}
+        for chain in chains:
+            if self.check_ligand(chain):
+                residue_ids[chain.id] = [
+                    residue.id[1] for residue in chain for atom in residue
+                ]
+                continue
+            residue_ids[chain.id] = [
+                residue.id[1]
+                for residue in chain
+                if residue.id[0] == " " or residue.id[0] == "H"
+            ]
+
+        return residue_ids
 
     def get_plddt_per_atom(self) -> dict:
         """
