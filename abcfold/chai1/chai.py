@@ -70,8 +70,6 @@ def run_inference_wrapper(
         device=device,
         low_memory=True,
     )
-    print(type(result))
-    print(dir(result))
 
     np.save(f"{output_dir}/pae_scores.npy", result.pae)
     return result
