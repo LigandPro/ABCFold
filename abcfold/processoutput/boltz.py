@@ -2,9 +2,13 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
-                                                 FileTypes, ModelCount,
-                                                 NpzFile)
+from abcfold.processoutput.file_handlers import (
+    CifFile,
+    ConfidenceJsonFile,
+    FileTypes,
+    ModelCount,
+    NpzFile,
+)
 
 logger = logging.getLogger("logger")
 
@@ -143,7 +147,9 @@ class BoltzOutput:
             if max(plddt_score) <= 1:
                 plddt_score = (plddt_score * 100).astype(float)
 
-            chain_lengths = cif_file.chain_lengths(mode=ModelCount.MIX)
+            chain_lengths = cif_file.chain_lengths(
+                mode=ModelCount.RESIDUES, ligand_atoms=True
+            )
 
             assert sum(chain_lengths.values()) == len(plddt_score), "Length mismatch"
 
