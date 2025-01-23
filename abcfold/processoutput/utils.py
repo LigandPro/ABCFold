@@ -51,7 +51,11 @@ class Af3Pae:
 
     @classmethod
     def from_chai1(cls, scores: dict, cif_file: CifFile):
+        af3_scores = AF3TEMPLATE.copy()
 
+        chain_lengths = cif_file.chain_lengths(mode="residues", ligand_atoms=False)
+
+        print(len(flatten([[key] * value for key, value in chain_lengths.items()])))
         pass
 
     def __init__(self, af3_scores: dict):
