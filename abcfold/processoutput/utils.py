@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Union
 
+
 import numpy as np
 
 from abcfold.processoutput.file_handlers import CifFile
