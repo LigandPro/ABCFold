@@ -9,6 +9,8 @@ from abcfold.processoutput.file_handlers import (
     ModelCount,
     NpzFile,
 )
+from abcfold.processoutput.utils import Af3Pae
+import json
 
 logger = logging.getLogger("logger")
 
@@ -75,9 +77,11 @@ class BoltzOutput:
         self.output = self.process_boltz_output()
 
         self.pae_files = [value["pae"] for value in self.output.values()]
+        self.cif_files = [value["cif"] for value in self.output.values()]
+        self.pae_to_af3()
+        self.af3_pae_files = [value["af3_pae"] for value in self.output.values()]
         self.plddt_files = [value["plddt"] for value in self.output.values()]
         self.pde_files = [value["pde"] for value in self.output.values()]
-        self.cif_files = [value["cif"] for value in self.output.values()]
         self.scores_files = [value["json"] for value in self.output.values()]
 
     def process_boltz_output(self):
@@ -169,3 +173,25 @@ class BoltzOutput:
 
             assert counter == len(plddt_score), "Length mismatch"
             cif_file.to_file(cif_file.pathway)
+
+    def pae_to_af3(self):
+        """
+        Convert the PAE data from Boltz-1 to the format used by Alphafold3
+
+        Returns:
+            None
+        """
+        for i, (pae_file, cif_file) in enumerate(zip(self.pae_files, self.cif_files)):
+            pae = Af3Pae.from_boltz1(
+                pae_file.data,
+                cif_file,
+            )
+
+            out_name = cif_file.pathway.parent.joinpath(
+                cif_file.pathway.stem + "_af3_pae.json"
+            )
+
+            with open(out_name, "w") as f:
+                json.dump(pae.scores, f)
+
+            self.output[i]["af3_pae"] = out_name

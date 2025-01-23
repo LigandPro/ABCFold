@@ -2,10 +2,11 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.file_handlers import (CifFile, FileTypes, NpyFile,
-                                                 NpzFile)
+from abcfold.processoutput.file_handlers import CifFile, FileTypes, NpyFile, NpzFile
+from abcfold.processoutput.utils import Af3Pae
 
 logger = logging.getLogger("logger")
+import json
 
 
 class ChaiOutput:
@@ -67,8 +68,12 @@ class ChaiOutput:
         self.cif_files = [
             value["cif"] for value in self.output.values() if "cif" in value
         ]
+        self.pae_to_af3()
         self.scores_files = [
             value["scores"] for value in self.output.values() if "scores" in value
+        ]
+        self.af3_paes = [
+            value["af3_pae"] for value in self.output.values() if "af3_pae" in value
         ]
 
     def process_chai_output(self):
@@ -108,6 +113,8 @@ class ChaiOutput:
                     intermediate_dict["scores"] = file_
                 elif file_.pathway.stem.startswith("pred.model"):
                     file_.name = f"Chai-1_{model_number}"
+                    # Chai cif not recognised by pae-viewer, so we load and save
+                    file_.to_file(file_.pathway)
                     intermediate_dict["cif"] = file_
                 elif file_.pathway.stem.startswith("pae_scores"):
                     intermediate_dict["pae"] = file_
@@ -120,3 +127,22 @@ class ChaiOutput:
         }
 
         return model_number_file_type_file
+
+    def pae_to_af3(self) -> None:
+        """
+        Convert the Chai-1 PAE data to the format expected by AlphaFold3
+
+        """
+
+        pae_file = self.pae_files[-1]
+        for i, cif_file in enumerate(self.cif_files):
+            pae = Af3Pae.from_chai1(
+                pae_file.data[i],
+                cif_file,
+            )
+
+            out_name = self.output_dir.joinpath(cif_file.pathway.stem + "_af3_pae.json")
+            with open(out_name, "w") as f:
+                json.dump(pae.scores, f)
+
+            self.output[i]["af3_pae"] = out_name
