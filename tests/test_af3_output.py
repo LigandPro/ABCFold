@@ -19,7 +19,7 @@ def test_process_af3_output(test_data):
     assert "cif" in files[1]
     assert "json" in files[1]
 
-    json_file = af3_output.scores_files["seed-1"][0]
+    json_file = af3_output.af3_pae_files["seed-1"][0]
 
     assert "atom_plddts" in json_file.data
     assert "pae" in json_file.data

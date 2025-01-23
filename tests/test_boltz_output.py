@@ -3,7 +3,6 @@ from pathlib import Path
 
 from abcfold.processoutput.file_handlers import CifFile, ConfidenceJsonFile, NpzFile
 from abcfold.processoutput.utils import Af3Pae
-import json
 
 
 def test_process_boltz_output(test_data):
@@ -56,7 +55,7 @@ def test_process_boltz_output(test_data):
 
 
 def test_boltz_pae_to_af3_pae(test_data):
-    comparison_af3_output = test_data.af3_output.scores_files["seed-1"][0].data
+    comparison_af3_output = test_data.af3_output.af3_pae_files["seed-1"][0].data
     for pae_file, cif_file in zip(
         test_data.boltz_output.pae_files, test_data.boltz_output.cif_files
     ):
@@ -84,5 +83,3 @@ def test_boltz_pae_to_af3_pae(test_data):
         assert len(pae.scores["token_res_ids"]) == len(
             comparison_af3_output["token_res_ids"]
         )
-
-    

@@ -57,12 +57,15 @@ class AlphafoldOutput:
             seed: [value["cif"] for value in self.output[seed].values()]
             for seed in self.seeds
         }
-        self.scores_files = {
+        self.af3_pae_files = {
             seed: {
-                model_number: value["json"]
+                model_number: value["af3_pae"]
                 for model_number, value in self.output[seed].items()
             }
             for seed in self.seeds
+        }
+        self.scores_files = {
+            seed: value["summary"] for seed, value in self.output.items()
         }
 
     def process_af3_output(self):
@@ -88,7 +91,11 @@ class AlphafoldOutput:
                         cif_file.name = f"Alphafold3_{seed}_{sample}"
                         file_groups[seed][sample]["cif"] = cif_file
                     elif file.suffix == ".json" and "summary" not in file.stem:
-                        file_groups[seed][sample]["json"] = ConfidenceJsonFile(
+                        file_groups[seed][sample]["af3_pae"] = ConfidenceJsonFile(
+                            str(file)
+                        )
+                    elif file.suffix == ".json" and "summary" in file.stem:
+                        file_groups[seed][sample]["summary"] = ConfidenceJsonFile(
                             str(file)
                         )
                     else:

@@ -22,7 +22,7 @@ def test_process_chai_output(test_data):
 
 
 def test_chai_pae_to_af3_pae(test_data):
-    comparison_af3_output = test_data.af3_output.scores_files["seed-1"][0].data
+    comparison_af3_output = test_data.af3_output.af3_pae_files["seed-1"][0].data
     pae_file = test_data.chai_output.pae_files[-1]
     for i, cif_file in enumerate(test_data.chai_output.cif_files):
 
