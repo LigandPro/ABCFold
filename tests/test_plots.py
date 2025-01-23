@@ -27,3 +27,11 @@ def test_plddt_plot(test_data):
         )
 
         assert Path(f"{temp_dir}/test.html").exists()
+
+        plot_plddt_distribution_plotly(
+            plot_files,
+            output_name=f"{temp_dir}/test.html",
+            include_plotlyjs=False,
+        )
+
+        assert Path(f"{temp_dir}/test.div.html").exists()
