@@ -32,6 +32,7 @@ dependencies = [
     "types-requests",
     "pandas",
     "plotly",
+    "jinja2",
 ]
 
 [project.urls]
