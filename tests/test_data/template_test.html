@@ -1,0 +1,81 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>abcfold - AF3</title>
+    <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0"/>
+    <meta name="theme-color" content="#ffffff">
+
+    <link rel="icon" type="image/svg+xml" href="../../../abcfold/plots/pae-viewer-main/standalone/favicon.svg">
+    <link rel="icon" sizes="any" href="../../../abcfold/plots/pae-viewer-main/standalone/favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/libs/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/libs/bootstrap@5.1.3.css"/>
+
+    <link rel="stylesheet" type="text/css" href="/home/luc/dev/ABCFold/abcfold/plots/pae-viewer-main/standalone/css/paeViewerStandaloneLayoutAF3.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/css/common.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/src/css/structure-carousel.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/src/css/structure-viewer.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/src/css/structure-panel.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/src/css/pae-viewer.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/src/css/complex-sequence-viewer.css"/>
+    <link rel="stylesheet" type="text/css" href="../../../abcfold/plots/pae-viewer-main/standalone/css/paeViewerStandaloneOverrides.css"/>
+
+    <script type="text/javascript" src="../../../abcfold/plots/pae-viewer-main/standalone/libs/jquery.min.js"></script>
+    <script type="text/javascript" src="../../../abcfold/plots/pae-viewer-main/standalone/libs/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="../../../abcfold/plots/pae-viewer-main/standalone/libs/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="../../../abcfold/plots/pae-viewer-main/standalone/libs/ngl.js"></script>
+    <script type="text/javascript" src="../../../abcfold/plots/pae-viewer-main/standalone/libs/chroma.min.js"></script>
+    <script type="text/javascript" src="../../../abcfold/plots/pae-viewer-main/standalone/libs/FileSaver.min.js"></script>
+
+    <script defer src="../../../abcfold/plots/pae-viewer-main/standalone/js/setup.js"></script>
+
+    <script defer type="module" src="../../../abcfold/plots/pae-viewer-main/standalone/src/modules/structure-carousel.js"></script>
+    <script defer type="module" src="../../../abcfold/plots/pae-viewer-main/standalone/src/modules/pae-viewer.js"></script>
+    <script defer type="module" src="../../../abcfold/plots/pae-viewer-main/standalone/src/modules/complex-sequence-viewer.js"></script>
+</head>
+<body>
+<noscript>
+    <div class="alert alert-danger text-center">
+        <strong>Error:</strong> JavaScript is disabled or not supported
+        by your browser, but this page requires it to work.
+    </div>
+</noscript>
+<div id="container">
+    <header id="top">
+        <div class="title">PAE Viewer</div>
+        <div class="subtitle">Interactive display of the Predicted Aligned Error</div>
+    </header>
+    <main>
+    {{paeViewerDemo.tpl"}}
+</main>
+    <footer class="footer">
+        <div class="footer-segment">
+            <h3>Contact</h3>
+            <ul>
+                
+                <li>
+                    <a href="http://genmibio.uni-goettingen.de/" target="_blank">
+                        General Microbiology Göttingen
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="mailto:christoph.elfmann@uni-goettingen.de" target="_blank">
+                        Christoph Elfmann
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="mailto:jstuelk@gwdg.de" target="_blank">
+                        Jörg Stülke
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </footer>
+</div>
+</body>
+</html>

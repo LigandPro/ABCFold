@@ -42,9 +42,13 @@ def load_pae_viewer(
     scores_path: Optional[Path] = None,
     crosslinks_path: Optional[Path] = None,
     port: int = 8000,
+    output_file: Optional[Path] = None,
+    template_file: Optional[Path] = None,
 ):
     data = get_session_data(structure_path, chain_labels, scores_path, crosslinks_path)
-    session_path = create_session_file(structure_path.stem, data)
+    session_path = create_session_file(
+        structure_path.stem, data, output_file, template_file
+    )
 
     webbrowser.open(
         f"localhost:{port}/{Path(*session_path.parts[-2:])}", new=0, autoraise=True
@@ -88,17 +92,26 @@ def create_session_json_element(value: Any) -> str:
     )
 
 
-def create_session_file(handle: str, data: dict[str, str]) -> Path:
+def create_session_file(
+    handle: str, data: dict[str, str], output_file: Optional[Path], template_file: Path
+) -> Path:
+    output_file = Path(output_file) if output_file else None
     current_dir = Path(__file__).parent.resolve()
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     random_id = os.urandom(4).hex()
 
-    session_path = current_dir / f"{timestamp}_{random_id}_{handle}.html"
+    if output_file is not None:
+        if not output_file.suffix == ".html":
+            output_file = output_file.with_suffix(".html")
+        session_path = output_file
+    else:
+        session_path = current_dir / f"{timestamp}_{random_id}_{handle}.html"
     session_path.touch()
 
+    pae_template = template_file
     with (
-        open("pae-viewer.html", "r") as template_file,
+        open(pae_template, "r") as template_file,
         open(session_path, "w") as session_file,
     ):
         template = template_file.read()
@@ -154,8 +167,27 @@ if __name__ == "__main__":
         default=8000,
     )
 
+    parser.add_argument(
+        "-o",
+        "--output_file",
+        help="output file",
+    )
+    parser.add_argument(
+        "-t",
+        "--template_file",
+        help="template file",
+        type=resolved_path,
+        default="pae-viewer.html",
+    )
+
     args = parser.parse_args()
 
     load_pae_viewer(
-        args.structure, args.labels, args.scores, args.crosslinks, args.port
+        args.structure,
+        args.labels,
+        args.scores,
+        args.crosslinks,
+        args.port,
+        args.output_file,
+        args.template_file,
     )
