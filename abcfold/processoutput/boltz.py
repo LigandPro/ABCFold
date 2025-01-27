@@ -194,4 +194,4 @@ class BoltzOutput:
             with open(out_name, "w") as f:
                 json.dump(pae.scores, f)
 
-            self.output[i]["af3_pae"] = out_name
+            self.output[i]["af3_pae"] = ConfidenceJsonFile(out_name)

@@ -58,14 +58,12 @@ class AlphafoldOutput:
             for seed in self.seeds
         }
         self.af3_pae_files = {
-            seed: {
-                model_number: value["af3_pae"]
-                for model_number, value in self.output[seed].items()
-            }
+            seed: [value["af3_pae"] for value in self.output[seed].values()]
             for seed in self.seeds
         }
         self.scores_files = {
-            seed: value["summary"] for seed, value in self.output.items()
+            seed: [value["summary"] for value in self.output[seed].values()]
+            for seed in self.seeds
         }
 
     def process_af3_output(self):

@@ -2,7 +2,13 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.file_handlers import CifFile, FileTypes, NpyFile, NpzFile
+from abcfold.processoutput.file_handlers import (
+    CifFile,
+    FileTypes,
+    NpyFile,
+    NpzFile,
+    ConfidenceJsonFile,
+)
 from abcfold.processoutput.utils import Af3Pae
 
 logger = logging.getLogger("logger")
@@ -72,7 +78,7 @@ class ChaiOutput:
         self.scores_files = [
             value["scores"] for value in self.output.values() if "scores" in value
         ]
-        self.af3_paes = [
+        self.af3_pae_files = [
             value["af3_pae"] for value in self.output.values() if "af3_pae" in value
         ]
 
@@ -145,4 +151,4 @@ class ChaiOutput:
             with open(out_name, "w") as f:
                 json.dump(pae.scores, f)
 
-            self.output[i]["af3_pae"] = out_name
+            self.output[i]["af3_pae"] = ConfidenceJsonFile(out_name)
