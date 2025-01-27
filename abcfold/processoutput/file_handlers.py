@@ -158,7 +158,6 @@ class CifFile(FileBase):
     def name(self):
         return self.__name
 
-    # name setter
     @name.setter
     def name(self, name: str):
         if not isinstance(name, str):
