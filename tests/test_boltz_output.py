@@ -1,7 +1,8 @@
 import tempfile
 from pathlib import Path
 
-from abcfold.processoutput.file_handlers import CifFile, ConfidenceJsonFile, NpzFile
+from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
+                                                 NpzFile)
 from abcfold.processoutput.utils import Af3Pae
 
 
