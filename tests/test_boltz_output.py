@@ -55,8 +55,8 @@ def test_process_boltz_output(test_data):
             assert (temp_dir / f"{i}.cif").exists()
 
 
-def test_boltz_pae_to_af3_pae(test_data):
-    comparison_af3_output = test_data.af3_output.af3_pae_files["seed-1"][0].data
+def test_boltz_pae_to_af3_pae(test_data, output_objs):
+    comparison_af3_output = output_objs.af3_output.af3_pae_files["seed-1"][0].data
     for pae_file, cif_file in zip(
         test_data.boltz_output.pae_files, test_data.boltz_output.cif_files
     ):
@@ -68,7 +68,6 @@ def test_boltz_pae_to_af3_pae(test_data):
         with tempfile.TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
             pae.to_file(temp_dir / "pae.json")
-            pae.to_file("pae.json")
             assert (temp_dir / "pae.json").exists()
 
         # for some reason the lengths are different for atom - realted things

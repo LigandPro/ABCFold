@@ -1,5 +1,5 @@
-def test_process_af3_output(test_data):
-    af3_output = test_data.af3_output
+def test_process_af3_output(test_data, output_objs):
+    af3_output = output_objs.af3_output
     assert str(af3_output.output_dir) == test_data.test_alphafold3_6BJ9_
 
     assert "seed-1" in af3_output.output
@@ -10,10 +10,10 @@ def test_process_af3_output(test_data):
     assert 1 in files
 
     assert "cif" in files[0]
-    assert "json" in files[0]
+    assert "af3_pae" in files[0]
 
     assert "cif" in files[1]
-    assert "json" in files[1]
+    assert "af3_pae" in files[1]
 
     json_file = af3_output.af3_pae_files["seed-1"][0]
 

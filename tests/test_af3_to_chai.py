@@ -28,6 +28,10 @@ GMRES
 GMRES
 >protein|C
 YANEN
+>ligand|D
+Nc1ncnc2n(cnc12)C3OC(CO[P](O)(=O)O[P](O)(=O)O[P](O)(O)=O)C(O)C3O
+>ligand|E
+Nc1ncnc2n(cnc12)C3OC(CO[P](O)(=O)O[P](O)(=O)O[P](O)(O)=O)C(O)C3O
 >ligand|F
 CC(=O)OC1C[NH+]2CCC1CC2
 """
@@ -116,6 +120,7 @@ def test_af3_to_chai_ligand(test_data):
         assert filename.exists()
         with open(filename, "r") as f:
             data = f.read()
+            print(data)
 
         assert data == reference
 
