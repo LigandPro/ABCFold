@@ -44,6 +44,17 @@ packages = [
     "abcfold.boltz1",
     "abcfold.chai1",
     "abcfold.processoutput",
+    "abcfold.plots",
+    "abcfold.plots.pae-viewer-main",
+    "abcfold.plots.pae-viewer-main.src",
+    "abcfold.plots.pae-viewer-main.src.css",
+    "abcfold.plots.pae-viewer-main.src.modules",
+    "abcfold.plots.pae-viewer-main.src.templates",
+    "abcfold.plots.pae-viewer-main.standalone",
+    "abcfold.plots.pae-viewer-main.standalone.css",
+    "abcfold.plots.pae-viewer-main.standalone.js",
+    "abcfold.plots.pae-viewer-main.standalone.libs",
+
 ]
 include-package-data = true
 
