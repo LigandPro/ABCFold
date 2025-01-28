@@ -5,6 +5,7 @@ from typing import Dict, List, Union
 
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.offline as pyo
 
 from abcfold.processoutput.file_handlers import CifFile
 
@@ -18,6 +19,7 @@ def plot_plddt(
     dash: str = "dot",
     chain_line_occupancy: float = 0.8,
     show: bool = False,
+    include_plotlyjs: bool = True,
 ) -> None:
     """
     Plots the pLDDT distribution of the models in the dictionary of cif models. Outputs
@@ -140,7 +142,13 @@ this if failing that means the computer wins."
     if output_name.suffix == "":
         output_name = output_name.with_suffix(".html")
 
-    fig.write_html(str(output_name))
+    if include_plotlyjs:
+        fig.write_html(str(output_name))
+    else:
+        div = pyo.plot(fig, include_plotlyjs=False, output_type="div")
+        output_name = output_name.with_suffix(".div.html")
+        with open(output_name, "w") as f:
+            f.write(div)
 
 
 def Bold(string):
