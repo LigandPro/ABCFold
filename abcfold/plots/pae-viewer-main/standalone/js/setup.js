@@ -1,4 +1,7 @@
+
 // https://stackoverflow.com/a/73891404
+
+
 async function replaceAsync(string, regexp, replacerFunction) {
     const replacements = await Promise.all(
         Array.from(string.matchAll(regexp), replacerFunction));
@@ -7,36 +10,43 @@ async function replaceAsync(string, regexp, replacerFunction) {
     return string.replace(regexp, () => replacements[i++]);
 }
 
+function compileTemplate(template, relativePath) {
+    console.log('compileTemplate', template, relativePath);
+    return replaceAsync(template, /\{\{(\S+)}}/g, async (match) => {
+        const value = match[1];
 
-function compileTemplate(template) {
-    return replaceAsync(template, /\{\{(\S+)}}/g, async match => {
-            const value = match[1];
+        console.log('compileTemplate', value.slice(1));
 
-            if (value.startsWith('@')) {
-                return Promise.resolve(`../src/${value.slice(1)}`);
-            } else {
-                return await fetch(`../src/templates/${value}`)
-                    .then(response => response.text())
-                    .then(template => {
-                        return compileTemplate(template);
-                    });
-            }
+        if (value.startsWith('@')) {
+            console.log(`${relativePath}/src/${value.slice(1)}`);
+            return Promise.resolve(`${relativePath}/src/${value.slice(1)}`);
+        } else {
+            return await fetch(`${relativePath}/src/templates/${value}`)
+                .then(response => response.text())
+                .then(template => {
+                    return compileTemplate(template, relativePath);
+                });
         }
-    );
+    });
 }
 
 const main = document.querySelector('main');
+document.addEventListener("DOMContentLoaded", function() {
+    const relativePath = document.getElementById('relativePath').value;
+    console.log(relativePath); // Use the value as needed
 
-compileTemplate(main.innerHTML).then((result) => {
-    main.innerHTML = result;
+    compileTemplate(main.innerHTML, relativePath).then((result) => {
+        main.innerHTML = result;
 
-    const uploadTab = main.querySelector('button[data-bs-target="#upload"]'); //.classList.add('active');
-    // new bootstrap.Tab(uploadTab).show();
+        // const uploadTab = main.querySelector('button[data-bs-target="#upload"]');
+        // new bootstrap.Tab(uploadTab).show();
 
-    main.querySelector('button[data-bs-target="#examples"]').parentElement.remove();
-    // main.querySelector('button[data-bs-target="#upload"]').parentElement.remove();
-    // main.querySelector('button[data-bs-target="#Offline version"]').parentElement.remove();
-    // main.querySelector('button[data-bs-target="#Citation"]').parentElement.remove();
+        main.querySelector('button[data-bs-target="#examples"]').parentElement.remove();
+        // main.querySelector('button[data-bs-target="#upload"]').parentElement.remove();
+        // main.querySelector('button[data-bs-target="#Offline version"]').parentElement.remove();
+        // main.querySelector('button[data-bs-target="#Citation"]').parentElement.remove();
 
-    import('./pae-viewer-standalone.js');
+
+        import(`./pae-viewer-standalone.js`);
+    });
 });
