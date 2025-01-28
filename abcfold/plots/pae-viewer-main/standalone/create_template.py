@@ -1,6 +1,7 @@
-from jinja2 import Template
-from pathlib import Path
 import os
+from pathlib import Path
+
+from jinja2 import Template
 
 TEMPLATE = """
 <!doctype html>
@@ -11,27 +12,27 @@ TEMPLATE = """
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0"/>
     <meta name="theme-color" content="#ffffff">
 
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="icon" sizes="any" href="favicon.ico" >
+    <link rel="icon" type="image/svg+xml" href="{{ favicon_svg }}">
+    <link rel="icon" sizes="any" href="{{ favicon_ico }}" >
 
-    <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css"/>
-    <link rel="stylesheet" type="text/css" href="libs/bootstrap@5.1.3.css"/>
+    <link rel="stylesheet" type="text/css" href="{{ bootstrap_min_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ bootstrap_css }}"/>
 
-    <link rel="stylesheet" type="text/css" href="css/paeViewerStandaloneLayoutAF3.css"/>
-    <link rel="stylesheet" type="text/css" href="css/common.css"/>
-    <link rel="stylesheet" type="text/css" href="../src/css/structure-carousel.css"/>
-    <link rel="stylesheet" type="text/css" href="../src/css/structure-viewer.css"/>
-    <link rel="stylesheet" type="text/css" href="../src/css/structure-panel.css"/>
-    <link rel="stylesheet" type="text/css" href="../src/css/pae-viewer.css"/>
-    <link rel="stylesheet" type="text/css" href="../src/css/complex-sequence-viewer.css"/>
-    <link rel="stylesheet" type="text/css" href="css/paeViewerStandaloneOverrides.css"/>
+    <link rel="stylesheet" type="text/css" href="{{ pae_viewer_standalone_layout_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ common_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ structure_carousel_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ structure_viewer_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ structure_panel_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ pae_viewer_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ complex_sequence_viewer_css }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ pae_viewer_standalone_overrides_css }}"/>
 
-    <script type="text/javascript" src="libs/jquery.min.js"></script>
-    <script type="text/javascript" src="libs/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="libs/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="libs/ngl.js"></script>
-    <script type="text/javascript" src="libs/chroma.min.js"></script>
-    <script type="text/javascript" src="libs/FileSaver.min.js"></script>
+    <script type="text/javascript" src="{{ jquery_min_js }}"></script>
+    <script type="text/javascript" src="{{ jquery_ui_min_js }}"></script>
+    <script type="text/javascript" src="{{ bootstrap_bundle_min_js }}"></script>
+    <script type="text/javascript" src="{{ ngl_js }}"></script>
+    <script type="text/javascript" src="{{ chroma_min_js }}"></script>
+    <script type="text/javascript" src="{{ file_saver_min_js }}"></script>
 
     <script defer src="{{ setup_js }}"></script>
 
@@ -40,6 +41,9 @@ TEMPLATE = """
     <script defer type="module" src="{{ complex_sequence_viewer_js }}"></script>
 </head>
 <body>
+
+<input type="hidden" id="relativePath" value="{{ relative_path }}">
+
 <noscript>
     <div class="alert alert-danger text-center">
         <strong>Error:</strong> JavaScript is disabled or not supported
@@ -52,7 +56,7 @@ TEMPLATE = """
         <div class="subtitle">{{ header_subtitle }}</div>
     </header>
     <main>
-        {{ paeViewerDemo_tpl }}
+        {{ pae_viewer_demo_tpl }}
     </main>
     <footer class="footer">
         <div class="footer-segment">
@@ -71,25 +75,31 @@ TEMPLATE = """
 </div>
 </body>
 </html>
-"""
+"""  # noqa
 
 
 def render_html(args, output_file):
+
     template = Template(TEMPLATE)
     # create a relative link between the current directory and the template
 
-    current_dir = Path(__file__).parent
-    relative_path = Path(os.path.relpath(current_dir, output_file))
+    current_dir = Path(__file__).parent.parent
+    relative_path = Path(os.path.relpath(current_dir, Path(output_file).parent))
+
     rendered_html = template.render(
         title=args.title,
-        favicon_svg=str(relative_path.joinpath("favicon.svg")),
-        favicon_ico=str(relative_path.joinpath("favicon.ico")),
-        bootstrap_min_css=str(relative_path.joinpath("libs", "bootstrap.min.css")),
-        bootstrap_css=str(relative_path.joinpath("libs", "bootstrap@5.1.3.css")),
-        pae_viewer_standalone_layout_css=str(
-            relative_path.joinpath("css", args.standalonecss)
+        favicon_svg=str(relative_path.joinpath("standalone", "favicon.svg")),
+        favicon_ico=str(relative_path.joinpath("standalone", "favicon.ico")),
+        bootstrap_min_css=str(
+            relative_path.joinpath("standalone", "libs", "bootstrap.min.css")
         ),
-        common_css=str(relative_path.joinpath("css", "common.css")),
+        bootstrap_css=str(
+            relative_path.joinpath("standalone", "libs", "bootstrap@5.1.3.css")
+        ),
+        pae_viewer_standalone_layout_css=str(
+            relative_path.joinpath("standalone", "css", args.standalonecss)
+        ),
+        common_css=str(relative_path.joinpath("standalone", "css", "common.css")),
         structure_carousel_css=str(
             relative_path.joinpath("src", "css", "structure-carousel.css")
         ),
@@ -104,17 +114,27 @@ def render_html(args, output_file):
             relative_path.joinpath("src", "css", "complex-sequence-viewer.css")
         ),
         pae_viewer_standalone_overrides_css=str(
-            relative_path.joinpath("css", "paeViewerStandaloneOverrides.css")
+            relative_path.joinpath(
+                "standalone", "css", "paeViewerStandaloneOverrides.css"
+            )
         ),
-        jquery_min_js=str(relative_path.joinpath("libs", "jquery.min.js")),
-        jquery_ui_min_js=str(relative_path.joinpath("libs", "jquery-ui.min.js")),
+        jquery_min_js=str(
+            relative_path.joinpath("standalone", "libs", "jquery.min.js")
+        ),
+        jquery_ui_min_js=str(
+            relative_path.joinpath("standalone", "libs", "jquery-ui.min.js")
+        ),
         bootstrap_bundle_min_js=str(
-            relative_path.joinpath("libs", "bootstrap.bundle.min.js")
+            relative_path.joinpath("standalone", "libs", "bootstrap.bundle.min.js")
         ),
-        ngl_js=str(relative_path.joinpath("libs", "ngl.js")),
-        chroma_min_js=str(relative_path.joinpath("libs", "chroma.min.js")),
-        file_saver_min_js=str(relative_path.joinpath("libs", "FileSaver.min.js")),
-        setup_js=str(relative_path.joinpath("js", "setup.js")),
+        ngl_js=str(relative_path.joinpath("standalone", "libs", "ngl.js")),
+        chroma_min_js=str(
+            relative_path.joinpath("standalone", "libs", "chroma.min.js")
+        ),
+        file_saver_min_js=str(
+            relative_path.joinpath("standalone", "libs", "FileSaver.min.js")
+        ),
+        setup_js=str(relative_path.joinpath("standalone", "js", "setup.js")),
         structure_carousel_js=str(
             relative_path.joinpath("src", "modules", "structure-carousel.js")
         ),
@@ -122,8 +142,10 @@ def render_html(args, output_file):
         complex_sequence_viewer_js=str(
             relative_path.joinpath("src", "modules", "complex-sequence-viewer.js")
         ),
-        header_title="PAE Viewer",
+        header_title=args.title,
         header_subtitle="Interactive display of the Predicted Aligned Error",
+        relative_path=relative_path,
+        pae_viewer_demo_tpl="{{paeViewerDemo.tpl}}",
         contacts=[
             {
                 "url": "http://genmibio.uni-goettingen.de/",
@@ -163,7 +185,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--standalonecss",
         type=str,
-        default="css/paeViewerStandaloneLayout.css",
+        default="paeViewerStandaloneLayout.css",
     )
 
     args = parser.parse_args()

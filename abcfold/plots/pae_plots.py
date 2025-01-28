@@ -1,30 +1,24 @@
 # Run the code for the PAE plots
 
+import logging
+import subprocess
+from multiprocessing import Process
 from pathlib import Path
-from typing import Union, List, Optional
+from typing import Dict, List, Optional, Union
+
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.processoutput.chai import ChaiOutput
 
-from multiprocessing import Process
-import subprocess
-import logging
-
 logger = logging.getLogger(__name__)
 
 CSSPATHS = {
-    "A": Path(__file__).parent.joinpath(
-        "pae-viewer-main", "standalone", "css", "paeViewerStandaloneLayoutAF3.css"
-    ),
-    "B": Path(__file__).parent.joinpath(
-        "pae-viewer-main", "standalone", "css", "paeViewerStandaloneLayoutBoltz.css"
-    ),
-    "C": Path(__file__).parent.joinpath(
-        "pae-viewer-main", "standalone", "css", "paeViewerStandaloneLayoutChai.css"
-    ),
+    "A": "paeViewerStandaloneLayoutAF3.css",
+    "B": "paeViewerStandaloneLayoutBoltz.css",
+    "C": "paeViewerStandaloneLayoutChai.css",
 }
 
-PAEVIEWER = pae_viewer_main = Path(__file__).parent.joinpath(
+PAEVIEWER = Path(__file__).parent.joinpath(
     "pae-viewer-main", "standalone", "pae_viewer.py"
 )
 
@@ -34,11 +28,27 @@ CREATETEMPLATE = Path(__file__).parent.joinpath(
 
 
 def create_pae_plots(
-    *outputs: List[Union[AlphafoldOutput, BoltzOutput, ChaiOutput]],
+    *outputs,
     output_dir: Optional[Union[str, Path]] = None,
-):
-    pathway_plot = {}
-    run_scripts = []
+) -> Dict[str, str]:
+    """
+    Create PAE html plots for the outputs
+
+    Args:
+        outputs: List of outputs to create plots for
+        output_dir: Output directory for the plots
+
+    Returns:
+        Pathway plot dictionary with the key as the plot path and value as the plot path
+
+    Raises:
+        ValueError: If the output type is invalid
+
+
+    """
+    pathway_plot: Dict[str, str] = {}
+    run_scripts: List[list] = []
+    template_files: List[Path] = []
 
     for output in outputs:
         plots_dir = (
@@ -47,10 +57,11 @@ def create_pae_plots(
             else output.output_dir.parent.joinpath(".plots")
         )
         plots_dir.mkdir(exist_ok=True)
-        #
+
         if isinstance(output, BoltzOutput):
             css_path = CSSPATHS["B"]
             template_file = plots_dir.joinpath("boltz_template.html")
+            template_files.append(template_file)
             cmd = get_template_run_script(
                 "ABCFold - Boltz-1 Output",
                 css_path,
@@ -60,6 +71,8 @@ def create_pae_plots(
 
         elif isinstance(output, ChaiOutput):
             css_path = CSSPATHS["C"]
+            template_file = plots_dir.joinpath("chai_template.html")
+            template_files.append(template_file)
             cmd = get_template_run_script(
                 "ABCFold - Chai-1 Output",
                 css_path,
@@ -69,6 +82,8 @@ def create_pae_plots(
 
         elif isinstance(output, AlphafoldOutput):
             css_path = CSSPATHS["A"]
+            template_file = plots_dir.joinpath("af3_template.html")
+            template_files.append(template_file)
             cmd = get_template_run_script(
                 "ABCFold - AlphaFold-3 Output",
                 css_path,
@@ -84,8 +99,10 @@ def create_pae_plots(
                         plots_dir,
                         pathway_plot,
                         True,
+                        template_file,
                     )
                 )
+
             continue
         else:
             logger.error("Invalid output type")
@@ -98,6 +115,7 @@ def create_pae_plots(
                 plots_dir,
                 pathway_plot,
                 False,
+                template_file,
             )
         )
 
@@ -107,24 +125,31 @@ def create_pae_plots(
     for process in processes:
         process.join()
 
-    # remove the template file
-    template_file.unlink()
+    for template_file in template_files:
+        template_file.unlink()
 
     return pathway_plot
 
 
-def prepare_scripts(cif_files, pae_files, plots_dir, pathway_plot, is_af3):
+def prepare_scripts(
+    cif_files, pae_files, plots_dir, pathway_plot, is_af3, template_file
+):
     scripts = []
     for cif_file, pae_file in zip(cif_files, pae_files):
         labels = [f"Chain-{chain}" for chain in cif_file.chain_lengths()]
-        print(pae_file)
         plot_pathway = plots_dir.joinpath(
-            f"{pae_file.pathway.stem}_{'af3_' if is_af3 else ''}pae_plot.html"
+            f"{pae_file.pathway.stem}\
+{'_' + pae_file.pathway.parent.stem if is_af3 else ''}_{'af3_' if is_af3 else ''}\
+pae_plot.html"
         )
         pae_viewer_script = get_pae_run_script(
-            cif_file.pathway, labels, pae_file.pathway, plot_pathway
+            cif_file.pathway,
+            labels,
+            pae_file.pathway,
+            plot_pathway,
+            template_file,
         )
-        pathway_plot[plot_pathway] = plot_pathway
+        pathway_plot[str(plot_pathway)] = str(plot_pathway)
         scripts.append(pae_viewer_script)
     return scripts
 
@@ -134,8 +159,8 @@ def run_script(cmd):
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
         stdout, stderr = proc.communicate()
         proc.wait()
-        print(" ".join(cmd))
         print(stdout.decode())
+        print(stderr.decode())
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
 
@@ -147,10 +172,23 @@ def get_pae_run_script(
     output_file: Union[str, Path],
     template_file: Union[str, Path],
 ):
-    """ """
+    """
+    Get the command to run the PAE viewer script
+
+    Args:
+        cif_path: Path to the CIF file
+        labels: List of labels for the chains
+        pae_path: Path to the PAE file
+        output_file: Path to the output file
+        template_file: Path to the template file
+    Returns:
+        Command to run the PAE viewer script
+    """
+
     cif_path = Path(cif_path)
     pae_path = Path(pae_path)
     output_file = Path(output_file)
+    template_file = Path(template_file)
 
     cmd = []
     labels_string = ";".join(labels)
@@ -179,6 +217,7 @@ def get_template_run_script(
     output_file: Union[str, Path],
 ):
     """ """
+    output_file = Path(output_file)
     cmd = []
     cmd.append("python")
     cmd.append(str(CREATETEMPLATE.resolve()))
