@@ -39,11 +39,11 @@ def resolved_path(value: str) -> Path:
 def load_pae_viewer(
     structure_path: Path,
     chain_labels: str,
+    template_file: Path,
     scores_path: Optional[Path] = None,
     crosslinks_path: Optional[Path] = None,
     port: int = 8000,
     output_file: Optional[Path] = None,
-    template_file: Optional[Path] = None,
 ):
     data = get_session_data(structure_path, chain_labels, scores_path, crosslinks_path)
     session_path = create_session_file(
@@ -109,12 +109,12 @@ def create_session_file(
         session_path = current_dir / f"{timestamp}_{random_id}_{handle}.html"
     session_path.touch()
 
-    pae_template = template_file
+    pae_template = str(template_file)
     with (
-        open(pae_template, "r") as template_file,
+        open(pae_template, "r") as template_file_obj,
         open(session_path, "w") as session_file,
     ):
-        template = template_file.read()
+        template = template_file_obj.read()
         template = template.replace(
             "</head>", f"\n{create_session_json_element(data)}\n</head>"
         )

@@ -1,8 +1,8 @@
 import tempfile
 from pathlib import Path
 
-from abcfold.plots.pae_plots import create_pae_plots
-from abcfold.plots.plddt_plot import plot_plddt_distribution_plotly
+from abcfold.plots.pae_plot import create_pae_plots
+from abcfold.plots.plddt_plot import plot_plddt
 
 
 def test_plddt_plot(test_data):
@@ -22,7 +22,7 @@ def test_plddt_plot(test_data):
     }
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        plot_plddt_distribution_plotly(
+        plot_plddt(
             plot_files,
             output_name=f"{temp_dir}/test.html",
         )
