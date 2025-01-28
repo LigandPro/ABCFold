@@ -86,7 +86,7 @@ def output_objs():
     d["boltz_output"] = boltz_output
     d["chai_output"] = chai_output
 
-    nt = namedtuple("TestData", d)
+    nt = namedtuple("output_objs", d)
     n = nt(**d)
 
     return n
