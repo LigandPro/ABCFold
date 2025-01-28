@@ -83,8 +83,7 @@ def render_html(args, output_file):
     template = Template(TEMPLATE)
     # create a relative link between the current directory and the template
 
-    current_dir = Path(__file__).parent.parent
-    relative_path = Path(os.path.relpath(current_dir, Path(output_file).parent))
+    relative_path = Path(os.path.relpath(args.src_path, Path(output_file).parent))
 
     rendered_html = template.render(
         title=args.title,
@@ -186,6 +185,11 @@ if __name__ == "__main__":
         "--standalonecss",
         type=str,
         default="paeViewerStandaloneLayout.css",
+    )
+    parser.add_argument(
+        "--src_path",
+        type=str,
+        required=True,
     )
 
     args = parser.parse_args()
