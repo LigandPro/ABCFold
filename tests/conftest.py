@@ -13,7 +13,7 @@ logger = logging.getLogger("logger")
 
 
 # Code taken from SliceNDice
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def test_data():
     """
     Return a namedtuple object with the paths to all the data files we require.
@@ -39,23 +39,45 @@ tests from the root of the repository or the tests directory"
         stem, suffix = test_file.stem, test_file.suffix[1:]
         d[f"test_{stem.replace('-', '_')}_{suffix}"] = str(test_file)
 
+    nt = namedtuple("TestData", d)
+    n = nt(**d)
+
+    return n
+
+
+@pytest.fixture(scope="session")
+def output_objs():
+    data_dir = Path("./test_data")
+    if not data_dir.exists():
+        data_dir = Path("tests/test_data")
+    if not data_dir.exists():
+        msg = "Could not find the test_data, Please make sure that you're running the \
+    tests from the root of the repository or the tests directory"
+        logger.critical(msg)
+        raise FileNotFoundError()
+    d = {}
+
+    adir = data_dir.joinpath("alphafold3_6BJ9")
+    bdir = data_dir.joinpath("boltz-1_6BJ9")
+    cdir = data_dir.joinpath("chai1_6BJ9")
     name = "6BJ9"
-    input_params = Path(d["test_alphafold3_6BJ9_"]).joinpath("6bj9_data.json")
+    input_params = adir.joinpath("6bj9_data.json")
+
     with open(input_params, "r") as f:
         input_params = json.load(f)
 
     af3_output = AlphafoldOutput(
-        d["test_alphafold3_6BJ9_"],
+        adir,
         input_params,
         name,
     )
     boltz_output = BoltzOutput(
-        d["test_boltz_1_6BJ9_"],
+        bdir,
         input_params,
         name,
     )
     chai_output = ChaiOutput(
-        d["test_chai1_6BJ9_"],
+        cdir,
         input_params,
         name,
     )
