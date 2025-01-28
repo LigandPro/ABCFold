@@ -11,7 +11,7 @@ from abcfold.processoutput.file_handlers import CifFile
 logger = logging.getLogger("logger")
 
 
-def plot_plddt_distribution_plotly(
+def plot_plddt(
     cif_models_dict: Dict[str, List[CifFile]],
     output_name: Union[str, Path],
     line_width: float = 1.6,
@@ -97,7 +97,6 @@ def plot_plddt_distribution_plotly(
             label="All Models",
         )
     )
-
     for i in range(sources - 1):
         step = dict(
             method="restyle",

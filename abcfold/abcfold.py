@@ -3,6 +3,7 @@ import json
 import sys
 import tempfile
 from pathlib import Path
+from typing import Dict
 
 from abcfold.add_mmseqs_msa import add_msa_to_json
 from abcfold.af3_script_utils import make_dir, setup_logger
@@ -11,12 +12,16 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util,
                                     prediction_argparse_util)
+from abcfold.plots.pae_plot import create_pae_plots
+from abcfold.plots.plddt_plot import plot_plddt
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.processoutput.chai import ChaiOutput
 from abcfold.run_alphafold3 import run_alphafold3
 
 logger = setup_logger()
+
+PLOTS_DIR = ".plots"
 
 
 def run(args, config, defaults, config_file):
@@ -34,10 +39,12 @@ def run(args, config, defaults, config_file):
 
 
     """
+    outputs = []
 
     args.output_dir = Path(args.output_dir)
 
     make_dir(args.output_dir, overwrite=args.override)
+    make_dir(args.output_dir.joinpath(PLOTS_DIR))
 
     updated_config = False
     if args.model_params != defaults["model_params"]:
@@ -119,7 +126,8 @@ by default"
 
             # Need to find the name of the af3_dir
             af3_out_dir = list(args.output_dir.iterdir())[0]
-            _ = AlphafoldOutput(af3_out_dir, input_params, name)
+            ao = AlphafoldOutput(af3_out_dir, input_params, name)
+            outputs.append(ao)
 
         if args.boltz1:
             from abcfold.run_boltz import run_boltz
@@ -133,6 +141,7 @@ by default"
             bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
             bo = BoltzOutput(bolt_out_dir, input_params, name)
             bo.add_plddt_to_cif()
+            outputs.append(bo)
 
         if args.chai1:
             from abcfold.run_chai1 import run_chai
@@ -145,7 +154,39 @@ by default"
                 number_of_models=args.number_of_models,
             )
 
-            _ = ChaiOutput(chai_output_dir, input_params, name)
+            co = ChaiOutput(chai_output_dir, input_params, name)
+            outputs.append(co)
+
+        plots(outputs, args.output_dir.joinpath(PLOTS_DIR))
+
+
+def plots(outputs: list, output_dir: Path):
+    """
+    Generate plots for the output of the different programs
+
+    Args:
+        outputs (list): List of output objects
+
+    """
+    pathway_plots = create_pae_plots(outputs, output_dir=output_dir)
+    plddt_plot_input: Dict[str, list] = {}
+    for output in outputs:
+        if isinstance(output, AlphafoldOutput):
+            for seed in output.seeds:
+                if "Alphafold3" not in plddt_plot_input:
+                    plddt_plot_input["Alphafold3"] = []
+                plddt_plot_input["Alphafold3"].extend(output.cif_files[seed])
+        elif isinstance(output, BoltzOutput):
+
+            plddt_plot_input["Boltz-1"] = output.cif_files
+        elif isinstance(output, ChaiOutput):
+            plddt_plot_input["Chai-1"] = output.cif_files
+
+    plot_plddt(plddt_plot_input, output_name=output_dir.joinpath("plddt_plot.html"))
+
+    pathway_plots["plddt"] = str(output_dir.joinpath("plddt_plot.html").resolve())
+
+    return pathway_plots
 
 
 def main():

@@ -1,10 +1,11 @@
 # Run the code for the PAE plots
 
 import logging
+import shutil
 import subprocess
 from multiprocessing import Process
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
@@ -26,10 +27,12 @@ CREATETEMPLATE = Path(__file__).parent.joinpath(
     "pae-viewer-main", "standalone", "create_template.py"
 )
 
+INCLUDE_EXTS = [".css", ".js", ".html", ".tpl", ".svg", ".ico"]
+
 
 def create_pae_plots(
-    *outputs,
-    output_dir: Optional[Union[str, Path]] = None,
+    outputs: list,
+    output_dir: Union[str, Path],
 ) -> Dict[str, str]:
     """
     Create PAE html plots for the outputs
@@ -49,6 +52,10 @@ def create_pae_plots(
     pathway_plot: Dict[str, str] = {}
     run_scripts: List[list] = []
     template_files: List[Path] = []
+    output_dir = Path(output_dir)
+
+    # start by copying the pae viewer files to the output directory
+    copy_pae_viewer_files(output_dir.joinpath(".pae_viewer"))
 
     for output in outputs:
         plots_dir = (
@@ -66,6 +73,7 @@ def create_pae_plots(
                 "ABCFold - Boltz-1 Output",
                 css_path,
                 template_file,
+                output_dir.joinpath(".pae_viewer"),
             )
             run_script(cmd)
 
@@ -77,6 +85,7 @@ def create_pae_plots(
                 "ABCFold - Chai-1 Output",
                 css_path,
                 template_file,
+                output_dir.joinpath(".pae_viewer"),
             )
             run_script(cmd)
 
@@ -88,6 +97,7 @@ def create_pae_plots(
                 "ABCFold - AlphaFold-3 Output",
                 css_path,
                 template_file,
+                output_dir.joinpath(".pae_viewer"),
             )
             run_script(cmd)
 
@@ -159,8 +169,7 @@ def run_script(cmd):
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
         stdout, stderr = proc.communicate()
         proc.wait()
-        print(stdout.decode())
-        print(stderr.decode())
+
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
 
@@ -215,9 +224,11 @@ def get_template_run_script(
     title: str,
     standalonecss: str,
     output_file: Union[str, Path],
+    src_path: Union[str, Path],
 ):
     """ """
     output_file = Path(output_file)
+    src_path = Path(src_path)
     cmd = []
     cmd.append("python")
     cmd.append(str(CREATETEMPLATE.resolve()))
@@ -228,5 +239,43 @@ def get_template_run_script(
     cmd.append(standalonecss)
     cmd.append("--output_file")
     cmd.append(str(output_file.resolve()))
+    cmd.append("--src_path")
+    cmd.append(str(src_path.resolve()))
 
     return cmd
+
+
+def make_dir(output_dir: Union[str, Path]):
+    output_dir = Path(output_dir)
+    if output_dir.exists():
+        return output_dir
+    output_dir.mkdir(parents=True)
+    return output_dir
+
+
+def copy_pae_viewer_files(output_dir: Union[str, Path]):
+    output_dir = Path(output_dir)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+    pae_viewer_main_pathway = Path(__file__).parent.joinpath("pae-viewer-main")
+    pae_viewer_files = pae_viewer_main_pathway.rglob("*")
+
+    for file_ in pae_viewer_files:
+        if file_.suffix in INCLUDE_EXTS:
+            # print out the filepathway from the current directory
+            subdirs = list(file_.relative_to(pae_viewer_main_pathway).parts)
+            create_subdirs(output_dir, subdirs)
+            # copy the file to the output directory
+            new_file = output_dir.joinpath(*subdirs)
+            if not new_file.exists():
+                shutil.copy2(file_, new_file)
+
+
+def create_subdirs(output_dir: Union[str, Path], subdirs: List[str]):
+    output_dir = Path(output_dir)
+    subdirs = subdirs[:-1]
+    new_subdirs = output_dir
+    for subdir in subdirs:
+        new_subdirs = new_subdirs.joinpath(subdir)
+        if not new_subdirs.exists():
+            new_subdirs.mkdir()
