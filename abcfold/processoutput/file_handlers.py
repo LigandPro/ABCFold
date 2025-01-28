@@ -291,8 +291,8 @@ class CifFile(FileBase):
             raise ValueError()
 
         for chain in self.model[0]:
-            if self.check_ligand(chain):
-                continue
+            # if self.check_ligand(chain):
+            #     continue
             for residue in chain:
                 if method == ResidueCountType.AVERAGE.value:
                     scores = 0
