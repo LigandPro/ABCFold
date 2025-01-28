@@ -58,7 +58,7 @@ def test_process_boltz_output(test_data, output_objs):
 def test_boltz_pae_to_af3_pae(test_data, output_objs):
     comparison_af3_output = output_objs.af3_output.af3_pae_files["seed-1"][0].data
     for pae_file, cif_file in zip(
-        test_data.boltz_output.pae_files, test_data.boltz_output.cif_files
+        output_objs.boltz_output.pae_files, output_objs.boltz_output.cif_files
     ):
         pae = Af3Pae.from_boltz1(
             pae_file.data,
