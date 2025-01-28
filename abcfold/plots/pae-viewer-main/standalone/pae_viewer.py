@@ -185,9 +185,9 @@ if __name__ == "__main__":
     load_pae_viewer(
         args.structure,
         args.labels,
+        args.template_file,
         args.scores,
         args.crosslinks,
         args.port,
         args.output_file,
-        args.template_file,
     )

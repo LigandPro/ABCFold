@@ -216,7 +216,7 @@ def get_pae_run_script(
     cmd.append(str(output_file.resolve()))
     cmd.append("--template_file")
     cmd.append(str(template_file.resolve()))
-
+    print(" ".join(cmd))
     return cmd
 
 
