@@ -5,10 +5,10 @@ from abcfold.processoutput.file_handlers import CifFile, NpyFile, NpzFile
 from abcfold.processoutput.utils import Af3Pae
 
 
-def test_process_chai_output(output_objs):
+def test_process_chai_output(test_data, output_objs):
     chai_output = output_objs.chai_output
 
-    assert str(chai_output.output_dir) == str(output_objs.test_chai1_6BJ9_)
+    assert str(chai_output.output_dir) == str(test_data.test_chai1_6BJ9_)
 
     assert -1 in chai_output.output
     assert 0 in chai_output.output
@@ -34,7 +34,6 @@ def test_chai_pae_to_af3_pae(output_objs):
         with tempfile.TemporaryDirectory() as temp_dir_str:
             temp_dir = Path(temp_dir_str)
             pae.to_file(temp_dir / "pae.json")
-            pae.to_file("pae.json")
             assert (temp_dir / "pae.json").exists()
 
         # for some reason the lengths are different for atom - realted things

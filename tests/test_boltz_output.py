@@ -6,8 +6,8 @@ from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
 from abcfold.processoutput.utils import Af3Pae
 
 
-def test_process_boltz_output(test_data):
-    boltz_output = test_data.boltz_output
+def test_process_boltz_output(test_data, output_objs):
+    boltz_output = output_objs.boltz_output
     assert str(boltz_output.output_dir) == str(
         Path(test_data.test_boltz_1_6BJ9_).parent.joinpath("boltz-1_6BJ9")
     )
