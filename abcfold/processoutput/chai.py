@@ -1,18 +1,13 @@
+import json
 import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.file_handlers import (
-    CifFile,
-    FileTypes,
-    NpyFile,
-    NpzFile,
-    ConfidenceJsonFile,
-)
+from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
+                                                 FileTypes, NpyFile, NpzFile)
 from abcfold.processoutput.utils import Af3Pae
 
 logger = logging.getLogger("logger")
-import json
 
 
 class ChaiOutput:

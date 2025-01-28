@@ -1,16 +1,12 @@
+import json
 import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.file_handlers import (
-    CifFile,
-    ConfidenceJsonFile,
-    FileTypes,
-    ModelCount,
-    NpzFile,
-)
+from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
+                                                 FileTypes, ModelCount,
+                                                 NpzFile)
 from abcfold.processoutput.utils import Af3Pae
-import json
 
 logger = logging.getLogger("logger")
 
