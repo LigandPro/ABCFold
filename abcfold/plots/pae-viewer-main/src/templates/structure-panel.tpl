@@ -120,14 +120,14 @@
           <label class="sp-centered-label">
             <input type="radio" name="crosslink-scheme"
                    value="restraint" checked>
-            
+
             <span class="sp-color-marker" style="background-color: red">
             clashes
           </span>
-            
+
           </label>
         </div>
-        
+
         <div>
           <label class="sp-centered-label">
             <input type="radio" name="crosslink-scheme" value="">
