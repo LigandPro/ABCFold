@@ -7,13 +7,12 @@ from multiprocessing import Process
 from pathlib import Path
 from typing import Dict, List, Union
 
+import pandas as pd
+
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.processoutput.chai import ChaiOutput
-import pandas as pd
 from abcfold.processoutput.file_handlers import CifFile
-import tempfile
-
 
 logger = logging.getLogger(__name__)
 
