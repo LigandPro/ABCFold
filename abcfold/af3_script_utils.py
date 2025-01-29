@@ -280,6 +280,16 @@ contain chain {custom_template_chain}"
 
 
 def make_dir(dir_path: Union[str, Path], overwrite: bool = False):
+    """
+    Make a directory and return the Path object.
+
+    Args:
+        dir_path: The path to the directory to create.
+        overwrite: Whether to delete the directory if it already exists.
+
+    Returns:
+        The Path object for the created directory.
+    """
     dir_path = Path(dir_path)
     if dir_path.exists():
         if overwrite:
