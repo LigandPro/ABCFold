@@ -3,10 +3,13 @@ import logging
 from abc import ABC
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, List, Tuple
 
 import numpy as np
 from Bio.PDB import MMCIFIO, Chain, MMCIFParser
+from Bio.PDB.kdtrees import KDTree
+from Bio.PDB.Atom import Atom
+
 
 logger = logging.getLogger("logger")
 
@@ -354,6 +357,44 @@ class CifFile(FileBase):
         io = MMCIFIO()
         io.set_structure(self.model)
         io.save(str(output_file))
+
+    def check_clashes(
+        self, threshold: Union[int, float] = 2.4, bucket: int = 10
+    ) -> List[Tuple[Atom, Atom]]:
+        """
+        Check for clashes between atoms in different chains
+
+        Args:
+            threshold: The distance threshold for a clash.
+
+        Returns:
+            A list of clashes.
+
+        """
+        atoms = [atom for chain in self.model[0] for atom in chain.get_atoms()]
+        coords = np.array(
+            [atom.get_coord() for atom in atoms],
+            dtype="d",
+        )
+        assert bucket > 1
+        assert coords.shape[1] == 3
+
+        tree = KDTree(coords, bucket)
+        neighbors = tree.neighbor_search(threshold)
+        clashes = []
+
+        for neighbor in neighbors:
+            i1, i2 = neighbor.index1, neighbor.index2
+            atom1, atom2 = atoms[i1], atoms[i2]
+            # find chain_id and residue_id
+            chain_id1 = atom1.get_full_id()[2]
+            chain_id2 = atom2.get_full_id()[2]
+            if chain_id1 == chain_id2:
+                continue
+            else:
+                clashes.append((atom1, atom2))
+
+        return clashes
 
 
 class ConfidenceJsonFile(FileBase):
