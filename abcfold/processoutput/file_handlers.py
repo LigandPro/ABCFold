@@ -3,13 +3,12 @@ import logging
 from abc import ABC
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional, Union, List, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from Bio.PDB import MMCIFIO, Chain, MMCIFParser
-from Bio.PDB.kdtrees import KDTree
 from Bio.PDB.Atom import Atom
-
+from Bio.PDB.kdtrees import KDTree
 
 logger = logging.getLogger("logger")
 
