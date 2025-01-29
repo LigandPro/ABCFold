@@ -155,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c",
         "--crosslinks",
-        help="path to TSV containing crosslinks",
+        help="path to CSV containing crosslinks",
         type=resolved_path,
     )
 
