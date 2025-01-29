@@ -10,6 +10,10 @@ from typing import Dict, List, Union
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.processoutput.chai import ChaiOutput
+import pandas as pd
+from abcfold.processoutput.file_handlers import CifFile
+import tempfile
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +31,24 @@ CREATETEMPLATE = Path(__file__).parent.joinpath(
     "pae-viewer-main", "standalone", "create_template.py"
 )
 
-INCLUDE_EXTS = [".css", ".js", ".html", ".tpl", ".svg", ".ico"]
+INCLUDE_EXTS = [
+    ".css",
+    ".js",
+    ".html",
+    ".tpl",
+    ".svg",
+    ".ico",
+    ".png",
+]
+
+
+COLUMNS = [
+    "Protein1",
+    "SeqPos1",
+    "Protein2",
+    "SeqPos2",
+    "RestraintSatisfied",
+]
 
 
 def create_pae_plots(
@@ -138,6 +159,9 @@ def create_pae_plots(
     for template_file in template_files:
         template_file.unlink()
 
+    for csv_file in output_dir.glob("*.csv"):
+        csv_file.unlink()
+
     return pathway_plot
 
 
@@ -146,18 +170,21 @@ def prepare_scripts(
 ):
     scripts = []
     for cif_file, pae_file in zip(cif_files, pae_files):
+        name_stem = f"{pae_file.pathway.stem}\
+{'_' + pae_file.pathway.parent.stem if is_af3 else ''}_{'af3_' if is_af3 else ''}"
+
+        clashes_csv_file = plots_dir.joinpath(f"{name_stem}clashes.csv")
+        clashes_csv(cif_file, clashes_csv_file)
+
         labels = [f"Chain-{chain}" for chain in cif_file.chain_lengths()]
-        plot_pathway = plots_dir.joinpath(
-            f"{pae_file.pathway.stem}\
-{'_' + pae_file.pathway.parent.stem if is_af3 else ''}_{'af3_' if is_af3 else ''}\
-pae_plot.html"
-        )
+        plot_pathway = plots_dir.joinpath(f"{name_stem}pae_plot.html")
         pae_viewer_script = get_pae_run_script(
             cif_file.pathway,
             labels,
             pae_file.pathway,
             plot_pathway,
             template_file,
+            clashes_csv_file,
         )
         pathway_plot[str(plot_pathway)] = str(plot_pathway)
         scripts.append(pae_viewer_script)
@@ -165,7 +192,6 @@ pae_plot.html"
 
 
 def run_script(cmd):
-
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
         stdout, stderr = proc.communicate()
         proc.wait()
@@ -180,6 +206,7 @@ def get_pae_run_script(
     pae_path: Union[str, Path],
     output_file: Union[str, Path],
     template_file: Union[str, Path],
+    clashes_csv_file: Union[str, Path],
 ):
     """
     Get the command to run the PAE viewer script
@@ -190,6 +217,7 @@ def get_pae_run_script(
         pae_path: Path to the PAE file
         output_file: Path to the output file
         template_file: Path to the template file
+        clashes_csv: Path to the clashes CSV file
     Returns:
         Command to run the PAE viewer script
     """
@@ -198,10 +226,11 @@ def get_pae_run_script(
     pae_path = Path(pae_path)
     output_file = Path(output_file)
     template_file = Path(template_file)
+    clashes_csv_file = Path(clashes_csv_file)
 
     cmd = []
     labels_string = ";".join(labels)
-    labels_string = rf'"{labels_string}"'
+    # labels_string = rf'"{labels_string}"'
 
     cmd.append("python")
     cmd.append(str(PAEVIEWER.resolve()))
@@ -216,7 +245,8 @@ def get_pae_run_script(
     cmd.append(str(output_file.resolve()))
     cmd.append("--template_file")
     cmd.append(str(template_file.resolve()))
-    print(" ".join(cmd))
+    cmd.append("--crosslinks")
+    cmd.append(str(clashes_csv_file.resolve()))
     return cmd
 
 
@@ -233,7 +263,7 @@ def get_template_run_script(
     cmd.append("python")
     cmd.append(str(CREATETEMPLATE.resolve()))
     cmd.append("--title")
-    title = rf'"{title}"'
+    # title = rf'"{title}"'
     cmd.append(title)
     cmd.append("--standalonecss")
     cmd.append(standalonecss)
@@ -279,3 +309,24 @@ def create_subdirs(output_dir: Union[str, Path], subdirs: List[str]):
         new_subdirs = new_subdirs.joinpath(subdir)
         if not new_subdirs.exists():
             new_subdirs.mkdir()
+
+
+def clashes_csv(cif_file: CifFile, output_name: Union[str, Path]):
+    output_name = Path(output_name)
+
+    clashes = cif_file.check_clashes()
+    df = pd.DataFrame(columns=COLUMNS)
+
+    for clash in clashes:
+        atom1, atom2 = clash
+        chain_id1, chain_id2 = atom1.get_full_id()[2], atom2.get_full_id()[2]
+        res1, res2 = atom1.get_full_id()[3][1], atom2.get_full_id()[3][1]
+        df.loc[len(df)] = [
+            f"Chain-{chain_id1}",
+            res1,
+            f"Chain-{chain_id2}",
+            res2,
+            False,
+        ]
+
+    df.to_csv(output_name, index=False)
