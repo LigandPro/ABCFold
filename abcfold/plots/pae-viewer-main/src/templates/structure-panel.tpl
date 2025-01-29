@@ -114,45 +114,30 @@
           </div>
         </div>
       </div>
-      <div class="sp-color-options hidden" data-scheme="crosslinks">
+       <div class="sp-color-options hidden" data-scheme="crosslinks">
         <strong>Crosslink color scheme:</strong>
         <div>
           <label class="sp-centered-label">
             <input type="radio" name="crosslink-scheme"
                    value="restraint" checked>
-            <span class="sp-color-marker" style="background-color: blue">
-            satisfied
-          </span>
-            /
+            
             <span class="sp-color-marker" style="background-color: red">
-            violated
+            clashes
           </span>
-            restraint
+            
           </label>
         </div>
-        <div>
-          <label class="sp-centered-label">
-            <input type="radio" name="crosslink-scheme" value="connection">
-            <span class="sp-color-marker" style="background-color: grey">
-            intra
-          </span>
-            /
-            <span class="sp-color-marker" style="background-color: orange">
-            inter
-          </span>
-            protein links
-          </label>
-        </div>
+        
         <div>
           <label class="sp-centered-label">
             <input type="radio" name="crosslink-scheme" value="">
             hide all crosslinks
           </label>
         </div>
-        <p>
+        <p class="sp-restraint-note hidden">
           <small>
             <strong>Note:</strong>
-            a Cα-Cα distance ≥ 30 Å is considered a restraint violation.
+            any atom within a residue that is within a 2.4Å distance to another atom on a residue from a different chain is considered a clash violation.
           </small>
         </p>
       </div>
