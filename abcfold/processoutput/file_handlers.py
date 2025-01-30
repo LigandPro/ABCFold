@@ -295,8 +295,13 @@ class CifFile(FileBase):
             raise ValueError()
 
         for chain in self.model[0]:
-            # if self.check_ligand(chain):
-            #     continue
+            if self.check_ligand(chain):
+                for residue in chain:
+                    for atom in residue:
+                        if chain.id in plddts:
+                            plddts[chain.id].append(atom.bfactor)
+                        else:
+                            plddts[chain.id] = [atom.bfactor]
             for residue in chain:
                 if method == ResidueCountType.AVERAGE.value:
                     scores = 0

@@ -109,12 +109,5 @@ def alphafold_argparse_util(parser):
         help="Override the existing output directory, if it exists",
         action="store_true",
     )
-    if "--num_recycles" not in parser._option_string:
-        parser.add_argument(
-            "--num_recycles",
-            type=int,
-            default=10,
-            help="Number of recycles to use during the inference",
-        )
 
     return parser
