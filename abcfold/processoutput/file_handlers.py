@@ -402,10 +402,18 @@ class CifFile(FileBase):
                 continue
 
             distance = np.linalg.norm(atom1.get_coord() - atom2.get_coord())
+            if (atom1.name == "C" and atom1.name == "N") or (
+                atom2.name == "N" and atom1.name == "C"
+            ):
+                continue
+            elif (atom1.name == "SG" and atom2.name == "SG") and distance > 1.88:
+                continue
+
             clash_radius = (
-                VANDERWALLS.get(element1, 1.7) + VANDERWALLS.get(element2, 1.7) * 0.63
-            )
+                VANDERWALLS.get(element1, 1.7) + VANDERWALLS.get(element2, 1.7)
+            ) * 0.63
             if distance < clash_radius:
+
                 clashes.append((atom1, atom2))
 
         return clashes

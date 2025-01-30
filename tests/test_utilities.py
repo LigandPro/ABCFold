@@ -59,7 +59,8 @@ def test_clash_checker(test_data):
     cif_file = Path(test_data.test_boltz_1_6BJ9_).joinpath(
         "predictions", "test_mmseqs", "test_mmseqs_model_0.cif"
     )
+
     structure = CifFile(cif_file)
     clashes = structure.check_clashes()
     assert isinstance(clashes, list)
-    assert len(clashes) == 9
+    assert len(clashes) == 2
