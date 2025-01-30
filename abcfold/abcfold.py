@@ -140,7 +140,7 @@ by default"
             outputs.append(ao)
 
             if args.use_af3_msa:
-                run_json = Path(ao.output_dir).joinpath(f"{name}_data.json")
+                run_json = ao.input_json
 
         if args.boltz1:
             from abcfold.run_boltz import run_boltz

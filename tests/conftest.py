@@ -42,10 +42,10 @@ tests from the root of the repository or the tests directory"
     nt = namedtuple("TestData", d)
     n = nt(**d)
 
-    return n
+    yield n
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def output_objs():
     data_dir = Path("./test_data")
     if not data_dir.exists():
@@ -89,4 +89,4 @@ def output_objs():
     nt = namedtuple("output_objs", d)
     n = nt(**d)
 
-    return n
+    yield n
