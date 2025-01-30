@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from abcfold.af3_script_utils import (align_and_map,
+from abcfold.abc_script_utils import (align_and_map,
                                       extract_sequence_from_mmcif, get_chains,
                                       get_mmcif)
 from abcfold.processoutput.file_handlers import CifFile

@@ -5,8 +5,8 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
+from abcfold.abc_script_utils import make_dir, setup_logger
 from abcfold.add_mmseqs_msa import add_msa_to_json
-from abcfold.af3_script_utils import make_dir, setup_logger
 from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
