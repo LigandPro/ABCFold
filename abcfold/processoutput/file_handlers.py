@@ -10,6 +10,8 @@ from Bio.PDB import MMCIFIO, Chain, MMCIFParser
 from Bio.PDB.Atom import Atom
 from Bio.PDB.kdtrees import KDTree
 
+from abcfold.processoutput.atoms import VANDERWALLS
+
 logger = logging.getLogger("logger")
 
 
@@ -358,7 +360,10 @@ class CifFile(FileBase):
         io.save(str(output_file))
 
     def check_clashes(
-        self, threshold: Union[int, float] = 2.4, bucket: int = 10
+        self,
+        threshold: Union[int, float] = 3.4,
+        bucket: int = 10,
+        clash_cutoff: float = 0.63,
     ) -> List[Tuple[Atom, Atom]]:
         """
         Check for clashes between atoms in different chains
@@ -377,6 +382,7 @@ class CifFile(FileBase):
         )
         assert bucket > 1
         assert coords.shape[1] == 3
+        assert clash_cutoff > 0.0 and clash_cutoff <= 1.0
 
         tree = KDTree(coords, bucket)
         neighbors = tree.neighbor_search(threshold)
@@ -385,12 +391,21 @@ class CifFile(FileBase):
         for neighbor in neighbors:
             i1, i2 = neighbor.index1, neighbor.index2
             atom1, atom2 = atoms[i1], atoms[i2]
+            # get the element of the atom
+            element1 = atom1.element
+            element2 = atom2.element
             # find chain_id and residue_id
             chain_id1 = atom1.get_full_id()[2]
             chain_id2 = atom2.get_full_id()[2]
+
             if chain_id1 == chain_id2:
                 continue
-            else:
+
+            distance = np.linalg.norm(atom1.get_coord() - atom2.get_coord())
+            clash_radius = (
+                VANDERWALLS.get(element1, 1.7) + VANDERWALLS.get(element2, 1.7) * 0.63
+            )
+            if distance < clash_radius:
                 clashes.append((atom1, atom2))
 
         return clashes
