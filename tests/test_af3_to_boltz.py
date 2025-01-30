@@ -96,3 +96,13 @@ def test_boltz_output_msa(test_data):
         assert boltz_yaml.msa_file is not None
         assert boltz_yaml.msa_file.exists()
         assert boltz_yaml.msa_file.is_file()
+
+
+def test_af3_data_json_to_yaml(output_objs):
+    try:
+        af3_json = output_objs.af3_output.input_json
+        with tempfile.TemporaryDirectory() as temp_dir:
+            boltz_yaml = BoltzYaml(temp_dir)
+            boltz_yaml.json_to_yaml(af3_json)
+    except TypeError:
+        assert False

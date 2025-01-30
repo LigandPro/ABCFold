@@ -64,7 +64,7 @@ class BoltzYaml:
                         self.yaml_string += self.add_ligand_information(
                             sequence_dict["ligand"]
                         )
-            if key == "bondedAtomPairs":
+            if key == "bondedAtomPairs" and isinstance(value, list):
                 if "constraints" not in self.yaml_string:
                     self.yaml_string += self.add_non_indented_string("constraints")
                 self.yaml_string += self.bonded_atom_pairs_to_yaml(value)

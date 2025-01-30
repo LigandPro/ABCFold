@@ -210,3 +210,13 @@ def test_ccd_to_smiles():
 
     smiles = chai_fasta.ccd_to_smiles("NOT_A_CCD")
     assert smiles is None
+
+
+def test_af3_data_json_to_fasta(output_objs):
+    try:
+        af3_json = output_objs.af3_output.input_json
+        with tempfile.TemporaryDirectory() as temp_dir:
+            chai_fasta = ChaiFasta(temp_dir)
+            chai_fasta.json_to_fasta(af3_json)
+    except TypeError:
+        assert False

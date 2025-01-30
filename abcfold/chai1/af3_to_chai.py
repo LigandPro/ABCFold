@@ -26,12 +26,23 @@ chai_lab'"
 
 
 class ChaiFasta:
-    """
-    Object to convert an AlphaFold3 json to a fasta file compatible with CHAI-1
-    """
 
     def __init__(self, working_dir: Union[str, Path]):
-        self.working_dir = working_dir
+        """
+        Object to convert an AlphaFold3 json to a fasta file compatible with CHAI-1
+
+        Args:
+            working_dir (Union[str, Path]): working directory to store the fasta file
+
+        Attributes:
+            working_dir (Path): working directory to store the fasta file
+            fasta (Path): path to the fasta file
+            constraints (Path): path to the constraints file
+            msa_file (Optional[Union[str, Path]]): path to the msa file
+
+
+        """
+        self.working_dir = Path(working_dir)
         self.fasta = Path(working_dir) / "chai1.fasta"
         self.constraints = Path(working_dir) / "chai1_constraints.csv"
         self.msa_file: Optional[Union[str, Path]] = None
@@ -150,8 +161,9 @@ class ChaiFasta:
 
         # Check if there are bonded pairs
         if "bondedAtomPairs" in json_dict.keys():
-            bonded_pairs = json_dict["bondedAtomPairs"]
-            self.bonded_pairs_to_file(bonded_pairs, fasta_data)
+            if isinstance(json_dict["bondedAtomPairs"], list):
+                bonded_pairs = json_dict["bondedAtomPairs"]
+                self.bonded_pairs_to_file(bonded_pairs, fasta_data)
 
     def add_protein(self, seq: dict, fasta_data: dict):
         prot_id = seq["protein"]["id"]
@@ -199,6 +211,7 @@ class ChaiFasta:
         return nucleotide_str, fasta_data
 
     def ccd_to_smiles(self, ccd_id: str):
+        assert isinstance(ccd_id, str), "CCD ID must be a string"
         logger.info(f"CCD code found in input: {ccd_id}")
         logger.info("Chai-1 currently only supports SMILES strings for ligands")
         logger.info("Attempting to retrieve SMILES from CCD")
@@ -217,12 +230,23 @@ class ChaiFasta:
         ligand_str = ""
         if "ccdCodes" in seq["ligand"]:
             if isinstance(lig_id, list):
-                for i in seq["ligand"]["id"]:
-                    smile = self.ccd_to_smiles(seq["ligand"]["ccdCodes"][0])
+                for i in lig_id:
+                    ccd_code = (
+                        seq["ligand"]["ccdCodes"][0]
+                        if isinstance(seq["ligand"]["ccdCodes"], list)
+                        else seq["ligand"]["ccdCodes"]
+                    )
+
+                    smile = self.ccd_to_smiles(ccd_code)
                     if smile:
                         ligand_str += f">ligand|{i}\n{smile}\n"
             else:
-                smile = self.ccd_to_smiles(seq["ligand"]["ccdCodes"])
+                ccd_code = (
+                    seq["ligand"]["ccdCodes"][0]
+                    if isinstance(seq["ligand"]["ccdCodes"], list)
+                    else seq["ligand"]["ccdCodes"]
+                )
+                smile = self.ccd_to_smiles(ccd_code)
                 if smile:
                     ligand_str = f">ligand|{lig_id}\n{smile}\n"
         if "smiles" in seq["ligand"]:
