@@ -42,6 +42,7 @@ def run_alphafold3(
     database_dir: Union[str, Path],
     interactive: bool = True,
     number_of_models: int = 5,
+    num_recycles: int = 10,
 ) -> None:
     """
     Run Alphafold3 using the input JSON file
@@ -73,6 +74,7 @@ def run_alphafold3(
         database_dir=database_dir,
         interactive=interactive,
         number_of_models=number_of_models,
+        num_recycles=num_recycles,
     )
 
     logger.info("Running Alphafold3")
@@ -92,7 +94,8 @@ def generate_af3_cmd(
     output_dir: Union[str, Path],
     model_params: Union[str, Path],
     database_dir: Union[str, Path],
-    number_of_models: int = 5,
+    number_of_models: int = 10,
+    num_recycles: int = 5,
     interactive: bool = True,
 ) -> str:
     """
@@ -124,6 +127,7 @@ def generate_af3_cmd(
     --model_dir=/root/models \
     --output_dir=/root/af_output \
     --num_diffusion_samples {number_of_models}
+    --num_recycles {num_recycles}
     """
 
 
