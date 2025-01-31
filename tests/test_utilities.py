@@ -1,4 +1,4 @@
-from abcfold.af3_script_utils import (align_and_map,
+from abcfold.af3_script_utils import (align_and_map, check_input_json,
                                       extract_sequence_from_mmcif, get_chains,
                                       get_mmcif)
 
@@ -50,3 +50,9 @@ def test_get_mmcif(test_data):
 
     cif_str = get_mmcif(test_data.test_1G03_cif, "1G03", "A", 1, 100)
     assert cif_str.startswith("data_1G03")
+
+
+def test_check_input_json(test_data):
+    input_json = test_data.test_inputAB_json
+    check_input_json(input_json)
+    assert False

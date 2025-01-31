@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import shutil
@@ -302,3 +303,25 @@ def make_dir(dir_path: Union[str, Path], overwrite: bool = False):
 
     dir_path.mkdir(parents=True, exist_ok=True)
     return dir_path
+
+
+# Check the input json file to see if unpairedMsa is present and if te
+# mplates are present
+
+
+def check_input_json(input_json: Union[str, Path]):
+    # check if unpairedMsa is present
+    with open(input_json, "r") as f:
+        input_data = json.load(f)
+
+    for sequence in input_data["sequences"]:
+        for sequence_type in sequence:
+            if (
+                "unpairedMsa" in sequence[sequence_type]
+                or "unpairedMsaPath" in sequence[sequence_type]
+            ):
+                if "templates" not in sequence[sequence_type]:
+                    sequence[sequence_type]["templates"] = []
+
+                if "pairedMsa" not in sequence[sequence_type]:
+                    sequence[sequence_type]["pairedMsa"] = ""
