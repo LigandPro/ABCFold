@@ -1,6 +1,10 @@
-from abcfold.af3_script_utils import (align_and_map, check_input_json,
+from pathlib import Path
+
+from abcfold.abc_script_utils import check_input_json
+from abcfold.af3_script_utils import (align_and_map,
                                       extract_sequence_from_mmcif, get_chains,
                                       get_mmcif)
+from abcfold.processoutput.file_handlers import CifFile
 
 
 def test_get_chains(test_data):
@@ -55,4 +59,15 @@ def test_get_mmcif(test_data):
 def test_check_input_json(test_data):
     input_json = test_data.test_inputAB_json
     check_input_json(input_json)
-    assert False
+    # assert False
+
+
+def test_clash_checker(test_data):
+    cif_file = Path(test_data.test_boltz_1_6BJ9_).joinpath(
+        "predictions", "test_mmseqs", "test_mmseqs_model_0.cif"
+    )
+
+    structure = CifFile(cif_file)
+    clashes = structure.check_clashes()
+    assert isinstance(clashes, list)
+    assert len(clashes) == 2
