@@ -40,7 +40,7 @@ def run_alphafold3(
     output_dir: Union[str, Path],
     model_params: Union[str, Path],
     database_dir: Union[str, Path],
-    interactive: bool = True,
+    interactive: bool = False,
     number_of_models: int = 5,
     num_recycles: int = 10,
 ) -> None:
@@ -96,7 +96,7 @@ def generate_af3_cmd(
     database_dir: Union[str, Path],
     number_of_models: int = 10,
     num_recycles: int = 5,
-    interactive: bool = True,
+    interactive: bool = False,
 ) -> str:
     """
     Generate the Alphafold3 command
