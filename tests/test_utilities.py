@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from abcfold.abc_script_utils import check_input_json
-from abcfold.af3_script_utils import (align_and_map,
+from abcfold.abc_script_utils import (align_and_map, check_input_json,
                                       extract_sequence_from_mmcif, get_chains,
                                       get_mmcif)
 from abcfold.processoutput.file_handlers import CifFile
@@ -57,9 +56,15 @@ def test_get_mmcif(test_data):
 
 
 def test_check_input_json(test_data):
-    input_json = test_data.test_inputAB_json
-    check_input_json(input_json)
-    # assert False
+    input_json = test_data.test_inputAmsa_json
+    input_json1 = check_input_json(input_json, use_af3_templates=True, test=True)
+    input_json2 = check_input_json(input_json, use_af3_templates=False, test=True)
+
+    assert "templates" in input_json1["sequences"][0]["protein"]
+    assert input_json1["sequences"][0]["protein"]["templates"] is None
+
+    assert "templates" in input_json2["sequences"][0]["protein"]
+    assert input_json2["sequences"][0]["protein"]["templates"] == []
 
 
 def test_clash_checker(test_data):
