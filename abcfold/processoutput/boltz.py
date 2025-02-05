@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Union
 
+from abcfold.boltz1.af3_to_boltz1 import BoltzYaml
 from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
                                                  FileTypes, ModelCount,
                                                  NpzFile)
@@ -69,7 +70,7 @@ class BoltzOutput:
             self.output_dir = self.output_dir.rename(
                 self.output_dir.parent / f"boltz-1_{name}"
             )
-
+        self.yaml_input_obj = self.get_input_yaml()
         self.output = self.process_boltz_output()
 
         self.pae_files = [value["pae"] for value in self.output.values()]
@@ -96,6 +97,7 @@ class BoltzOutput:
                 file_ = NpzFile(str(pathway))
             elif file_type == FileTypes.CIF.value:
                 file_ = CifFile(str(pathway), self.input_params)
+                file_.relabel_chains(self.yaml_input_obj.chain_ids)
             elif file_type == FileTypes.JSON.value:
                 file_ = ConfidenceJsonFile(str(pathway))
             else:
@@ -150,7 +152,9 @@ class BoltzOutput:
             chain_lengths = cif_file.chain_lengths(
                 mode=ModelCount.RESIDUES, ligand_atoms=True
             )
-
+            print(chain_lengths)
+            print(sum(chain_lengths.values()))
+            print(len(plddt_score))
             assert sum(chain_lengths.values()) == len(plddt_score), "Length mismatch"
 
             counter = 0
@@ -191,3 +195,21 @@ class BoltzOutput:
                 json.dump(pae.scores, f)
 
             self.output[i]["af3_pae"] = ConfidenceJsonFile(out_name)
+
+    def get_input_yaml(self) -> BoltzYaml:
+        """
+        Get the input yaml file used for the Boltz-1 run
+
+        Returns:
+            BoltzYaml: Object containing the input yaml file
+        """
+
+        by = BoltzYaml(self.output_dir)
+        by.json_to_yaml(self.input_params)
+        [
+            self.input_params["sequences"].append({"ligand": {"id": ligand}})
+            for ligand in by.additional_ligands
+        ]
+
+        # update the input_params with the new sequences in the yaml string
+        return by
