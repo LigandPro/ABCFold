@@ -3,7 +3,7 @@ import logging
 import random
 import string
 from pathlib import Path
-from typing import Optional, Union
+from typing import Dict, List, Optional, Union
 
 DELIM = "      "
 
@@ -19,6 +19,18 @@ class BoltzYaml:
         self.working_dir = working_dir
         self.yaml_string: str = ""
         self.msa_file: Optional[Union[str, Path]] = None
+        self.__ids: List[Union[str, int]] = []
+        self.__id_char: str = "A"
+        self.__id_links: Dict[Union[str, int], str] = {}
+        self.__additional_ligands: List[Union[str, int]] = []
+
+    @property
+    def chain_ids(self) -> List[Union[str, int]]:
+        return self.__ids
+
+    @property
+    def additional_ligands(self) -> List[Union[str, int]]:
+        return self.__additional_ligands
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
         """
@@ -50,6 +62,8 @@ class BoltzYaml:
         else:
             json_dict = json_file_or_dict
 
+        self.get_ids(json_dict["sequences"])
+
         self.yaml_string = ""
 
         self.yaml_string += self.add_version_number("1")
@@ -69,12 +83,25 @@ class BoltzYaml:
                     self.yaml_string += self.add_non_indented_string("constraints")
                 self.yaml_string += self.bonded_atom_pairs_to_yaml(value)
 
+        # Remove the last new id as this is an artifact from recursion
+        self.__additional_ligands = self.__additional_ligands[:-1]
         return self.yaml_string
 
     def bonded_atom_pairs_to_yaml(self, bonded_atom_pairs: list):
         yaml_string = ""
         for pair in bonded_atom_pairs:
             yaml_string += self.add_title("bond")
+
+            if pair[0][0] == pair[1][0]:
+                if pair[0][0] not in self.__id_links:
+                    continue
+
+                if pair[0][1] < pair[1][1]:
+
+                    pair[1] = [self.__id_links[pair[0][0]], pair[1][1] - 1, pair[1][2]]
+                else:
+
+                    pair[0] = [self.__id_links[pair[0][0]], pair[0][1] - 1, pair[0][2]]
             yaml_string += self.add_key_and_value("atom1", pair[0])
             yaml_string += self.add_key_and_value("atom2", pair[1])
 
@@ -112,9 +139,12 @@ class BoltzYaml:
             str: yaml string
 
         """
+
         if isinstance(id_, list):
+            self.__ids.extend([id__ for id__ in id_ if id__ not in self.__ids])
             new_id = ", ".join([str(i).replace('"', "").replace("'", "") for i in id_])
         else:
+            self.__ids.append(id_) if id_ not in self.__ids else None
             new_id = str(id_).replace('"', "").replace("'", "")
 
         return (
@@ -164,7 +194,7 @@ class BoltzYaml:
         """
         return f"{DELIM}{DELIM}{key}: {value}\n"
 
-    def add_ligand_information(self, ligand_dict: dict):
+    def add_ligand_information(self, ligand_dict: dict, linked_id=None):
         """
         Function to add ligand information to the yaml string
 
@@ -174,6 +204,10 @@ class BoltzYaml:
         Returns:
             str: yaml string
         """
+
+        if "ccdCodes" in ligand_dict and len(ligand_dict["ccdCodes"]) == 0:
+            self.__additional_ligands.append(self.__id_char)
+            return ""
         yaml_string = ""
         yaml_string += self.add_title("ligand")
         yaml_string += self.add_id(ligand_dict["id"])
@@ -181,7 +215,22 @@ class BoltzYaml:
         if "smiles" in ligand_dict:
             yaml_string += self.add_key_and_value("smiles", ligand_dict["smiles"])
         elif "ccdCodes" in ligand_dict:
-            yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"])
+            if isinstance(ligand_dict["ccdCodes"], str):
+                yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"])
+            elif isinstance(ligand_dict["ccdCodes"], list):
+                if linked_id is not None:
+
+                    self.__id_links[linked_id] = ligand_dict["id"]
+                yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"][0])
+
+                yaml_string += self.add_ligand_information(
+                    {
+                        "id": self.find_next_id(),
+                        "ccdCodes": ligand_dict["ccdCodes"][1:],
+                    },
+                    linked_id=ligand_dict["id"],
+                )
+
         else:
 
             msg = "Ligand must have either a smiles or ccdCCodes"
@@ -267,3 +316,21 @@ class BoltzYaml:
         assert Path(file_path).suffix == ".yaml", "File must have a .yaml extension"
         with open(file_path, "w") as f:
             f.write(self.yaml_string)
+
+    def find_next_id(self):
+
+        if self.__id_char not in self.__ids:
+            return self.__id_char
+        while self.__id_char in self.__ids:
+            self.__id_char = chr(ord(self.__id_char) + 1)
+        return self.__id_char
+
+    def get_ids(self, sequences: list):
+        for sequence in sequences:
+            for key in sequence:
+                for key2 in sequence[key]:
+                    if key2 == "id":
+                        if isinstance(sequence[key][key2], list):
+                            self.__ids.extend(sequence[key][key2])
+                            continue
+                        self.__ids.append(sequence[key][key2])
