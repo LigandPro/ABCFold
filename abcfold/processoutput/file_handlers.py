@@ -1,5 +1,6 @@
 import json
 import logging
+import warnings
 from abc import ABC
 from enum import Enum
 from pathlib import Path
@@ -11,6 +12,8 @@ from Bio.PDB.Atom import Atom
 from Bio.PDB.kdtrees import KDTree
 
 from abcfold.processoutput.atoms import VANDERWALLS
+
+warnings.filterwarnings("ignore")
 
 logger = logging.getLogger("logger")
 
@@ -349,6 +352,21 @@ class CifFile(FileBase):
                         if chain.id in sequence_data["id"]:
                             return True
         return False
+
+    def relabel_chains(self, chain_ids: List[str]) -> None:
+        """
+        Relabel the chains in the model
+
+        Args:
+            chain_ids (List[str]): List of chain ids to relabel the chains
+
+        Returns:
+            None
+        """
+
+        for i, chain in enumerate(self.model[0]):
+            print(f"Relabeling chain {chain.id} to {chain_ids[i]}")
+            chain.id = chain_ids[i]
 
     def to_file(self, output_file: Union[str, Path]) -> None:
         """
