@@ -5,6 +5,8 @@ import string
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+import yaml  # type: ignore
+
 DELIM = "      "
 
 logger = logging.getLogger("logger")
@@ -15,14 +17,16 @@ class BoltzYaml:
     Object to convert an AlphaFold3 json file to a boltzmann yaml file.
     """
 
-    def __init__(self, working_dir: Union[str, Path]):
+    def __init__(self, working_dir: Union[str, Path], create_files: bool = True):
         self.working_dir = working_dir
         self.yaml_string: str = ""
-        self.msa_file: Optional[Union[str, Path]] = None
+        self.msa_file: Optional[Union[str, Path]] = "null"
         self.__ids: List[Union[str, int]] = []
         self.__id_char: str = "A"
         self.__id_links: Dict[Union[str, int], str] = {}
         self.__additional_ligands: List[Union[str, int]] = []
+        self.__create_files = create_files
+        self.__non_ligands: List[str] = []
 
     @property
     def chain_ids(self) -> List[Union[str, int]]:
@@ -43,10 +47,14 @@ class BoltzYaml:
         Returns:
             None
         """
+
         with open(file_path, "w") as f:
             f.write(msa)
 
-    def json_to_yaml(self, json_file_or_dict: Union[dict, str, Path]):
+    def json_to_yaml(
+        self,
+        json_file_or_dict: Union[dict, str, Path],
+    ):
         """
         Main function to convert a json file or dict to a yaml string
 
@@ -65,6 +73,7 @@ class BoltzYaml:
         self.get_ids(json_dict["sequences"])
 
         self.yaml_string = ""
+        bonded_atom_string = ""
 
         self.yaml_string += self.add_version_number("1")
         for key, value in json_dict.items():
@@ -79,20 +88,27 @@ class BoltzYaml:
                             sequence_dict["ligand"]
                         )
             if key == "bondedAtomPairs" and isinstance(value, list):
-                if "constraints" not in self.yaml_string:
+
+                bonded_atom_string += self.bonded_atom_pairs_to_yaml(value)
+                if "constraints" not in self.yaml_string and bonded_atom_string:
                     self.yaml_string += self.add_non_indented_string("constraints")
-                self.yaml_string += self.bonded_atom_pairs_to_yaml(value)
+                self.yaml_string += bonded_atom_string
 
         # Remove the last new id as this is an artifact from recursion
         self.__additional_ligands = self.__additional_ligands[:-1]
+
+        for ligand_id in self.__additional_ligands:
+            self.move_ligand_to_end(ligand_id)
+
         return self.yaml_string
 
     def bonded_atom_pairs_to_yaml(self, bonded_atom_pairs: list):
         yaml_string = ""
+        # counter = 0
         for pair in bonded_atom_pairs:
-            yaml_string += self.add_title("bond")
 
-            if pair[0][0] == pair[1][0]:
+            if (pair[0][0] == pair[1][0]) and pair[0][1] in self.__non_ligands:
+
                 if pair[0][0] not in self.__id_links:
                     continue
 
@@ -102,6 +118,8 @@ class BoltzYaml:
                 else:
 
                     pair[0] = [self.__id_links[pair[0][0]], pair[0][1] - 1, pair[0][2]]
+
+            yaml_string += self.add_title("bond")
             yaml_string += self.add_key_and_value("atom1", pair[0])
             yaml_string += self.add_key_and_value("atom2", pair[1])
 
@@ -176,7 +194,7 @@ class BoltzYaml:
         Returns:
             str: yaml string
         """
-        if not Path(msa).exists():
+        if not Path(msa).exists() and self.__create_files:
             msg = f"File {msa} does not exist"
             logger.critical(msg)
             raise FileNotFoundError()
@@ -257,9 +275,20 @@ class BoltzYaml:
             if "sequence" in sequence_dict
             else ""
         )
+        if isinstance(sequence_dict["id"], str):
+            id_ = [sequence_dict["id"]]
+        else:
+            id_ = sequence_dict["id"]
+
+        self.__non_ligands.extend(id_)
+
         if self.msa_file is None:
             return yaml_string
-        self.msa_to_file(sequence_dict["unpairedMsa"], self.msa_file)
+        (
+            self.msa_to_file(sequence_dict["unpairedMsa"], self.msa_file)
+            if self.__create_files
+            else None
+        )
         yaml_string += self.add_msa(self.msa_file)
         return yaml_string
 
@@ -334,3 +363,42 @@ class BoltzYaml:
                             self.__ids.extend(sequence[key][key2])
                             continue
                         self.__ids.append(sequence[key][key2])
+
+    def move_ligand_to_end(self, ligand_id_to_move: Union[str, int]):
+        """
+        Moves the ligand to the end of the sequence list
+
+        Args:
+            ligand_id (Union[str, int]): ligand id
+
+        Returns:
+            str: yaml string
+        """
+
+        data = yaml.safe_load(self.yaml_string)
+        new_data = {}
+        found_ligand = None
+        other_entries = []
+
+        for yaml_title in data:
+            if yaml_title != "sequences":
+                new_data[yaml_title] = data[yaml_title]
+                continue
+            for entry in data[yaml_title]:
+                if not isinstance(entry, dict):
+                    other_entries.append(entry)
+                    continue
+
+                if entry.get("ligand") and entry["ligand"].get("id") == str(
+                    ligand_id_to_move
+                ):
+                    found_ligand = entry
+                else:
+                    other_entries.append(entry)
+
+            if found_ligand:
+                other_entries.append(found_ligand)
+
+            new_data[yaml_title] = other_entries
+
+        self.yaml_string = yaml.dump(new_data, default_flow_style=False)
