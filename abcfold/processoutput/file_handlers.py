@@ -363,7 +363,9 @@ class CifFile(FileBase):
         Returns:
             None
         """
-
+        assert len(chain_ids) == len(
+            self.model[0]
+        ), "Number of chain ids must match the number of chains"
         for i, chain in enumerate(self.model[0]):
             print(f"Relabeling chain {chain.id} to {chain_ids[i]}")
             chain.id = chain_ids[i]
