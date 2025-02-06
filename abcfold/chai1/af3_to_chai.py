@@ -3,18 +3,23 @@ import json
 import logging
 import tempfile
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as _  # noqa F401
 import pandas as pd
 import requests
 
+from abcfold.processoutput.atoms import VANDERWALLS
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 try:
     from chai_lab.data.parsing.msas.aligned_pqt import \
         merge_multi_a3m_to_aligned_dataframe
     from chai_lab.data.parsing.msas.data_source import MSADataSource
+
 except ImportError:
 
     logger.error(
@@ -23,6 +28,9 @@ please try running the job again or install chai_lab directly using 'pip install
 chai_lab'"
     )
     raise ImportError()
+
+
+ATOMS_NAMES = sorted(list(VANDERWALLS.keys()), key=len, reverse=True)
 
 
 class ChaiFasta:
@@ -46,6 +54,11 @@ class ChaiFasta:
         self.fasta = Path(working_dir) / "chai1.fasta"
         self.constraints = Path(working_dir) / "chai1_constraints.csv"
         self.msa_file: Optional[Union[str, Path]] = None
+        self.__ids: List[Union[str, int]] = []
+
+    @property
+    def chain_ids(self):
+        return self.__ids
 
     def bonded_pairs_to_file(self, bonded_pairs, fasta_data: dict):
         """
@@ -75,12 +88,36 @@ class ChaiFasta:
 
         for i, bonded_pair in enumerate(bonded_pairs):
             pair_data = []
+            if (
+                fasta_data[bonded_pair[0][0]] == "CCD-CODE_PLACEHOLDER"
+                or fasta_data[bonded_pair[1][0]] == "CCD-CODE_PLACEHOLDER"
+            ):
+                logger.warning(
+                    "Currently Chai-1 does not support most ccdcode ligands\
+ in bonded pairs. This is something that we will be keeping in mind for future\
+ updates"
+                )
+                continue
+            if (
+                fasta_data[bonded_pair[0][0]] == "LIGAND_PLACEHOLDER"
+                or fasta_data[bonded_pair[1][0]] == "LIAGND_PLACEHOLDER"
+            ):
+                logger.warning(
+                    "SMILES Ligand bonded paris are not implemented yet, please \
+check back for updates"
+                )
+                continue
+
             for pair in bonded_pair:
+
                 chain_id = pair[0]
                 seq_idx = pair[1]
-                res = fasta_data[chain_id][seq_idx - 1]
                 pair_data.append(chain_id)
-                pair_data.append(f"{res}{seq_idx}")
+
+                res = fasta_data[chain_id][seq_idx - 1]
+
+                pair_data.append(f"{res}{seq_idx}@{pair[2]}")
+
             row_data = [
                 pair_data[0],
                 pair_data[1],
@@ -90,11 +127,13 @@ class ChaiFasta:
                 1.0,
                 0.0,
                 5.5,
-                "No comment",
+                "Covalent Bond",
                 f"restraint_{i}",
             ]
             df.loc[i] = row_data
-        df.to_csv(self.constraints, sep=",", index=False)
+
+        if not df.empty:
+            df.to_csv(self.constraints, sep=",", index=False)
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
         """
@@ -156,14 +195,16 @@ class ChaiFasta:
                     )
                     f.write(nucleotide_str)
                 if "ligand" in seq:
-                    ligand_str = self.add_ligand(seq)
+                    ligand_str = self.add_ligand(seq, fasta_data)
                     f.write(ligand_str)
 
-        # Check if there are bonded pairs
         if "bondedAtomPairs" in json_dict.keys():
             if isinstance(json_dict["bondedAtomPairs"], list):
                 bonded_pairs = json_dict["bondedAtomPairs"]
                 self.bonded_pairs_to_file(bonded_pairs, fasta_data)
+
+        print(fasta_data)
+        self.__ids = list(fasta_data.keys())
 
     def add_protein(self, seq: dict, fasta_data: dict):
         prot_id = seq["protein"]["id"]
@@ -211,6 +252,7 @@ class ChaiFasta:
         return nucleotide_str, fasta_data
 
     def ccd_to_smiles(self, ccd_id: str):
+
         assert isinstance(ccd_id, str), "CCD ID must be a string"
         logger.info(f"CCD code found in input: {ccd_id}")
         logger.info("Chai-1 currently only supports SMILES strings for ligands")
@@ -225,30 +267,43 @@ class ChaiFasta:
             logger.warning(f"Could not retrieve SMILES for {ccd_id}")
             return None
 
-    def add_ligand(self, seq: dict):
+    def add_ligand(self, seq: dict, fasta_data: dict):
         lig_id = seq["ligand"]["id"]
         ligand_str = ""
         if "ccdCodes" in seq["ligand"]:
-            if isinstance(lig_id, list):
-                for i in lig_id:
-                    ccd_code = (
-                        seq["ligand"]["ccdCodes"][0]
-                        if isinstance(seq["ligand"]["ccdCodes"], list)
-                        else seq["ligand"]["ccdCodes"]
-                    )
+            if isinstance(lig_id, str):
+                lig_id = [lig_id]
 
-                    smile = self.ccd_to_smiles(ccd_code)
-                    if smile:
-                        ligand_str += f">ligand|{i}\n{smile}\n"
-            else:
-                ccd_code = (
-                    seq["ligand"]["ccdCodes"][0]
-                    if isinstance(seq["ligand"]["ccdCodes"], list)
-                    else seq["ligand"]["ccdCodes"]
+            for lig in lig_id:
+                if isinstance(seq["ligand"]["ccdCodes"], str):
+                    ccd_codes = [seq["ligand"]["ccdCodes"]]
+                else:
+                    ccd_codes = seq["ligand"]["ccdCodes"]
+                ligand_str += (
+                    f">protein|{lig}\n{''.join([f'({ccd})' for ccd in ccd_codes])}\n"
                 )
-                smile = self.ccd_to_smiles(ccd_code)
-                if smile:
-                    ligand_str = f">ligand|{lig_id}\n{smile}\n"
+                fasta_data[lig] = "CCD-CODE_PLACEHOLDER"
+
+            # if isinstance(lig_id, list):
+            #     for i in lig_id:
+            #         ccd_code = (
+            #             seq["ligand"]["ccdCodes"][0]
+            #             if isinstance(seq["ligand"]["ccdCodes"], list)
+            #             else seq["ligand"]["ccdCodes"]
+            #         )
+
+            #         smile = self.ccd_to_smiles(ccd_code)
+            #         if smile:
+            #             ligand_str += f">ligand|{i}\n{smile}\n"
+            # else:
+            #     ccd_code = (
+            #         seq["ligand"]["ccdCodes"][0]
+            #         if isinstance(seq["ligand"]["ccdCodes"], list)
+            #         else seq["ligand"]["ccdCodes"]
+            #     )
+            #     smile = self.ccd_to_smiles(ccd_code)
+            #     if smile:
+            #         ligand_str = f">ligand|{lig_id}\n{smile}\n"
         if "smiles" in seq["ligand"]:
             if isinstance(lig_id, list):
                 for i in seq["ligand"]["id"]:
@@ -256,4 +311,12 @@ class ChaiFasta:
             else:
                 ligand_str = f">ligand|{lig_id}\n{seq['ligand']['smiles']}\n"
 
+            fasta_data[lig_id] = "SMILES_PLACEHOLDER"
+
         return ligand_str
+
+    def get_atom_name(self, atom: str) -> str:
+        for name in ATOMS_NAMES:
+            if atom.startswith(name):
+                return name
+        return ""
