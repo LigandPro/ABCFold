@@ -35,7 +35,7 @@ ATOMS_NAMES = sorted(list(VANDERWALLS.keys()), key=len, reverse=True)
 
 class ChaiFasta:
 
-    def __init__(self, working_dir: Union[str, Path]):
+    def __init__(self, working_dir: Union[str, Path], create_files: bool = True):
         """
         Object to convert an AlphaFold3 json to a fasta file compatible with CHAI-1
 
@@ -55,6 +55,7 @@ class ChaiFasta:
         self.constraints = Path(working_dir) / "chai1_constraints.csv"
         self.msa_file: Optional[Union[str, Path]] = None
         self.__ids: List[Union[str, int]] = []
+        self.__create_files = create_files
 
     @property
     def chain_ids(self):
@@ -113,7 +114,6 @@ check back for updates"
                 chain_id = pair[0]
                 seq_idx = pair[1]
                 pair_data.append(chain_id)
-
                 res = fasta_data[chain_id][seq_idx - 1]
 
                 pair_data.append(f"{res}{seq_idx}@{pair[2]}")
@@ -132,7 +132,7 @@ check back for updates"
             ]
             df.loc[i] = row_data
 
-        if not df.empty:
+        if not df.empty and self.__create_files:
             df.to_csv(self.constraints, sep=",", index=False)
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
@@ -157,7 +157,8 @@ check back for updates"
             )
 
         # Write the dataframe to a parquet file
-        df.to_parquet(file_path)
+        if not df.empty and self.__create_files:
+            df.to_parquet(file_path)
 
     def json_to_fasta(self, json_file_or_dict: Union[dict, str, Path]):
         """
@@ -179,6 +180,7 @@ check back for updates"
             json_dict = json_file_or_dict
 
         fasta_data: Dict[str, str] = {}
+
         with open(self.fasta, "w") as f:
             for seq in json_dict["sequences"]:
                 if "protein" in seq:
@@ -203,7 +205,9 @@ check back for updates"
                 bonded_pairs = json_dict["bondedAtomPairs"]
                 self.bonded_pairs_to_file(bonded_pairs, fasta_data)
 
-        print(fasta_data)
+        if not self.__create_files:
+            self.fasta.unlink()
+
         self.__ids = list(fasta_data.keys())
 
     def add_protein(self, seq: dict, fasta_data: dict):
@@ -308,10 +312,10 @@ check back for updates"
             if isinstance(lig_id, list):
                 for i in seq["ligand"]["id"]:
                     ligand_str += f">ligand|{i}\n{seq['ligand']['smiles']}\n"
+                    fasta_data[i] = "SMILES_PLACEHOLDER"
             else:
                 ligand_str = f">ligand|{lig_id}\n{seq['ligand']['smiles']}\n"
-
-            fasta_data[lig_id] = "SMILES_PLACEHOLDER"
+                fasta_data[lig_id] = "SMILES_PLACEHOLDER"
 
         return ligand_str
 
