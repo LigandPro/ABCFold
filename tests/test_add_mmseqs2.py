@@ -18,7 +18,7 @@ def test_add_msa_to_json(test_data):
         custom_template=None,
         custom_template_chain=None,
         target_id=None,
-        af3_json=None,
+        input_params=None,
         output_json=None,
     )
 
@@ -36,7 +36,7 @@ def test_add_msa_to_json(test_data):
             custom_template=None,
             custom_template_chain=None,
             target_id=None,
-            af3_json=input_dict,
+            input_params=input_dict,
             output_json=tmpdir / "output.json",
         )
 
@@ -55,7 +55,7 @@ def test_add_msa_to_json(test_data):
                 custom_template=test_data.test_6BJ9_cif,
                 custom_template_chain=None,
                 target_id=None,
-                af3_json=input_dict,
+                input_params=input_dict,
                 output_json=tmpdir / "output.json",
             )
         with pytest.raises(FileNotFoundError):
@@ -66,7 +66,7 @@ def test_add_msa_to_json(test_data):
                 custom_template="road/to/nowhere",
                 custom_template_chain=None,
                 target_id=None,
-                af3_json=input_dict,
+                input_params=input_dict,
                 output_json=tmpdir / "output.json",
             )
 

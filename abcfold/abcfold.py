@@ -3,14 +3,17 @@ import json
 import sys
 import tempfile
 from pathlib import Path
+from typing import Dict
 
+from abcfold.abc_script_utils import make_dir, setup_logger
 from abcfold.add_mmseqs_msa import add_msa_to_json
-from abcfold.af3_script_utils import make_dir, setup_logger
 from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util,
                                     prediction_argparse_util)
+from abcfold.plots.pae_plot import create_pae_plots
+from abcfold.plots.plddt_plot import plot_plddt
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.processoutput.chai import ChaiOutput
@@ -18,13 +21,30 @@ from abcfold.run_alphafold3 import run_alphafold3
 
 logger = setup_logger()
 
+PLOTS_DIR = ".plots"
+
 
 def run(args, config, defaults, config_file):
-    """Run AlphaFold3"""
+    """Run ABCFold
+
+    Args:
+        args (argparse.Namespace): Arguments from the command line
+        config (configparser.SafeConfigParser): Config parser object
+        defaults (dict): Default values from the config file
+        config_file (Path): Path to the config file
+
+
+    Raises:
+        SystemExit: If the database directory or model parameters directory is not found
+
+
+    """
+    outputs = []
 
     args.output_dir = Path(args.output_dir)
 
     make_dir(args.output_dir, overwrite=args.override)
+    make_dir(args.output_dir.joinpath(PLOTS_DIR))
 
     updated_config = False
     if args.model_params != defaults["model_params"]:
@@ -45,9 +65,9 @@ def run(args, config, defaults, config_file):
         sys.exit(1)
 
     with open(args.input_json, "r") as f:
-        af3_json = json.load(f)
+        input_params = json.load(f)
 
-    name = af3_json.get("name")
+    name = input_params.get("name")
     if name is None:
         logger.error("Input JSON must contain a 'name' field")
         sys.exit(1)
@@ -72,14 +92,14 @@ def run(args, config, defaults, config_file):
             else:
                 run_json = Path(args.output_json)
 
-            af3_json = add_msa_to_json(
+            input_params = add_msa_to_json(
                 input_json=input_json,
                 templates=args.templates,
                 num_templates=args.num_templates,
                 custom_template=args.custom_template,
                 custom_template_chain=args.custom_template_chain,
                 target_id=args.target_id,
-                af3_json=af3_json,
+                input_params=input_params,
                 output_json=run_json,
                 to_file=True,
             )
@@ -102,11 +122,13 @@ by default"
                 model_params=args.model_params,
                 database_dir=args.database_dir,
                 number_of_models=args.number_of_models,
+                num_recycles=args.num_recycles,
             )
 
             # Need to find the name of the af3_dir
             af3_out_dir = list(args.output_dir.iterdir())[0]
-            _ = AlphafoldOutput(af3_out_dir, name)
+            ao = AlphafoldOutput(af3_out_dir, input_params, name)
+            outputs.append(ao)
 
         if args.boltz1:
             from abcfold.run_boltz import run_boltz
@@ -115,9 +137,13 @@ by default"
                 input_json=run_json,
                 output_dir=args.output_dir,
                 save_input=args.save_input,
+                number_of_models=args.number_of_models,
+                num_recycles=args.num_recycles,
             )
             bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
-            _ = BoltzOutput(bolt_out_dir, name)
+            bo = BoltzOutput(bolt_out_dir, input_params, name)
+            bo.add_plddt_to_cif()
+            outputs.append(bo)
 
         if args.chai1:
             from abcfold.run_chai1 import run_chai
@@ -128,17 +154,52 @@ by default"
                 output_dir=chai_output_dir,
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
+                num_recycles=args.num_recycles,
             )
 
-            _ = ChaiOutput(chai_output_dir, name)
+            co = ChaiOutput(chai_output_dir, input_params, name)
+            outputs.append(co)
+
+        plots(outputs, args.output_dir.joinpath(PLOTS_DIR))
+
+
+def plots(outputs: list, output_dir: Path):
+    """
+    Generate plots for the output of the different programs
+
+    Args:
+        outputs (list): List of output objects
+
+    """
+    pathway_plots = create_pae_plots(outputs, output_dir=output_dir)
+    plddt_plot_input: Dict[str, list] = {}
+    for output in outputs:
+        if isinstance(output, AlphafoldOutput):
+            for seed in output.seeds:
+                if "Alphafold3" not in plddt_plot_input:
+                    plddt_plot_input["Alphafold3"] = []
+                plddt_plot_input["Alphafold3"].extend(output.cif_files[seed])
+        elif isinstance(output, BoltzOutput):
+
+            plddt_plot_input["Boltz-1"] = output.cif_files
+        elif isinstance(output, ChaiOutput):
+            plddt_plot_input["Chai-1"] = output.cif_files
+
+    plot_plddt(plddt_plot_input, output_name=output_dir.joinpath("plddt_plot.html"))
+
+    pathway_plots["plddt"] = str(output_dir.joinpath("plddt_plot.html").resolve())
+
+    return pathway_plots
 
 
 def main():
+    """
+    Run AlphaFold3 / Boltz1 / Chai-1
+    """
     import argparse
 
     parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai-1")
 
-    # Load defaults from config file
     defaults = {}
     config_file = Path(__file__).parent.joinpath("data", "config.ini")
     config = configparser.SafeConfigParser()

@@ -16,7 +16,28 @@ def run_boltz(
     output_dir: Union[str, Path],
     save_input: bool = False,
     test: bool = False,
+    number_of_models: int = 5,
+    num_recycles: int = 10,
 ):
+    """
+    Run Boltz1 using the input JSON file
+
+    Args:
+        input_json (Union[str, Path]): Path to the input JSON file
+        output_dir (Union[str, Path]): Path to the output directory
+        save_input (bool): If True, save the input yaml file and MSA to the output
+        directory
+        test (bool): If True, run the test command
+        number_of_models (int): Number of models to generate
+
+    Returns:
+        None
+
+    Raises:
+        subprocess.CalledProcessError: If the Boltz1 command returns an error
+
+
+    """
     input_json = Path(input_json)
     output_dir = Path(output_dir)
 
@@ -36,9 +57,9 @@ def run_boltz(
         boltz_yaml.write_yaml(out_file)
         logger.info("Running Boltz1")
         cmd = (
-            generate_boltz_command(out_file, output_dir)
+            generate_boltz_command(out_file, output_dir, number_of_models, num_recycles)
             if not test
-            else generate_test_command()
+            else generate_boltz_test_command()
         )
 
         with subprocess.Popen(
@@ -60,7 +81,19 @@ def generate_boltz_command(
     input_yaml: Union[str, Path],
     output_dir: Union[str, Path],
     number_of_models: int = 5,
-):
+    num_recycles: int = 10,
+) -> list:
+    """
+    Generate the Boltz1 command
+
+    Args:
+        input_yaml (Union[str, Path]): Path to the input YAML file
+        output_dir (Union[str, Path]): Path to the output directory
+        number_of_models (int): Number of models to generate
+
+    Returns:
+        list: The Boltz1 command
+    """
     return [
         "boltz",
         "predict",
@@ -72,10 +105,22 @@ def generate_boltz_command(
         "--write_full_pde",
         "--diffusion_samples",
         str(number_of_models),
+        "--recycling_steps",
+        str(num_recycles),
     ]
 
 
-def generate_test_command():
+def generate_boltz_test_command() -> list:
+    """
+    Generate the test command for Boltz1
+
+    Args:
+        None
+
+    Returns:
+        list: The Boltz1 test command
+    """
+
     return [
         "boltz",
         "predict",

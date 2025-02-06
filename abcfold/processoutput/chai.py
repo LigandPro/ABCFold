@@ -1,14 +1,59 @@
+import json
 import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.utils import CifFile, FileTypes, NpyFile, NpzFile
+from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
+                                                 FileTypes, NpyFile, NpzFile)
+from abcfold.processoutput.utils import Af3Pae
 
 logger = logging.getLogger("logger")
 
 
 class ChaiOutput:
-    def __init__(self, chai_output_dir: Union[str, Path], name):
+    def __init__(
+        self,
+        chai_output_dir: Union[str, Path],
+        input_params: dict,
+        name: str,
+    ):
+        """
+        Object to process the output of an Chai-1 run
+
+        Args:
+            chai_output_dir (Union[str, Path]): Path to the Chai-1 output directory
+            input_params (dict): Dictionary containing the input parameters used for the
+            Chai-1 run
+            name (str): Name given to the Chai-1 run
+
+        Attributes:
+            input_params (dict): Dictionary containing the input parameters used for the
+            Chai-1 run
+            output_dir (Path): Path to the Chai-1 output directory
+            name (str): Name given to the Chai-1 run
+            output (dict): Dictionary containing the processed output the contents
+            of the Chai-1 output directory. The dictionary is structured as follows:
+
+            {
+                1: {
+                    "pae": NpzFile,
+                    "cif": CifFile,
+                    "scores": NpyFile
+                },
+                2: {
+                    "pae": NpzFile,
+                    "cif": CifFile,
+                    "scores": NpyFile
+                },
+                ...
+            }
+            pae_files (list): Ordered list of NpzFile objects containing the PAE data
+            cif_files (list): Ordered list of CifFile objects containing the CIF data
+            scores_files (list):  Ordered list of NpyFile objects containing the scores
+            data
+
+        """
+        self.input_params = input_params
         self.output_dir = Path(chai_output_dir)
         self.name = name
 
@@ -24,8 +69,12 @@ class ChaiOutput:
         self.cif_files = [
             value["cif"] for value in self.output.values() if "cif" in value
         ]
+        self.pae_to_af3()
         self.scores_files = [
             value["scores"] for value in self.output.values() if "scores" in value
+        ]
+        self.af3_pae_files = [
+            value["af3_pae"] for value in self.output.values() if "af3_pae" in value
         ]
 
     def process_chai_output(self):
@@ -42,7 +91,7 @@ class ChaiOutput:
                 file_ = NpzFile(str(pathway))
 
             elif file_type == FileTypes.CIF.value:
-                file_ = CifFile(str(pathway))
+                file_ = CifFile(str(pathway), self.input_params)
 
             elif file_type == FileTypes.NPY.value:
                 file_ = NpyFile(str(pathway))
@@ -64,6 +113,9 @@ class ChaiOutput:
                 if file_.pathway.stem.startswith("scores.model"):
                     intermediate_dict["scores"] = file_
                 elif file_.pathway.stem.startswith("pred.model"):
+                    file_.name = f"Chai-1_{model_number}"
+                    # Chai cif not recognised by pae-viewer, so we load and save
+                    file_.to_file(file_.pathway)
                     intermediate_dict["cif"] = file_
                 elif file_.pathway.stem.startswith("pae_scores"):
                     intermediate_dict["pae"] = file_
@@ -76,3 +128,22 @@ class ChaiOutput:
         }
 
         return model_number_file_type_file
+
+    def pae_to_af3(self) -> None:
+        """
+        Convert the Chai-1 PAE data to the format expected by AlphaFold3
+
+        """
+
+        pae_file = self.pae_files[-1]
+        for i, cif_file in enumerate(self.cif_files):
+            pae = Af3Pae.from_chai1(
+                pae_file.data[i],
+                cif_file,
+            )
+
+            out_name = self.output_dir.joinpath(cif_file.pathway.stem + "_af3_pae.json")
+            with open(out_name, "w") as f:
+                json.dump(pae.scores, f)
+
+            self.output[i]["af3_pae"] = ConfidenceJsonFile(out_name)

@@ -13,7 +13,7 @@ from typing import Sequence
 import requests  # type: ignore
 from tqdm.autonotebook import tqdm
 
-from abcfold.af3_script_utils import (align_and_map,
+from abcfold.abc_script_utils import (align_and_map,
                                       extract_sequence_from_mmcif,
                                       get_custom_template, get_mmcif)
 from abcfold.argparse_utils import (custom_template_argpase_util,
@@ -42,15 +42,15 @@ def add_msa_to_json(
     custom_template,
     custom_template_chain,
     target_id,
-    af3_json=None,
+    input_params=None,
     output_json=None,
     to_file=True,
 ):
-    if af3_json is None:
+    if input_params is None:
         with open(input_json, "r") as f:
-            af3_json = json.load(f)
+            input_params = json.load(f)
 
-    for sequence in af3_json["sequences"]:
+    for sequence in input_params["sequences"]:
         if "protein" in sequence:
             input_sequence = sequence["protein"]["sequence"]
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -77,7 +77,13 @@ def add_msa_to_json(
                     # Can only add templates to protein sequences, so check if there
                     # are multiple protein sequences in the input json
                     if (
-                        len([x for x in af3_json["sequences"] if "protein" in x.keys()])
+                        len(
+                            [
+                                x
+                                for x in input_params["sequences"]
+                                if "protein" in x.keys()
+                            ]
+                        )
                         > 1
                         and not target_id
                     ):
@@ -99,13 +105,13 @@ target id so that custom template can be added to the correct sequence"
     if to_file:
         if output_json:
             with open(output_json, "w") as f:
-                json.dump(af3_json, f)
+                json.dump(input_params, f)
         else:
             output_json = input_json.replace(".json", "_mmseqs.json")
             with open(output_json, "w") as f:
-                json.dump(af3_json, f)
+                json.dump(input_params, f)
 
-    return af3_json
+    return input_params
 
 
 # Code from https://github.com/sokrypton/ColabFold

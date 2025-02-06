@@ -54,7 +54,7 @@ def run_inference_wrapper(
     seed: int | None = None,
     device: str | None = None,
 ):
-    # print(num_diffn_samples)
+
     result = run_inference(
         fasta_file=fasta_file,
         output_dir=output_dir,
