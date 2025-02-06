@@ -94,7 +94,7 @@ class ChaiOutput:
 
             elif file_type == FileTypes.CIF.value:
                 file_ = CifFile(str(pathway), self.input_params)
-                file_.relabel_chains(self.input_fasta.chain_ids)
+                file_ = self.update_chain_labels(file_)
 
             elif file_type == FileTypes.NPY.value:
                 file_ = NpyFile(str(pathway))
@@ -160,7 +160,20 @@ class ChaiOutput:
 
         """
 
-        ch = ChaiFasta(self.output_dir)
+        ch = ChaiFasta(self.output_dir, create_files=False)
         ch.json_to_fasta(self.input_params)
 
         return ch
+
+    def update_chain_labels(self, cif_file: CifFile) -> CifFile:
+        """
+        Function to update the chain labels in the CIF file
+
+        Args:
+            cif_file (CifFile): CifFile object to update the chain labels for
+
+        """
+
+        cif_file.relabel_chains(self.input_fasta.chain_ids)
+        cif_file.to_file(cif_file.pathway)
+        return CifFile(cif_file.pathway)

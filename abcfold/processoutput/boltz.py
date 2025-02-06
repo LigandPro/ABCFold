@@ -152,9 +152,6 @@ class BoltzOutput:
             chain_lengths = cif_file.chain_lengths(
                 mode=ModelCount.RESIDUES, ligand_atoms=True
             )
-            print(chain_lengths)
-            print(sum(chain_lengths.values()))
-            print(len(plddt_score))
             assert sum(chain_lengths.values()) == len(plddt_score), "Length mismatch"
 
             counter = 0
@@ -204,7 +201,7 @@ class BoltzOutput:
             BoltzYaml: Object containing the input yaml file
         """
 
-        by = BoltzYaml(self.output_dir)
+        by = BoltzYaml(self.output_dir, create_files=False)
         by.json_to_yaml(self.input_params)
         [
             self.input_params["sequences"].append({"ligand": {"id": ligand}})
