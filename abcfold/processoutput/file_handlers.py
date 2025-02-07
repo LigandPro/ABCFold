@@ -353,7 +353,9 @@ class CifFile(FileBase):
                             return True
         return False
 
-    def relabel_chains(self, chain_ids: List[str]) -> None:
+    def relabel_chains(
+        self, chain_ids: List[str], link_ids: Optional[dict] = None
+    ) -> None:
         """
         Relabel the chains in the model
 
@@ -363,11 +365,24 @@ class CifFile(FileBase):
         Returns:
             None
         """
-        assert len(chain_ids) == len(
+        # assert len(chain_ids) == len(
+        # self.model[0]
+        # ), "Number of chain ids must match the number of chains"
+        if link_ids is None:
+            link_ids = {}
+        i = 0
+        chain_names = [chain.id for chain in self.model[0]]
+        for chain in chain_ids:
+            self.model[0][chain_names[i]].id = chain
+            i += 1
+            if chain in link_ids:
+                for linked_chain in link_ids[chain]:
+                    self.model[0][chain_names[i]].id = linked_chain
+                    i += 1
+
+        assert i == len(
             self.model[0]
         ), "Number of chain ids must match the number of chains"
-        for i, chain in enumerate(self.model[0]):
-            chain.id = chain_ids[i]
 
     def to_file(self, output_file: Union[str, Path]) -> None:
         """

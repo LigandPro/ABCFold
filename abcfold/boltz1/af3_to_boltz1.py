@@ -5,8 +5,6 @@ import string
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-import yaml  # type: ignore
-
 DELIM = "      "
 
 logger = logging.getLogger("logger")
@@ -23,18 +21,18 @@ class BoltzYaml:
         self.msa_file: Optional[Union[str, Path]] = "null"
         self.__ids: List[Union[str, int]] = []
         self.__id_char: str = "A"
-        self.__id_links: Dict[Union[str, int], str] = {}
-        self.__additional_ligands: List[Union[str, int]] = []
+        self.__id_links: Dict[Union[str, int], list] = {}
         self.__create_files = create_files
         self.__non_ligands: List[str] = []
+        self.__id_buffer: dict = {}
 
     @property
     def chain_ids(self) -> List[Union[str, int]]:
         return self.__ids
 
     @property
-    def additional_ligands(self) -> List[Union[str, int]]:
-        return self.__additional_ligands
+    def id_links(self) -> Dict[Union[str, int], list]:
+        return self.__id_links
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
         """
@@ -95,10 +93,11 @@ class BoltzYaml:
                 self.yaml_string += bonded_atom_string
 
         # Remove the last new id as this is an artifact from recursion
-        self.__additional_ligands = self.__additional_ligands[:-1]
 
-        for ligand_id in self.__additional_ligands:
-            self.move_ligand_to_end(ligand_id)
+        # for ligand_id in self.__additional_ligands:
+        #     self.move_ligand_to_end(ligand_id)
+        print(self.yaml_string)
+        print(self.__id_links)
 
         return self.yaml_string
 
@@ -107,18 +106,31 @@ class BoltzYaml:
         # counter = 0
         for pair in bonded_atom_pairs:
 
-            if (pair[0][0] == pair[1][0]) and pair[0][1] in self.__non_ligands:
+            if (pair[0][0] == pair[1][0]) and pair[0][1] not in self.__non_ligands:
 
                 if pair[0][0] not in self.__id_links:
                     continue
 
-                if pair[0][1] < pair[1][1]:
-
-                    pair[1] = [self.__id_links[pair[0][0]], pair[1][1] - 1, pair[1][2]]
+                # I'm sorry
+                if pair[0][0] not in self.__id_buffer:
+                    self.__id_buffer[pair[0][0]] = 0
                 else:
+                    self.__id_buffer[pair[0][0]] += 1
 
-                    pair[0] = [self.__id_links[pair[0][0]], pair[0][1] - 1, pair[0][2]]
-
+                if self.__id_buffer[pair[0][0]] == 0:
+                    first = pair[0][0]
+                    second = self.__id_links[pair[0][0]][0]
+                else:
+                    first, second = (
+                        self.__id_links[pair[0][0]][self.__id_buffer[pair[0][0]] - 1],
+                        self.__id_links[pair[0][0]][self.__id_buffer[pair[0][0]]],
+                    )
+                if pair[0][1] < pair[1][1]:
+                    pair[0] = [first, 1, pair[0][2]]
+                    pair[1] = [second, 1, pair[1][2]]
+                else:
+                    pair[0] = [first, 1, pair[0][2]]
+                    pair[1] = [second, 2, pair[1][2]]
             yaml_string += self.add_title("bond")
             yaml_string += self.add_key_and_value("atom1", pair[0])
             yaml_string += self.add_key_and_value("atom2", pair[1])
@@ -224,7 +236,6 @@ class BoltzYaml:
         """
 
         if "ccdCodes" in ligand_dict and len(ligand_dict["ccdCodes"]) == 0:
-            self.__additional_ligands.append(self.__id_char)
             return ""
         yaml_string = ""
         yaml_string += self.add_title("ligand")
@@ -238,7 +249,8 @@ class BoltzYaml:
             elif isinstance(ligand_dict["ccdCodes"], list):
                 if linked_id is not None:
 
-                    self.__id_links[linked_id] = ligand_dict["id"]
+                    self.__add_linked_ids(linked_id, ligand_dict["id"])
+
                 yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"][0])
 
                 yaml_string += self.add_ligand_information(
@@ -364,41 +376,54 @@ class BoltzYaml:
                             continue
                         self.__ids.append(sequence[key][key2])
 
-    def move_ligand_to_end(self, ligand_id_to_move: Union[str, int]):
-        """
-        Moves the ligand to the end of the sequence list
+    def __add_linked_ids(
+        self, ligand_id: Union[str, int], linked_ligand_id: Union[str, int]
+    ):
+        if not self.__id_links:
+            self.__id_links[ligand_id] = [linked_ligand_id]
+            return
+        for id_, value in self.__id_links.items():
+            if ligand_id in value:
+                self.__id_links[id_].append(linked_ligand_id)
 
-        Args:
-            ligand_id (Union[str, int]): ligand id
+                return
 
-        Returns:
-            str: yaml string
-        """
+    # def move_ligand_to_end(self, ligand_id_to_move: Union[str, int]):
+    # """
 
-        data = yaml.safe_load(self.yaml_string)
-        new_data = {}
-        found_ligand = None
-        other_entries = []
+    #     Moves the ligand to the end of the sequence list
 
-        for yaml_title in data:
-            if yaml_title != "sequences":
-                new_data[yaml_title] = data[yaml_title]
-                continue
-            for entry in data[yaml_title]:
-                if not isinstance(entry, dict):
-                    other_entries.append(entry)
-                    continue
+    #     Args:
+    #         ligand_id (Union[str, int]): ligand id
 
-                if entry.get("ligand") and entry["ligand"].get("id") == str(
-                    ligand_id_to_move
-                ):
-                    found_ligand = entry
-                else:
-                    other_entries.append(entry)
+    #     Returns:
+    #         str: yaml string
+    #     """
 
-            if found_ligand:
-                other_entries.append(found_ligand)
+    #     data = yaml.safe_load(self.yaml_string)
+    #     new_data = {}
+    #     found_ligand = None
+    #     other_entries = []
 
-            new_data[yaml_title] = other_entries
+    #     for yaml_title in data:
+    #         if yaml_title != "sequences":
+    #             new_data[yaml_title] = data[yaml_title]
+    #             continue
+    #         for entry in data[yaml_title]:
+    #             if not isinstance(entry, dict):
+    #                 other_entries.append(entry)
+    #                 continue
 
-        self.yaml_string = yaml.dump(new_data, default_flow_style=False)
+    #             if entry.get("ligand") and entry["ligand"].get("id") == str(
+    #                 ligand_id_to_move
+    #             ):
+    #                 found_ligand = entry
+    #             else:
+    #                 other_entries.append(entry)
+
+    #         if found_ligand:
+    #             other_entries.append(found_ligand)
+
+    #         new_data[yaml_title] = other_entries
+
+    #     self.yaml_string = yaml.dump(new_data, default_flow_style=False)

@@ -97,7 +97,7 @@ class BoltzOutput:
                 file_ = NpzFile(str(pathway))
             elif file_type == FileTypes.CIF.value:
                 file_ = CifFile(str(pathway), self.input_params)
-                file_.relabel_chains(self.yaml_input_obj.chain_ids)
+                file_ = self.update_chain_labels(file_)
             elif file_type == FileTypes.JSON.value:
                 file_ = ConfidenceJsonFile(str(pathway))
             else:
@@ -193,6 +193,19 @@ class BoltzOutput:
 
             self.output[i]["af3_pae"] = ConfidenceJsonFile(out_name)
 
+    def update_chain_labels(self, cif_file) -> CifFile:
+        """
+        Function to update the chain labels in the CIF file
+
+        Args:
+            cif_file (CifFile): CifFile object to update the chain labels for
+
+        """
+        cif_file.relabel_chains(
+            self.yaml_input_obj.chain_ids, self.yaml_input_obj.id_links
+        )
+        return cif_file
+
     def get_input_yaml(self) -> BoltzYaml:
         """
         Get the input yaml file used for the Boltz-1 run
@@ -203,10 +216,10 @@ class BoltzOutput:
 
         by = BoltzYaml(self.output_dir, create_files=False)
         by.json_to_yaml(self.input_params)
-        [
-            self.input_params["sequences"].append({"ligand": {"id": ligand}})
-            for ligand in by.additional_ligands
-        ]
+        # [
+        #     self.input_params["sequences"].append({"ligand": {"id": ligand}})
+        #     for ligand in by.additional_ligands
+        # ]
 
         # update the input_params with the new sequences in the yaml string
         return by
