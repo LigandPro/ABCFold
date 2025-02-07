@@ -223,3 +223,14 @@ class BoltzOutput:
 
         # update the input_params with the new sequences in the yaml string
         return by
+
+
+if __name__ == "__main__":
+    input_json = ConfidenceJsonFile("/home/etk48667/folding/bbb/abc_full_input.json")
+    bo = BoltzOutput(
+        "/home/etk48667/folding/bbb/boltz-1_Hello_fold/",
+        input_json.data,
+        "Hello_fold",
+    )
+    bo.process_boltz_output()
+    bo.add_plddt_to_cif()

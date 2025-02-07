@@ -370,17 +370,30 @@ class CifFile(FileBase):
         # ), "Number of chain ids must match the number of chains"
         if link_ids is None:
             link_ids = {}
-        i = 0
-        chain_names = [chain.id for chain in self.model[0]]
-        for chain in chain_ids:
-            self.model[0][chain_names[i]].id = chain
-            i += 1
-            if chain in link_ids:
-                for linked_chain in link_ids[chain]:
-                    self.model[0][chain_names[i]].id = linked_chain
-                    i += 1
+        else:
+            for new_ids in link_ids.values():
+                for new_id in new_ids:
+                    chain_ids.pop(chain_ids.index(new_id))
+        old_chain_label_counter = 0
+        new_chain_label_counter = 0
 
-        assert i == len(
+        chain_names = [chain.id for chain in self.model[0]]
+        print(chain_names)
+        print(chain_ids)
+        while old_chain_label_counter < len(self.model[0]):
+            chain = chain_ids[new_chain_label_counter]
+            print(chain_names[old_chain_label_counter] + " -> " + chain)
+            self.model[0][chain_names[old_chain_label_counter]].id = chain
+            old_chain_label_counter += 1
+
+            if chain in link_ids:
+                for _ in link_ids[chain]:
+                    print(chain_names[old_chain_label_counter] + " -> " + chain)
+                    self.model[0][chain_names[old_chain_label_counter]].id = chain
+                    old_chain_label_counter += 1
+            new_chain_label_counter += 1
+
+        assert old_chain_label_counter == len(
             self.model[0]
         ), "Number of chain ids must match the number of chains"
 
