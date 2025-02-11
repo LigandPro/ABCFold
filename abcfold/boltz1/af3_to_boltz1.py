@@ -97,8 +97,6 @@ class BoltzYaml:
         # for ligand_id in self.__additional_ligands:
         #     self.move_ligand_to_end(ligand_id)
         print(self.yaml_string)
-        print(self.__id_links)
-
         return self.yaml_string
 
     def bonded_atom_pairs_to_yaml(self, bonded_atom_pairs: list):
