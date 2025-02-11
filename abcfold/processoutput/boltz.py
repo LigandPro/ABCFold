@@ -97,7 +97,6 @@ class BoltzOutput:
                 file_ = NpzFile(str(pathway))
             elif file_type == FileTypes.CIF.value:
                 file_ = CifFile(str(pathway), self.input_params)
-                file_.to_file("tmp.cif")
 
             elif file_type == FileTypes.JSON.value:
                 file_ = ConfidenceJsonFile(str(pathway))
