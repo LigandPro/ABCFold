@@ -92,11 +92,6 @@ class BoltzYaml:
                     self.yaml_string += self.add_non_indented_string("constraints")
                 self.yaml_string += bonded_atom_string
 
-        # Remove the last new id as this is an artifact from recursion
-
-        # for ligand_id in self.__additional_ligands:
-        #     self.move_ligand_to_end(ligand_id)
-        print(self.yaml_string)
         return self.yaml_string
 
     def bonded_atom_pairs_to_yaml(self, bonded_atom_pairs: list):
@@ -385,43 +380,3 @@ class BoltzYaml:
                 self.__id_links[id_].append(linked_ligand_id)
 
                 return
-
-    # def move_ligand_to_end(self, ligand_id_to_move: Union[str, int]):
-    # """
-
-    #     Moves the ligand to the end of the sequence list
-
-    #     Args:
-    #         ligand_id (Union[str, int]): ligand id
-
-    #     Returns:
-    #         str: yaml string
-    #     """
-
-    #     data = yaml.safe_load(self.yaml_string)
-    #     new_data = {}
-    #     found_ligand = None
-    #     other_entries = []
-
-    #     for yaml_title in data:
-    #         if yaml_title != "sequences":
-    #             new_data[yaml_title] = data[yaml_title]
-    #             continue
-    #         for entry in data[yaml_title]:
-    #             if not isinstance(entry, dict):
-    #                 other_entries.append(entry)
-    #                 continue
-
-    #             if entry.get("ligand") and entry["ligand"].get("id") == str(
-    #                 ligand_id_to_move
-    #             ):
-    #                 found_ligand = entry
-    #             else:
-    #                 other_entries.append(entry)
-
-    #         if found_ligand:
-    #             other_entries.append(found_ligand)
-
-    #         new_data[yaml_title] = other_entries
-
-    #     self.yaml_string = yaml.dump(new_data, default_flow_style=False)
