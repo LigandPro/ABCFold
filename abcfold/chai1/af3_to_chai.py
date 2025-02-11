@@ -15,21 +15,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-try:
-    from chai_lab.data.parsing.msas.aligned_pqt import \
-        merge_multi_a3m_to_aligned_dataframe
-    from chai_lab.data.parsing.msas.data_source import MSADataSource
-
-except ImportError:
-
-    logger.error(
-        "Chai_lab didn't install correctly and the module is not available, \
-please try running the job again or install chai_lab directly using 'pip install \
-chai_lab'"
-    )
-    raise ImportError()
-
-
 ATOMS_NAMES = sorted(list(VANDERWALLS.keys()), key=len, reverse=True)
 
 
@@ -146,6 +131,18 @@ check back for updates"
         Returns:
             None
         """
+        try:
+            from chai_lab.data.parsing.msas.aligned_pqt import \
+                merge_multi_a3m_to_aligned_dataframe
+            from chai_lab.data.parsing.msas.data_source import MSADataSource
+        except ImportError:
+
+            logger.error(
+                "Chai_lab didn't install correctly and the module is not available, \
+please try running the job again or install chai_lab directly using 'pip \
+install chai_lab'"
+            )
+            raise ImportError()
 
         # Convert msa to CHAI-1 format with additional MSA source information
         with tempfile.NamedTemporaryFile(suffix=".a3m", mode="w") as f:
@@ -228,7 +225,12 @@ check back for updates"
             seq_hash = hashlib.sha256(sequence.upper().encode()).hexdigest()
             pqt_path = Path(self.working_dir) / f"{seq_hash}.aligned.pqt"
             msa = seq["protein"]["unpairedMsa"]
-            self.msa_to_file(msa=msa, file_path=pqt_path)
+
+            (
+                self.msa_to_file(msa=msa, file_path=pqt_path)
+                if self.__create_files
+                else None
+            )
         fasta_data[prot_id] = sequence
 
         return protein_str, fasta_data

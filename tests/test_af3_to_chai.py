@@ -211,6 +211,7 @@ def test_ccd_to_smiles():
     assert smiles is None
 
 
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_af3_data_json_to_fasta(output_objs):
     try:
         af3_json = output_objs.af3_output.input_json
