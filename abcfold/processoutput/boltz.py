@@ -97,7 +97,8 @@ class BoltzOutput:
                 file_ = NpzFile(str(pathway))
             elif file_type == FileTypes.CIF.value:
                 file_ = CifFile(str(pathway), self.input_params)
-                file_ = self.update_chain_labels(file_)
+                file_.to_file("tmp.cif")
+
             elif file_type == FileTypes.JSON.value:
                 file_ = ConfidenceJsonFile(str(pathway))
             else:
@@ -144,7 +145,7 @@ class BoltzOutput:
             of residues in the CIF file
         """
         for cif_file, plddt_scores in zip(self.cif_files, self.plddt_files):
-
+            cif_file = self.update_chain_labels(cif_file)
             plddt_score = plddt_scores.data["plddt"]
             if max(plddt_score) <= 1:
                 plddt_score = (plddt_score * 100).astype(float)
@@ -216,21 +217,5 @@ class BoltzOutput:
 
         by = BoltzYaml(self.output_dir, create_files=False)
         by.json_to_yaml(self.input_params)
-        # [
-        #     self.input_params["sequences"].append({"ligand": {"id": ligand}})
-        #     for ligand in by.additional_ligands
-        # ]
 
-        # update the input_params with the new sequences in the yaml string
         return by
-
-
-if __name__ == "__main__":
-    input_json = ConfidenceJsonFile("/home/etk48667/folding/bbb/abc_full_input.json")
-    bo = BoltzOutput(
-        "/home/etk48667/folding/bbb/boltz-1_Hello_fold/",
-        input_json.data,
-        "Hello_fold",
-    )
-    bo.process_boltz_output()
-    bo.add_plddt_to_cif()
