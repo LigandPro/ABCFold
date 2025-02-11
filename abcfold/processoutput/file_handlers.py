@@ -220,9 +220,15 @@ class CifFile(FileBase):
             for chain in chains:
                 if self.check_ligand(chain):
                     if ligand_atoms:
-                        residue_counts[chain.id] = len(
-                            [atom for resiude in chain for atom in resiude]
-                        )
+                        if chain.id not in residue_counts:
+                            residue_counts[chain.id] = len(
+                                [atom for resiude in chain for atom in resiude]
+                            )
+                        else:
+                            residue_counts[chain.id] += len(
+                                [atom for resiude in chain for atom in resiude]
+                            )
+
                     else:
                         residue_counts[chain.id] = 1
                     continue
@@ -365,33 +371,45 @@ class CifFile(FileBase):
         Returns:
             None
         """
-        # assert len(chain_ids) == len(
-        # self.model[0]
-        # ), "Number of chain ids must match the number of chains"
+
+        chain_ids = chain_ids.copy()
+        structure = self.model[0]
+        old_new_chain_id = {}
+
         if link_ids is None:
             link_ids = {}
         else:
             for new_ids in link_ids.values():
                 for new_id in new_ids:
                     chain_ids.pop(chain_ids.index(new_id))
-        old_chain_label_counter = 0
-        new_chain_label_counter = 0
 
-        chain_names = [chain.id for chain in self.model[0]]
-        print(chain_names)
-        print(chain_ids)
-        while old_chain_label_counter < len(self.model[0]):
+        old_chain_label_counter, new_chain_label_counter = 0, 0
+
+        chain_names = [chain.id for chain in structure]
+        while old_chain_label_counter < len(structure):
             chain = chain_ids[new_chain_label_counter]
-            print(chain_names[old_chain_label_counter] + " -> " + chain)
-            self.model[0][chain_names[old_chain_label_counter]].id = chain
+            old_new_chain_id[chain_names[old_chain_label_counter]] = chain
+
+            # increment the old_chain everytime a chain has been relabelled
             old_chain_label_counter += 1
 
             if chain in link_ids:
+                ligand_no_added = 2
                 for _ in link_ids[chain]:
-                    print(chain_names[old_chain_label_counter] + " -> " + chain)
-                    self.model[0][chain_names[old_chain_label_counter]].id = chain
+                    old_new_chain_id[chain_names[old_chain_label_counter]] = chain
+                    for residue in structure[chain_names[old_chain_label_counter]]:
+
+                        residue.id = (residue.id[0], ligand_no_added, residue.id[2])
+                        ligand_no_added += 1
                     old_chain_label_counter += 1
+
+            # There should be more old chains compared to new chains so
+            # old_chain_label counter should get incremented more than
+            # new_chai_label_counter
             new_chain_label_counter += 1
+
+        for chain_to_rename in structure:
+            chain_to_rename.id = old_new_chain_id[chain_to_rename.id]
 
         assert old_chain_label_counter == len(
             self.model[0]
