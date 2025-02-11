@@ -45,7 +45,7 @@ tests from the root of the repository or the tests directory"
     yield n
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def output_objs():
     data_dir = Path("./test_data")
     if not data_dir.exists():
@@ -68,17 +68,18 @@ def output_objs():
 
     af3_output = AlphafoldOutput(
         adir,
-        input_params,
+        input_params.copy(),
         name,
     )
     boltz_output = BoltzOutput(
         bdir,
-        input_params,
+        input_params.copy(),
         name,
     )
+
     chai_output = ChaiOutput(
         cdir,
-        input_params,
+        input_params.copy(),
         name,
     )
 

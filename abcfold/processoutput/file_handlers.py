@@ -218,6 +218,7 @@ class CifFile(FileBase):
         elif mode == ModelCount.RESIDUES or mode == ModelCount.RESIDUES.value:
             residue_counts = {}
             for chain in chains:
+
                 if self.check_ligand(chain):
                     if ligand_atoms:
                         if chain.id not in residue_counts:
@@ -345,12 +346,16 @@ class CifFile(FileBase):
 
         sequences = self.input_params.get("sequences")
         if sequences is None:
+            logger.warning("Unable to gain sequence infromation from input file")
             return False
         for sequence in sequences:
+
             for sequence_type, sequence_data in sequence.items():
+
                 if sequence_type == "ligand":
                     if "id" not in sequence_data:
                         continue
+
                     if isinstance(sequence_data["id"], str):
                         if chain.id == sequence_data["id"]:
                             return True

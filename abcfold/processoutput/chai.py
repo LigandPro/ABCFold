@@ -176,4 +176,4 @@ class ChaiOutput:
 
         cif_file.relabel_chains(self.input_fasta.chain_ids)
         cif_file.to_file(cif_file.pathway)
-        return CifFile(cif_file.pathway)
+        return CifFile(cif_file.pathway, self.input_params)
