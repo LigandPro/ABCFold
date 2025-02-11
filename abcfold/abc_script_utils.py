@@ -322,6 +322,7 @@ def check_input_json(
         None
     """
     input_json = Path(input_json)
+
     output_json = (
         input_json.parent.joinpath("abc_" + input_json.name)
         if output_dir is None

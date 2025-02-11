@@ -43,11 +43,8 @@ def run(args, config, defaults, config_file):
 
     args.output_dir = Path(args.output_dir)
 
-    if args.use_af3_msa and args.mmseqs2:
-        logger.error(
-            "Cannot use both --use_af3_msa and --mmseqs2. Please select only one."
-        )
-        sys.exit(1)
+    if args.mmseqs2:
+        logger.error("MMSeqs2 Selected, all other MSAs will be ignored")
 
     make_dir(args.output_dir, overwrite=args.override)
     make_dir(args.output_dir.joinpath(PLOTS_DIR))
@@ -127,10 +124,6 @@ by default"
             )
             args.alphafold3 = True
 
-        if not args.alphafold3 and args.use_af3_msa:
-            logger.error("Cannot use --use_af3_msa without --alphafold3 (-a). ")
-            sys.exit(1)
-
         if args.alphafold3:
 
             run_alphafold3(
@@ -146,9 +139,7 @@ by default"
             af3_out_dir = list(args.output_dir.iterdir())[0]
             ao = AlphafoldOutput(af3_out_dir, input_params, name)
             outputs.append(ao)
-
-            if args.use_af3_msa:
-                run_json = ao.input_json
+            run_json = ao.input_json
 
         if args.boltz1:
             from abcfold.run_boltz import run_boltz
