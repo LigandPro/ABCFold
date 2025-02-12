@@ -1,7 +1,7 @@
 # import numpy as np
 import logging
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -49,6 +49,12 @@ def plot_plddt(
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="LightGrey")
 
     colours = list(px.colors.qualitative.T10)
+    method_colours = {
+        "Alphafold3": px.colors.qualitative.Set1,
+        "Boltz-1": px.colors.qualitative.Set2,
+        "Chai-1": px.colors.qualitative.Prism,
+    }
+
     colour_index = 0
     added_lines = []
 
@@ -56,14 +62,18 @@ def plot_plddt(
         cif_file for cif_files in cif_models_dict.values() for cif_file in cif_files
     ]
 
-    for i, (key, cif_models) in enumerate(cif_models_dict.items()):
+    for method, cif_models in cif_models_dict.items():
         for cif_model in cif_models:
+            model_index = int(cif_model.name.split("_")[-1])
+            color_list = method_colours.get(method, colours)
+            color = color_list[model_index % len(color_list)]
             plddt = cif_model.residue_plddts
+            counter = 0
             chain_ranges = {
                 chain: range(len(plddt))
                 for chain, plddt in cif_model.residue_plddt_per_chain.items()
             }
-            counter = 0
+
             for chain, chain_range in chain_ranges.items():
                 counter += chain_range[-1]
                 chain_name = f"Chain {chain}"
@@ -84,64 +94,70 @@ def plot_plddt(
                     colour_index += 1
                     added_lines.append(chain_name)
 
-            fig.add_trace(
-                go.Scatter(
-                    x=list(range(len(plddt))),
-                    y=plddt,
-                    mode="lines",
-                    legendgroup=key,
-                    legendgrouptitle_text=Bold(key),
-                    name=int(cif_model.name.split("_")[-1]) + 1,
-                    line=dict(dash=dash, width=line_width),
-                )
+            trace = go.Scatter(
+                x=list(range(len(plddt))),
+                y=plddt,
+                mode="lines",
+                legendgroup=method,
+                legendgrouptitle_text=Bold(method),
+                name=f"Model {model_index + 1}",
+                line=dict(dash=dash, width=line_width, color=color),
+                visible=True,  # Ensure traces start as visible
+                showlegend=True,
             )
-    models_no = len(cif_models)
-    sources = i + 1
+            fig.add_trace(trace)
 
-    steps = []
-    steps.append(
-        dict(
-            method="restyle",
+    # Create buttons for each model
+    buttons = []
+    num_models = len(cif_models_dict[next(iter(cif_models_dict))])
+
+    # Add buttons for each individual model
+    for model_index in range(num_models):
+        button: Dict[str, Any] = dict(
+            method="update",
             args=[
-                {"visible": [True] * models_no * (i + 1)},
-                {"title": "All Models"},
+                {
+                    "visible":
+                    [i % num_models == model_index for i in range(len(fig.data))]
+                },
+                {"showlegend": True}
             ],
-            label="All Models",
+            label=f"Model {model_index + 1}",
+        )
+        for i in range(model_index, len(fig.data), num_models):
+            button["args"][0]["visible"][i] = True
+        buttons.append(button)
+
+    # Add a button to show all traces
+    buttons.append(
+        dict(
+            method="update",
+            args=[
+                {"visible": [True] * len(fig.data)},
+                {"showlegend": True}
+            ],
+            label="All",
         )
     )
-    for i in range(sources - 1):
-        step = dict(
-            method="restyle",
-            args=[
-                {"visible": [False] * models_no * sources},
-                {"title": f"Model {i+1}"},
-            ],
-            label=f"Model {i+1}",
-        )
-        for j in range(i, models_no * sources, models_no):
-            step_list = step["args"]
-            if isinstance(step_list, list):
-                step_list[0]["visible"][j] = True
-            else:
-                logger.error(
-                    "Error, MyPy made me change this for some reason and if \
-this if failing that means the computer wins."
-                )
-                raise ValueError()
-            # step["args"][0]["visible"][j] = True
-        steps.append(step)
 
+    # Add the updatemenu to the layout
     fig.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                showactive=True,
+                buttons=buttons,
+                direction="left",
+                x=0.5,
+                xanchor="center",
+                y=-0.1,
+                yanchor="top",
+            )
+        ],
         xaxis_title=Bold("Residue Number"),
         yaxis_title=Bold("pLDDT Score"),
         title=Bold("pLDDT Distribution"),
-        legend_title=Bold("Models"),
         plot_bgcolor="white",
-        sliders=[dict(steps=steps, currentvalue={"prefix": Bold("Selection: ")})],
-    )
-
-    fig.update_layout(
-        showlegend=True,
     )
 
     if show:
