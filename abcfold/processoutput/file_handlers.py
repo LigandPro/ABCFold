@@ -1,17 +1,17 @@
 import json
 import logging
+import re
 import warnings
 from abc import ABC
 from enum import Enum
-from itertools import groupby
-from operator import itemgetter
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from Bio.PDB import MMCIFIO, Chain, MMCIFParser
+from Bio.PDB import MMCIFIO, Chain, MMCIFParser, Model
 from Bio.PDB.Atom import Atom
 from Bio.PDB.kdtrees import KDTree
+from Bio.PDB.Polypeptide import is_aa
 from Bio.SeqUtils import seq1
 
 from abcfold.processoutput.atoms import VANDERWALLS
@@ -152,24 +152,12 @@ class CifFile(FileBase):
         super().__init__(cif_file)
         self.cif_file = Path(cif_file)
         self.clashes = 0
+        self.clashes = 0
         self.model = self.load_cif_file()
-        self.atom_plddt_per_chain = self.get_plddt_per_atom()
-        self.residue_plddt_per_chain = self.get_plddt_per_residue()
-        self.ligand_plddt = self.get_plddt_per_ligand()
-        self.__plddts = [
-            plddts for plddts in self.atom_plddt_per_chain.values()
-            for plddts in plddts
-        ]
-        self.__residue_plddts = [
-            plddts
-            for plddts in self.residue_plddt_per_chain.values()
-            for plddts in plddts
-        ]
-        self.__ligand_plddts = [
-            plddts for plddts in self.ligand_plddt.values() for plddts in plddts
-        ]
-        self.__plddt_regions = self.get_plddt_regions()
-        self.__h_score = self.calculate_h_score()
+        self.__ligand_plddts = None
+        self.__plddts = None
+        self.__residue_plddts = None
+        self.__h_score = None
         self.__name = self.cif_file.stem
 
     @property
@@ -188,6 +176,9 @@ class CifFile(FileBase):
         """
         The pLDDT scores for each atom in the model
         """
+        self.__plddts = [
+            plddts for plddts in self.get_plddt_per_atom().values() for plddts in plddts
+        ]
         return self.__plddts
 
     @property
@@ -195,6 +186,11 @@ class CifFile(FileBase):
         """
         The pLDDT scores for each residue in the model
         """
+        self.__residue_plddts = [
+            plddts
+            for plddts in self.get_plddt_per_residue().values()
+            for plddts in plddts
+        ]
         return self.__residue_plddts
 
     @property
@@ -202,13 +198,14 @@ class CifFile(FileBase):
         """
         The average pLDDT score for the model
         """
-        return float(np.mean(self.__plddts))
+        return float(np.mean(self.plddts))
 
     @property
     def ligand_plddts(self):
         """
         The pLDDT scores for each ligand in the model
         """
+        self.__ligand_plddts = self.get_plddt_per_ligand()
         return self.__ligand_plddts
 
     @property
@@ -216,14 +213,8 @@ class CifFile(FileBase):
         """
         The H score for the model
         """
+        self.__h_score = self.calculate_h_score()
         return self.__h_score
-
-    @property
-    def plddt_regions(self):
-        """
-        The pLDDT regions for the model
-        """
-        return self.__plddt_regions
 
     def load_cif_file(self):
         """
@@ -232,7 +223,15 @@ class CifFile(FileBase):
         parser = MMCIFParser(QUIET=True)
         return parser.get_structure(self.pathway.stem, self.pathway)
 
-    def chain_lengths(self, mode=ModelCount.RESIDUES, ligand_atoms=False) -> dict:
+    def get_chains(self):
+        return self.model[0]
+
+    def chain_lengths(
+        self,
+        mode=ModelCount.RESIDUES,
+        ligand_atoms=False,
+        ptm_atoms=False,
+    ) -> dict:
         """
         Function to get the length of each chain in the model
 
@@ -246,33 +245,56 @@ class CifFile(FileBase):
         Raises:
             ValueError: If the mode is not valid
         """
-        chains = self.model[0]
+        chains = self.get_chains()
         if mode == ModelCount.ALL or mode == ModelCount.ALL.value:
 
-            return {
-                chain.id: len([atom for resiude in chain for atom in resiude])
-                for chain in chains
-            }
+            # return {
+            #     chain.id: len([atom for resiude in chain for atom in resiude])
+            #     for chain in chains
+            # }
+            chain_lengths: dict = {}
+            for chain in chains:
+                if chain.id in chain_lengths:
+                    chain_lengths[chain.id] += len(
+                        [atom for resiude in chain for atom in resiude]
+                    )
+                else:
+                    chain_lengths[chain.id] = len(
+                        [atom for resiude in chain for atom in resiude]
+                    )
+
+            return chain_lengths
 
         elif mode == ModelCount.RESIDUES or mode == ModelCount.RESIDUES.value:
-            residue_counts = {}
+            residue_counts: dict = {}
             for chain in chains:
+                if self.check_other(chain, ["protein", "rna", "dna"]) and ptm_atoms:
+                    counter = 0
+                    for residue in chain:
+                        if is_aa(residue.resname, standard=True):
+                            counter += 1
+                            continue
+                        else:
+                            counter += len([atom for atom in residue])
 
-                if self.check_ligand(chain):
+                    residue_counts[chain.id] = counter
+
+                elif self.check_ligand(chain):
                     if ligand_atoms:
-                        if chain.id not in residue_counts:
-                            residue_counts[chain.id] = len(
+                        if chain.id in residue_counts:
+                            residue_counts[chain.id] += len(
                                 [atom for resiude in chain for atom in resiude]
                             )
                         else:
-                            residue_counts[chain.id] += len(
+                            residue_counts[chain.id] = len(
                                 [atom for resiude in chain for atom in resiude]
                             )
 
                     else:
                         residue_counts[chain.id] = 1
-                    continue
-                residue_counts[chain.id] = len(chain)
+                else:
+                    residue_counts[chain.id] = len([residue for residue in chain])
+
             return residue_counts
 
         else:
@@ -288,19 +310,26 @@ class CifFile(FileBase):
             dict: Dictionary containing the chain id and the residue ids for each
             chain
         """
-        chains = self.model[0]
+        from abcfold.processoutput.utils import flatten
+
+        chains = self.get_chains()
         residue_ids = {}
         for chain in chains:
             if self.check_ligand(chain):
                 residue_ids[chain.id] = [
-                    residue.id[1] for residue in chain for atom in residue
+                    [residue.id[1]] for residue in chain for _ in residue
                 ]
                 continue
             residue_ids[chain.id] = [
-                residue.id[1]
+                (
+                    [residue.id[1]]
+                    if residue.id[0] == " " or residue.id[0] == "H"
+                    else [residue.id[1] for _ in residue]
+                )
                 for residue in chain
-                if residue.id[0] == " " or residue.id[0] == "H"
             ]
+
+        residue_ids = {k: flatten(v) for k, v in residue_ids.items()}
 
         return residue_ids
 
@@ -332,11 +361,11 @@ class CifFile(FileBase):
             if self.check_ligand(chain):
                 sequence_data[chain.id] = "".join(
                     [atom.id[0] for residue in chain for atom in residue]
-                    )
+                )
             else:
                 sequence_data[chain.id] = "".join(
                     [seq1(residue.get_resname()) for residue in chain]
-                    )
+                )
         return sequence_data
 
     def get_plddt_per_atom(self) -> dict:
@@ -348,8 +377,7 @@ class CifFile(FileBase):
         """
         plddt: Dict[str, list] = {}
         for chain in self.model[0]:
-            if self.check_ligand(chain):
-                continue
+
             for residue in chain:
                 for atom in residue:
                     if chain.id in plddt:
@@ -359,7 +387,7 @@ class CifFile(FileBase):
 
         return plddt
 
-    def get_plddt_per_residue(self, method=ResidueCountType.AVERAGE.value) -> dict:
+    def get_plddt_per_residue(self, method=ResidueCountType.CARBONALPHA.value) -> dict:
         """
         Get the pLDDT scores for each residue in the model
 
@@ -378,33 +406,44 @@ class CifFile(FileBase):
             )
             raise ValueError()
 
-        for chain in self.model[0]:
+        chains = self.get_chains()
+        for chain in chains:
             if self.check_ligand(chain):
-                for residue in chain:
-                    for atom in residue:
-                        if chain.id in plddts:
-                            plddts[chain.id].append(atom.bfactor)
-                        else:
-                            plddts[chain.id] = [atom.bfactor]
-            for residue in chain:
-                if method == ResidueCountType.AVERAGE.value:
-                    scores = 0
-                    for atom in residue:
-                        scores += atom.bfactor
-                    score = scores / len(residue)
-
-                elif method == ResidueCountType.CARBONALPHA.value:
-                    for atom in residue:
-                        if atom.id == "CA":
-                            score = atom.bfactor
-                            break
-
                 if chain.id in plddts:
-                    plddts[chain.id].append(score)
-
+                    plddts[chain.id].extend(
+                        [atom.bfactor for residue in chain for atom in residue]
+                    )
                 else:
-                    plddts[chain.id] = [score]
+                    plddts[chain.id] = [
+                        atom.bfactor for residue in chain for atom in residue
+                    ]
 
+            else:
+                for residue in chain:
+                    if method == ResidueCountType.AVERAGE.value:
+                        scores = 0
+                        for atom in residue:
+                            scores += atom.bfactor
+                        score = scores / len(residue)
+
+                    elif method == ResidueCountType.CARBONALPHA.value:
+                        for atom in residue:
+                            if atom.id == "CA":
+                                score = atom.bfactor
+                                break
+
+                    if chain.id in plddts:
+                        plddts[chain.id].append(score)
+
+                    else:
+                        plddts[chain.id] = [score]
+
+        plddt_lengths = {k: len(v) for (k, v) in plddts.items()}
+        chain_lengths = self.chain_lengths(mode="residues", ligand_atoms=True)
+        for chain_id in plddt_lengths:
+            assert (
+                chain_lengths[chain_id] == plddt_lengths[chain_id]
+            ), f"{chain_id}, {chain_lengths[chain_id]} != {plddt_lengths[chain_id]}"
         return plddts
 
     def get_plddt_per_ligand(self) -> dict:
@@ -425,35 +464,6 @@ class CifFile(FileBase):
                             plddt[chain.id] = [atom.bfactor]
         return plddt
 
-    def get_plddt_regions(self) -> dict:
-        """
-        Get the pLDDT regions for the model
-        """
-        regions = {}
-
-        plddts_array = np.array(self.residue_plddts + self.ligand_plddts)
-        v_low = np.where(plddts_array <= 50)[0]
-        regions['v_low'] = self._get_regions(v_low)
-        low = np.where((plddts_array > 50) & (plddts_array < 70))[0]
-        regions['low'] = self._get_regions(low)
-        confident = np.where((plddts_array >= 70) & (plddts_array < 90))[0]
-        regions['confident'] = self._get_regions(confident)
-        v_confident = np.where(plddts_array >= 90)[0]
-        regions['v_high'] = self._get_regions(v_confident)
-
-        return regions
-
-    def _get_regions(self, indices):
-        """
-        Get the regions from the indices
-        """
-        regions = []
-        for _, g in groupby(enumerate(indices), lambda x: x[0] - x[1]):
-            group = (map(itemgetter(1), g))
-            group = list(map(int, group))
-            regions.append((group[0], group[-1]))
-        return regions
-
     def check_ligand(self, chain: Chain) -> bool:
         """
         Check if the chain is a ligand
@@ -465,23 +475,27 @@ class CifFile(FileBase):
             bool: True if the chain is a ligand, False otherwise
         """
 
+        return self.check_other(chain, ["ligand"])
+
+    def check_other(self, chain: Chain, check_list) -> bool:
         sequences = self.input_params.get("sequences")
         if sequences is None:
             logger.warning("Unable to gain sequence infromation from input file")
             return False
         for sequence in sequences:
-
             for sequence_type, sequence_data in sequence.items():
-
-                if sequence_type == "ligand":
+                if sequence_type in check_list:
                     if "id" not in sequence_data:
                         continue
-
+                    if hasattr(chain, "id"):
+                        chain_id = chain.id
+                    else:
+                        chain_id = chain
                     if isinstance(sequence_data["id"], str):
-                        if chain.id == sequence_data["id"]:
+                        if chain_id == sequence_data["id"]:
                             return True
                     elif isinstance(sequence_data["id"], list):
-                        if chain.id in sequence_data["id"]:
+                        if chain_id in sequence_data["id"]:
                             return True
         return False
 
@@ -529,31 +543,33 @@ class CifFile(FileBase):
                         ligand_no_added += 1
                     old_chain_label_counter += 1
 
-            # There should be more old chains compared to new chains so
-            # old_chain_label counter should get incremented more than
-            # new_chai_label_counter
             new_chain_label_counter += 1
 
         for chain_to_rename in structure:
             chain_to_rename.id = old_new_chain_id[chain_to_rename.id]
 
         assert old_chain_label_counter == len(
-            self.model[0]
+            self.get_chains()
         ), "Number of chain ids must match the number of chains"
+        self.update()
 
-    def to_file(self, output_file: Union[str, Path]) -> None:
-        """
-        Save the cif file
+    def update(self):
+        self.to_file(self.pathway)
+        self = CifFile(self.pathway, self.input_params)
 
-        Args:
-            output_file (Union[str, Path]): Path to save the cif file
+    def reorder_chains(self, new_chain_ids: List[str]):
 
-        Returns:
-            None
-        """
-        io = MMCIFIO()
-        io.set_structure(self.model)
-        io.save(str(output_file))
+        assert sorted([chain.id for chain in self.get_chains()]) == sorted(
+            new_chain_ids
+        ), "The chain ids need to be identical to what is in the model already \
+for reordering"
+
+        new_model = Model.Model(0)
+
+        [new_model.add(self.model[0][ch]) for ch in new_chain_ids]
+        self.model.detach_child(0)
+        self.model.add(new_model)
+        self.update()
 
     def check_clashes(
         self,
@@ -571,7 +587,7 @@ class CifFile(FileBase):
             A list of clashes.
 
         """
-        atoms = [atom for chain in self.model[0] for atom in chain.get_atoms()]
+        atoms = self.get_atoms()
         coords = np.array(
             [atom.get_coord() for atom in atoms],
             dtype="d",
@@ -614,6 +630,96 @@ class CifFile(FileBase):
         self.clashes = len(clashes)
 
         return clashes
+
+    def get_atoms(self, chain_id=None) -> list:
+        """
+        Get the atoms of the structure
+
+        Args:
+            threshold: The distance threshold for a clash.
+
+        Returns:
+            A list of clashes.
+
+        """
+        if chain_id is not None:
+            return [
+                atom
+                for chain in self.model[0]
+                for atom in chain.get_atoms()
+                if chain.id == chain_id
+            ]
+        return [atom for chain in self.model[0] for atom in chain.get_atoms()]
+
+    def to_file(self, output_file: Union[str, Path]) -> None:
+        """
+        Save the cif file
+
+        Args:
+            output_file (Union[str, Path]): Path to save the cif file
+
+        Returns:
+            None
+        """
+        io = MMCIFIO()
+        io.set_structure(self.model)
+
+        # save creates the dictionary
+        io.save(str(output_file))
+        self.__atom_site_label_update(io.dic)
+        self.__ligand_to_hetatm(io.dic)
+        with open(output_file, "w") as f:
+            io._save_dict(f)
+
+        self.__single_to_double_quotes(output_file)
+
+    def __single_to_double_quotes(self, file_name: Union[str, Path]) -> None:
+        new_lines = []
+        with open(file_name, "r") as f:
+            lines = [line.rstrip() for line in f]
+
+        for line in lines:
+
+            single_quotes = re.compile(r"[']\w+[']{2}")
+            new_lines.append(
+                single_quotes.sub(lambda x: f'"{x.group()[1:-1]}"', line, count=1)
+            )
+
+        with open(file_name, "w") as f:
+            f.write("\n".join(new_lines))
+
+    def __atom_site_label_update(self, out_dict):
+        atom_site_labels_asym_ids = []
+        for chain_id, chain_length in self.chain_lengths(mode="all").items():
+            atom_site_labels_asym_ids.extend([chain_id] * chain_length)
+
+        assert len(out_dict["_atom_site.label_asym_id"]) == len(
+            atom_site_labels_asym_ids
+        ), f"Lengths must be the same, current lengths are \
+{len(out_dict['_atom_site.label_asym_id'])} and {len(atom_site_labels_asym_ids)}"
+
+        out_dict["_atom_site.label_asym_id"] = atom_site_labels_asym_ids
+
+        return out_dict
+
+    def __ligand_to_hetatm(self, out_dict):
+        atom_site_group_pdb = []
+        counter = 0
+        for chain_id, chain_length in self.chain_lengths(mode="all").items():
+            if self.check_ligand(chain_id):
+                atom_site_group_pdb.extend(["HETATM"] * chain_length)
+            else:
+                atom_site_group_pdb.extend(
+                    out_dict["_atom_site.group_PDB"][counter:counter+chain_length]
+                )
+
+            counter += chain_length
+
+        assert len(out_dict["_atom_site.group_PDB"]) == len(atom_site_group_pdb)
+
+        out_dict["_atom_site.group_PDB"] = atom_site_group_pdb
+
+        return out_dict
 
 
 class ConfidenceJsonFile(FileBase):
