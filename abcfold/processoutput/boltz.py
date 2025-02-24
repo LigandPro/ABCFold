@@ -1,4 +1,3 @@
-import json
 import logging
 from pathlib import Path
 from typing import Union
@@ -119,6 +118,7 @@ class BoltzOutput:
                     intermediate_dict["pde"] = file_
                 elif file_.pathway.suffix == ".cif":
                     file_.name = f"Boltz-1_{model_number}"
+                    file_ = self.update_chain_labels(file_)
                     intermediate_dict["cif"] = file_
                 else:
                     intermediate_dict[file_.suffix] = file_
@@ -150,8 +150,9 @@ class BoltzOutput:
                 plddt_score = (plddt_score * 100).astype(float)
 
             chain_lengths = cif_file.chain_lengths(
-                mode=ModelCount.RESIDUES, ligand_atoms=True
+                mode=ModelCount.RESIDUES, ligand_atoms=True, ptm_atoms=True
             )
+
             assert sum(chain_lengths.values()) == len(plddt_score), "Length mismatch"
 
             counter = 0
@@ -169,7 +170,7 @@ class BoltzOutput:
                         counter += 1
 
             assert counter == len(plddt_score), "Length mismatch"
-            cif_file.to_file(cif_file.pathway)
+            cif_file.update()
 
     def pae_to_af3(self):
         """
@@ -188,8 +189,7 @@ class BoltzOutput:
                 cif_file.pathway.stem + "_af3_pae.json"
             )
 
-            with open(out_name, "w") as f:
-                json.dump(pae.scores, f)
+            pae.to_file(out_name)
 
             self.output[i]["af3_pae"] = ConfidenceJsonFile(out_name)
 

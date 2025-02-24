@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 import plotly.offline as pyo
 
 from abcfold.processoutput.file_handlers import CifFile
+from abcfold.processoutput.utils import (get_gap_indicies,
+                                         insert_none_by_minus_one)
 
 logger = logging.getLogger("logger")
 
@@ -17,8 +19,8 @@ def plot_plddt(
     output_name: Union[str, Path],
     line_width: float = 1.6,
     dash: str = "dot",
-    chain_line_occupancy: float = 0.8,
     show: bool = False,
+    chain_line_occupancy: float = 0.9,
     include_plotlyjs: bool = True,
 ) -> None:
     """
@@ -34,8 +36,8 @@ def plot_plddt(
         output_name: Path to the output html file.
         line_width: Width of the lines in the plot.
         dash: Dash style of the lines in the plot.
-        chain_line_occupancy: Opacity of the chain lines in the plot.
         show: If True, the plot will be displayed in the browser.
+        chain_line_occupancy: Opacity of the vertical lines that separate the chains.
 
     Returns:
         None
@@ -55,44 +57,34 @@ def plot_plddt(
         "Chai-1": px.colors.qualitative.Prism,
     }
 
-    colour_index = 0
-    added_lines = []
+    line_ranges: dict = {}
 
     cif_models = [
         cif_file for cif_files in cif_models_dict.values() for cif_file in cif_files
     ]
+    indicies = get_gap_indicies(*cif_models)
+    indicies_index = 0
 
     for method, cif_models in cif_models_dict.items():
+
         for cif_model in cif_models:
             model_index = int(cif_model.name.split("_")[-1])
             color_list = method_colours.get(method, colours)
             color = color_list[model_index % len(color_list)]
+
             plddt = cif_model.residue_plddts
-            counter = 0
+
+            plddt = insert_none_by_minus_one(indicies[indicies_index], plddt)
+
+            indicies_index += 1
             chain_ranges = {
-                chain: range(len(plddt))
-                for chain, plddt in cif_model.residue_plddt_per_chain.items()
+                chain: len(plddt)
+                for chain, plddt in cif_model.get_plddt_per_residue().items()
             }
-
-            for chain, chain_range in chain_ranges.items():
-                counter += chain_range[-1]
-                chain_name = f"Chain {chain}"
-
-                if chain_name not in added_lines:
-                    fig.add_vline(
-                        x=counter,
-                        line=dict(
-                            color=colours[colour_index % len(colours)], dash="dash"
-                        ),
-                        opacity=chain_line_occupancy,
-                        annotation_text=Bold(chain_name),
-                        annotation_font_size=15,
-                        annotation_position="top left",
-                        annotation_textangle=-90,
-                    )
-
-                    colour_index += 1
-                    added_lines.append(chain_name)
+            line_ranges = {
+                chain: max(chain_ranges[chain], line_ranges.get(chain, 0))
+                for chain in chain_ranges
+            }
 
             trace = go.Scatter(
                 x=list(range(len(plddt))),
@@ -107,6 +99,23 @@ def plot_plddt(
             )
             fig.add_trace(trace)
 
+    counter = 0
+    colour_index = 0
+    for chain, chain_range in line_ranges.items():
+        counter += chain_range
+        chain_name = f"Chain {chain}"
+
+        fig.add_vline(
+            x=counter - 1,
+            line=dict(color=colours[colour_index % len(colours)], dash="dash"),
+            opacity=chain_line_occupancy,
+            annotation_text=Bold(chain_name),
+            annotation_font_size=15,
+            annotation_position="top left",
+            annotation_textangle=-90,
+        )
+
+        colour_index += 1
     # Create buttons for each model
     buttons = []
     num_models = len(cif_models_dict[next(iter(cif_models_dict))])
@@ -117,10 +126,11 @@ def plot_plddt(
             method="update",
             args=[
                 {
-                    "visible":
-                    [i % num_models == model_index for i in range(len(fig.data))]
+                    "visible": [
+                        i % num_models == model_index for i in range(len(fig.data))
+                    ]
                 },
-                {"showlegend": True}
+                {"showlegend": True},
             ],
             label=f"Model {model_index + 1}",
         )
@@ -132,10 +142,7 @@ def plot_plddt(
     buttons.append(
         dict(
             method="update",
-            args=[
-                {"visible": [True] * len(fig.data)},
-                {"showlegend": True}
-            ],
+            args=[{"visible": [True] * len(fig.data)}, {"showlegend": True}],
             label="All",
         )
     )
