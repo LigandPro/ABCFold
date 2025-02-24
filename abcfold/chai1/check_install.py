@@ -5,6 +5,9 @@ import sys
 logger = logging.getLogger("logger")
 
 
+CHAI_VERSION = "0.6.0"
+
+
 def check_chai1():
     try:
         import chai_lab as _  # noqa F40
@@ -17,7 +20,14 @@ def check_chai1():
             no_deps = False
         logger.info("Installing chai_lab package")
         logger.info("No dependencies will be installed") if no_deps else None
-        cmd = [sys.executable, "-m", "pip", "install", "chai_lab", "--no-cache-dir"]
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            f"chai_lab=={CHAI_VERSION}",
+            "--no-cache-dir",
+        ]
         cmd.append("--no-deps") if no_deps else None
         logger.info("Running %s", " ".join(cmd))
         with subprocess.Popen(
