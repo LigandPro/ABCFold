@@ -11,6 +11,7 @@ import webbrowser
 from pathlib import Path
 from typing import Dict
 
+import pandas as _  # noqa F401
 from jinja2 import Environment, FileSystemLoader
 
 from abcfold.abc_script_utils import check_input_json, make_dir, setup_logger
@@ -148,7 +149,13 @@ by default"
             )
 
             # Need to find the name of the af3_dir
-            af3_out_dir = list(args.output_dir.iterdir())[0]
+            af3_out_dir = list(
+                [
+                    file
+                    for file in args.output_dir.iterdir()
+                    if not file.suffix == ".json"
+                ]
+            )[0]
             ao = AlphafoldOutput(af3_out_dir, input_params, name)
             outputs.append(ao)
             run_json = ao.input_json
@@ -292,7 +299,10 @@ by default"
 
         if args.no_server:
             logger.info("Server disabled")
-            logger.infof("Run python open_output.py to view the output pages")
+            logger.info(
+                "Run 'python open_output.py' in the output directory to \
+view the output pages"
+            )
             return
 
         try:
