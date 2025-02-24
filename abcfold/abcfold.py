@@ -19,7 +19,8 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util,
-                                    prediction_argparse_util)
+                                    prediction_argparse_util,
+                                    visuals_argparse_util)
 from abcfold.plots.pae_plot import create_pae_plots
 from abcfold.plots.plddt_plot import plot_plddt
 from abcfold.processoutput.alphafold3 import AlphafoldOutput
@@ -29,8 +30,8 @@ from abcfold.run_alphafold3 import run_alphafold3
 
 logger = setup_logger()
 
-HTML_DIR = Path(__file__).parent / 'html'
-HTML_TEMPLATE = HTML_DIR.joinpath('abcfold.html.jinja2')
+HTML_DIR = Path(__file__).parent / "html"
+HTML_TEMPLATE = HTML_DIR.joinpath("abcfold.html.jinja2")
 PLOTS_DIR = ".plots"
 PORT = 8000
 
@@ -182,57 +183,59 @@ by default"
             co = ChaiOutput(chai_output_dir, input_params, name)
             outputs.append(co)
 
+        if args.no_visuals:
+            logger.info("Visuals disabled")
+            return
+
         plot_dict = plots(outputs, args.output_dir.joinpath(PLOTS_DIR))
 
         # Compile data to make output page
         sequence_data = None
         programs_run = []
-        alphafold_models = {'models': []}
+        alphafold_models = {"models": []}
         if args.alphafold3:
             programs_run.append("AlphaFold3")
             for seed in ao.output.keys():
                 for idx in ao.output[seed].keys():
-                    model = ao.output[seed][idx]['cif']
+                    model = ao.output[seed][idx]["cif"]
                     model.check_clashes()
                     if sequence_data is None:
                         sequence_data = model.get_model_sequence_data()
-                    model_data = get_model_data(model,
-                                                plot_dict,
-                                                "AlphaFold3",
-                                                args.output_dir)
-                    alphafold_models['models'].append(model_data)
+                    model_data = get_model_data(
+                        model, plot_dict, "AlphaFold3", args.output_dir
+                    )
+                    alphafold_models["models"].append(model_data)
 
-        boltz_models = {'models': []}
+        boltz_models = {"models": []}
         if args.boltz1:
             programs_run.append("Boltz-1")
             for idx in bo.output.keys():
-                model = bo.output[idx]['cif']
+                model = bo.output[idx]["cif"]
                 model.check_clashes()
                 if sequence_data is None:
                     sequence_data = model.get_model_sequence_data()
-                model_data = get_model_data(model,
-                                            plot_dict,
-                                            "Boltz-1",
-                                            args.output_dir)
-                boltz_models['models'].append(model_data)
+                model_data = get_model_data(
+                    model, plot_dict, "Boltz-1", args.output_dir
+                )
+                boltz_models["models"].append(model_data)
 
-        chai_models = {'models': []}
+        chai_models = {"models": []}
         if args.chai1:
             programs_run.append("Chai-1")
             for idx in co.output.keys():
                 if idx >= 0:
-                    model = co.output[idx]['cif']
+                    model = co.output[idx]["cif"]
                     model.check_clashes()
                     if sequence_data is None:
                         sequence_data = model.get_model_sequence_data()
-                    model_data = get_model_data(model,
-                                                plot_dict,
-                                                "Chai-1",
-                                                args.output_dir)
-                    chai_models['models'].append(model_data)
+                    model_data = get_model_data(
+                        model, plot_dict, "Chai-1", args.output_dir
+                    )
+                    chai_models["models"].append(model_data)
 
-        combined_models = alphafold_models["models"] + \
-            boltz_models["models"] + chai_models["models"]
+        combined_models = (
+            alphafold_models["models"] + boltz_models["models"] + chai_models["models"]
+        )
 
         sequence = ""
         for key in sequence_data.keys():
@@ -241,34 +244,44 @@ by default"
         chain_data = {}
         ref = 0
         for key in sequence_data.keys():
-            chain_data['Chain ' + key] = (ref, len(sequence_data[key]) + ref - 1)
+            chain_data["Chain " + key] = (ref, len(sequence_data[key]) + ref - 1)
             ref += len(sequence_data[key])
 
-        results_dict = {"sequence": sequence,
-                        "models": combined_models,
-                        "plotly_path": Path(plot_dict['plddt']).relative_to(
-                            args.output_dir.resolve()).as_posix(),
-                        "chain_data": chain_data}
+        results_dict = {
+            "sequence": sequence,
+            "models": combined_models,
+            "plotly_path": Path(plot_dict["plddt"])
+            .relative_to(args.output_dir.resolve())
+            .as_posix(),
+            "chain_data": chain_data,
+        }
         results_json = json.dumps(results_dict)
 
-        if not args.output_dir.joinpath('.feature_viewer').exists():
-            shutil.copytree(HTML_DIR, args.output_dir / '.feature_viewer')
+        if not args.output_dir.joinpath(".feature_viewer").exists():
+            shutil.copytree(HTML_DIR, args.output_dir / ".feature_viewer")
 
         if len(programs_run) > 1:
-            programs = "Structure predictions for: " + ", ".join(programs_run[:-1]) + \
-                " and " + programs_run[-1]
+            programs = (
+                "Structure predictions for: "
+                + ", ".join(programs_run[:-1])
+                + " and "
+                + programs_run[-1]
+            )
         else:
             programs = "Structure predictions for: " + programs_run[0]
 
         # Create the index page
         HTML_OUT = args.output_dir.joinpath("index.html")
         html_out = Path(HTML_OUT).resolve()
-        render_template(HTML_TEMPLATE, html_out,
-                        # kwargs appear as variables in the template
-                        abcfold_html_dir='.feature_viewer',
-                        programs=programs,
-                        results_json=results_json,
-                        version=0.1)
+        render_template(
+            HTML_TEMPLATE,
+            html_out,
+            # kwargs appear as variables in the template
+            abcfold_html_dir=".feature_viewer",
+            programs=programs,
+            results_json=results_json,
+            version=0.1,
+        )
         logger.info(f"Output page written to {HTML_OUT}")
 
         # Change to the output directory to run the server
@@ -277,13 +290,17 @@ by default"
         # Make a script to open the output HTML file in the default web browser
         output_open_html_script("open_output.py", port=PORT)
 
+        if args.no_server:
+            logger.info("Server disabled")
+            logger.infof("Run python open_output.py to view the output pages")
+            return
+
         try:
             # Start the server
-            with socketserver.TCPServer(("", PORT),
-                                        NoCacheHTTPRequestHandler) as httpd:
+            with socketserver.TCPServer(("", PORT), NoCacheHTTPRequestHandler) as httpd:
                 logger.info(
                     f"Serving at port {PORT}: http://localhost:{PORT}/index.html"
-                    )
+                )
                 logger.info("Press Ctrl+C to stop the server")
                 # Open the main HTML page in the default web browser
                 webbrowser.open(f"http://localhost:{PORT}/index.html")
@@ -312,17 +329,18 @@ def get_model_data(model, plot_dict, method, output_dir):
         "avg_plddt": model.average_plddt,
         "h_score": model.h_score,
         "clashes": model.clashes,
-        "pae_path": Path(
-            plot_dict[model.pathway.as_posix()]
-            ).relative_to(output_dir).as_posix()
+        "pae_path": Path(plot_dict[model.pathway.as_posix()])
+        .relative_to(output_dir)
+        .as_posix(),
     }
     return model_data
 
 
 class NoCacheHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
-        self.send_header("Cache-Control",
-                         "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header(
+            "Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"
+        )
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
         super().end_headers()
@@ -367,8 +385,8 @@ def render_template(in_file_path, out_file_path, **kwargs):
         **kwargs (dict): Variables to use in templating.
     """
     env = Environment(
-        loader=FileSystemLoader(in_file_path.parent),
-        keep_trailing_newline=True)
+        loader=FileSystemLoader(in_file_path.parent), keep_trailing_newline=True
+    )
     template = env.get_template(in_file_path.name)
     output = template.render(**kwargs)
     with open(str(out_file_path), "w") as f:
@@ -440,6 +458,7 @@ def main():
     parser = mmseqs2_argparse_util(parser)
     parser = custom_template_argpase_util(parser)
     parser = prediction_argparse_util(parser)
+    parser = visuals_argparse_util(parser)
 
     parser.set_defaults(**defaults)
     args = parser.parse_args()
