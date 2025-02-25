@@ -14,7 +14,8 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util,
-                                    prediction_argparse_util)
+                                    prediction_argparse_util,
+                                    visuals_argparse_util)
 from abcfold.plots.plotter import (PORT, NoCacheHTTPRequestHandler,
                                    get_all_cif_files, get_model_data,
                                    get_model_sequence_data,
@@ -351,6 +352,7 @@ def main():
     parser = mmseqs2_argparse_util(parser)
     parser = custom_template_argpase_util(parser)
     parser = prediction_argparse_util(parser)
+    parser = visuals_argparse_util(parser)
 
     parser.set_defaults(**defaults)
     args = parser.parse_args()
