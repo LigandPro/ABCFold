@@ -11,6 +11,27 @@ CHAI_VERSION = "0.6.0"
 def check_chai1():
     try:
         import chai_lab as _  # noqa F40
+
+        cmd = [sys.executable, "-m", "pip", "show", "chai_lab"]
+        with subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ) as proc:
+            stdout, stderr = proc.communicate()
+            if proc.returncode != 0:
+                raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
+
+            version = None
+            for line in stdout.decode().split("\n"):
+                if line.startswith("Version:"):
+                    version = line.split(":", 1)[1].strip()
+                    break
+
+            if version != CHAI_VERSION:
+                raise ImportError(
+                    f"Expected Chai-1 version {CHAI_VERSION}, found {version}"
+                )
     except (ImportError, ModuleNotFoundError):
         try:
             import boltz1 as _  # noqa F401
