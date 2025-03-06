@@ -342,6 +342,7 @@ def check_input_json(
                 with open(msa_path, "r") as f:
                     msa = f.read()
                 sequence[sequence_type]["unpairedMsa"] = msa
+                del sequence[sequence_type]["unpairedMsaPath"]
             if "unpairedMsa" in sequence[sequence_type]:
                 if "templates" not in sequence[sequence_type]:
 
