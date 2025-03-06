@@ -67,6 +67,7 @@ def run_chai(
                 number_of_models,
                 num_recycles=num_recycles,
                 use_templates_server=use_templates_server,
+                template_hits_path=template_hits_path,
             )
             if not test
             else generate_chai_test_command()
@@ -126,14 +127,14 @@ def generate_chai_command(
     cmd += ["--num-diffn-samples", str(number_of_models)]
     cmd += ["--num-trunk-recycles", str(num_recycles)]
 
-    assert not(
+    assert not (
         use_templates_server and template_hits_path
-        ), "Cannot specify both templates server and path"
+    ), "Cannot specify both templates server and path"
 
-    if shutil.which("kalign") is None:
+    if shutil.which("kalign") is None and (use_templates_server or template_hits_path):
         logger.warning(
             "kalign not found, skipping template search kalign is required. \
-            Please install kalign to use templates with Chai-1."
+Please install kalign to use templates with Chai-1."
         )
     else:
         if use_templates_server:
