@@ -7,9 +7,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import plotly.offline as pyo
 
-from abcfold.processoutput.file_handlers import CifFile
-from abcfold.processoutput.utils import (get_gap_indicies,
-                                         insert_none_by_minus_one)
+from abcfold.output.file_handlers import CifFile
+from abcfold.output.utils import get_gap_indicies, insert_none_by_minus_one
 
 logger = logging.getLogger("logger")
 

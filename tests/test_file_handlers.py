@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from abcfold.plots.plotter import get_plddt_regions
-from abcfold.processoutput import file_handlers
+from abcfold.html.html_utils import get_plddt_regions
+from abcfold.output import file_handlers
 
 
 def test_npz_file(test_data):

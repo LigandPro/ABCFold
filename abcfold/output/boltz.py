@@ -3,10 +3,9 @@ from pathlib import Path
 from typing import Union
 
 from abcfold.boltz1.af3_to_boltz1 import BoltzYaml
-from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
-                                                 FileTypes, ModelCount,
-                                                 NpzFile)
-from abcfold.processoutput.utils import Af3Pae
+from abcfold.output.file_handlers import (CifFile, ConfidenceJsonFile,
+                                          FileTypes, ModelCount, NpzFile)
+from abcfold.output.utils import Af3Pae
 
 logger = logging.getLogger("logger")
 

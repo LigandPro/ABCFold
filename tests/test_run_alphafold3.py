@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from abcfold.run_alphafold3 import generate_af3_cmd, run_alphafold3
+from abcfold.alphafold3.run_alphafold3 import generate_af3_cmd, run_alphafold3
 
 
 def test_generate_af3_command(test_data):

@@ -1,8 +1,8 @@
 import tempfile
 from pathlib import Path
 
-from abcfold.processoutput.file_handlers import CifFile, NpyFile, NpzFile
-from abcfold.processoutput.utils import Af3Pae
+from abcfold.output.file_handlers import CifFile, NpyFile, NpzFile
+from abcfold.output.utils import Af3Pae
 
 
 def test_process_chai_output(test_data, output_objs):

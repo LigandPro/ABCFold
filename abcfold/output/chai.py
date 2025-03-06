@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Union
 
 from abcfold.chai1.af3_to_chai import ChaiFasta
-from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
-                                                 FileTypes, NpyFile, NpzFile)
-from abcfold.processoutput.utils import Af3Pae
+from abcfold.output.file_handlers import (CifFile, ConfidenceJsonFile,
+                                          FileTypes, NpyFile, NpzFile)
+from abcfold.output.utils import Af3Pae
 
 logger = logging.getLogger("logger")
 

@@ -116,7 +116,7 @@ def generate_chai_command(
 
     """
 
-    chai_exe = Path(__file__).parent / "chai1" / "chai.py"
+    chai_exe = Path(__file__).parent / "chai.py"
     cmd = ["python", str(chai_exe), "fold", str(input_fasta)]
 
     if Path(msa_dir).exists():
@@ -157,7 +157,7 @@ def generate_chai_test_command() -> list:
     Returns:
         list: The Chai-1 test command
     """
-    chai_exe = Path(__file__).parent / "chai1" / "chai.py"
+    chai_exe = Path(__file__).parent / "chai.py"
     return [
         "python",
         chai_exe,

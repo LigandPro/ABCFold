@@ -14,11 +14,11 @@ import pandas as pd
 import requests  # type: ignore
 from tqdm.autonotebook import tqdm
 
-from abcfold.abc_script_utils import (align_and_map,
-                                      extract_sequence_from_mmcif,
-                                      get_custom_template, get_mmcif)
 from abcfold.argparse_utils import (custom_template_argpase_util,
                                     mmseqs2_argparse_util)
+from abcfold.scripts.abc_script_utils import (align_and_map,
+                                              extract_sequence_from_mmcif,
+                                              get_custom_template, get_mmcif)
 
 logger = logging.getLogger("logger")
 
@@ -98,13 +98,15 @@ def add_msa_to_json(
                                     sep="\t",
                                     index=False,
                                     header=False,
-                                    mode='a')
+                                    mode="a",
+                                )
                             else:
                                 table.to_csv(
                                     chai_template_output,
                                     sep="\t",
                                     index=False,
-                                    header=False)
+                                    header=False,
+                                )
 
                 else:
                     a3m_lines = run_mmseqs(input_sequence, tmpdir, use_templates=False)
@@ -143,7 +145,7 @@ chains"
                             raise ValueError(msg)
                         custom_templates = zip(
                             target_id, custom_template, custom_template_chain
-                            )
+                        )
                     else:
                         if len(custom_template) != len(custom_template_chain):
                             msg = "Number of custom templates must match the number of \
@@ -157,7 +159,7 @@ custom template chains"
                             target_ids = [None] * len(custom_template)
                         custom_templates = zip(
                             target_ids, custom_template, custom_template_chain
-                            )
+                        )
 
                     for i in custom_templates:
                         tid, c_tem, c_tem_chn = i
@@ -166,7 +168,7 @@ custom template chains"
                             tid,
                             c_tem,
                             c_tem_chn,
-                            )
+                        )
 
                 # Add unpaired MSA to the json
                 sequence["protein"]["unpairedMsa"] = a3m_lines[0]

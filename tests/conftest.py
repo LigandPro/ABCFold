@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from abcfold.processoutput.alphafold3 import AlphafoldOutput
-from abcfold.processoutput.boltz import BoltzOutput
-from abcfold.processoutput.chai import ChaiOutput
+from abcfold.output.alphafold3 import AlphafoldOutput
+from abcfold.output.boltz import BoltzOutput
+from abcfold.output.chai import ChaiOutput
 
 logger = logging.getLogger("logger")
 

@@ -20,7 +20,7 @@
   </div>
 </div>
 
-
+{{paeViewerDemo__tabs.tpl}}
 
 <div id="complex-sequence-viewer"></div>
 

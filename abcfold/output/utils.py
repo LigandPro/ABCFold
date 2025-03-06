@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from Bio.Align import PairwiseAligner
 
-from abcfold.processoutput.file_handlers import CifFile
+from abcfold.output.file_handlers import CifFile
 
 AF3TEMPLATE: dict = {
     "atom_chain_ids": [],
@@ -249,7 +249,7 @@ def get_gap_indicies(*cif_objs) -> List[np.ndarray]:
 
 def interleave_repeated(lst, n, chain_no):
     indicies = []
-    chunks = [lst[i:i+n] for i in range(0, len(lst), n)]
+    chunks = [lst[i : i + n] for i in range(0, len(lst), n)]  # noqa: E203
     interleaved = [x for tup in zip_longest(*chunks) for x in tup if x is not None]
 
     for i in range(0, len(interleaved), chain_no):
@@ -303,8 +303,8 @@ def make_dummy_m8_file(run_json, output_dir):
     table = []
 
     for id_ in templates:
-        for template in templates[id]:
-            table.append([id, template, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        for template in templates[id_]:
+            table.append([id_, template, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     pd.DataFrame(table).to_csv(m8_file, sep="\t", header=False, index=False)
 
     return m8_file

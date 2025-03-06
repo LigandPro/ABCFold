@@ -15,7 +15,7 @@ from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Residue import Residue
 from Bio.SeqUtils import seq1
 
-from abcfold.processoutput.atoms import VANDERWALLS
+from abcfold.output.atoms import VANDERWALLS
 
 warnings.filterwarnings("ignore")
 
@@ -311,7 +311,7 @@ class CifFile(FileBase):
             dict: Dictionary containing the chain id and the residue ids for each
             chain
         """
-        from abcfold.processoutput.utils import flatten
+        from abcfold.output.utils import flatten
 
         chains = self.get_chains()
         residue_ids = {}
@@ -717,7 +717,9 @@ for reordering"
                 atom_site_group_pdb.extend(["HETATM"] * chain_length)
             else:
                 atom_site_group_pdb.extend(
-                    out_dict["_atom_site.group_PDB"][counter:counter+chain_length]
+                    out_dict["_atom_site.group_PDB"][
+                        counter : counter + chain_length  # noqa: E203
+                    ]
                 )
 
             counter += chain_length

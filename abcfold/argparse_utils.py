@@ -180,7 +180,7 @@ by default"
         logger.error("Custom template chain provided without a custom template")
         sys.exit(1)
 
-    if args.use_af3_template and not args.alphafold3:
+    if args.use_af3_template_search and not args.alphafold3:
         logger.error(
             "Cannot use the Alphafold3 template search without running Alphafold3"
         )

@@ -9,10 +9,10 @@ from typing import Dict, List, Union
 
 import pandas as pd
 
-from abcfold.processoutput.alphafold3 import AlphafoldOutput
-from abcfold.processoutput.boltz import BoltzOutput
-from abcfold.processoutput.chai import ChaiOutput
-from abcfold.processoutput.file_handlers import CifFile
+from abcfold.output.alphafold3 import AlphafoldOutput
+from abcfold.output.boltz import BoltzOutput
+from abcfold.output.chai import ChaiOutput
+from abcfold.output.file_handlers import CifFile
 
 logger = logging.getLogger(__name__)
 

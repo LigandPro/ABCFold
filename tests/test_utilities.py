@@ -2,11 +2,11 @@ import json
 import tempfile
 from pathlib import Path
 
-from abcfold.abc_script_utils import (align_and_map, check_input_json,
-                                      extract_sequence_from_mmcif, get_chains,
-                                      get_mmcif)
-from abcfold.processoutput.file_handlers import CifFile, ConfidenceJsonFile
-from abcfold.processoutput.utils import Af3Pae
+from abcfold.output.file_handlers import CifFile, ConfidenceJsonFile
+from abcfold.output.utils import Af3Pae
+from abcfold.scripts.abc_script_utils import (align_and_map, check_input_json,
+                                              extract_sequence_from_mmcif,
+                                              get_chains, get_mmcif)
 
 
 def test_get_chains(test_data):
@@ -109,4 +109,7 @@ def test_af3_pae_reorder(test_data):
         assert [chain.id for chain in structure.get_chains()] == ["B", "A", "D", "C"]
         pae_obj = Af3Pae.from_alphafold3(pae.data, structure)
 
-        assert pae_obj.scores["token_chain_ids"][787+50:] == pae_to_compare_tci[:51]
+        assert (
+            pae_obj.scores["token_chain_ids"][787 + 50 :]  # noqa: E203
+            == pae_to_compare_tci[:51]
+        )

@@ -1,6 +1,6 @@
 import pytest  # noqa: F401
 
-from abcfold.abc_script_utils import setup_logger
+from abcfold.scripts.abc_script_utils import setup_logger
 
 
 def test_logging():

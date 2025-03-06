@@ -1,9 +1,8 @@
 import tempfile
 from pathlib import Path
 
-from abcfold.processoutput.file_handlers import (CifFile, ConfidenceJsonFile,
-                                                 NpzFile)
-from abcfold.processoutput.utils import Af3Pae
+from abcfold.output.file_handlers import CifFile, ConfidenceJsonFile, NpzFile
+from abcfold.output.utils import Af3Pae
 
 
 def test_process_boltz_output(test_data, output_objs):

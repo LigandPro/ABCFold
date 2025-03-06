@@ -8,8 +8,7 @@ import tempfile
 import webbrowser
 from pathlib import Path
 
-from abcfold.abc_script_utils import check_input_json, make_dir, setup_logger
-from abcfold.add_mmseqs_msa import add_msa_to_json
+from abcfold.alphafold3.run_alphafold3 import run_alphafold3
 from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
@@ -17,18 +16,19 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     prediction_argparse_util,
                                     raise_argument_errors,
                                     visuals_argparse_util)
-from abcfold.plots.plotter import (PORT, NoCacheHTTPRequestHandler,
-                                   get_all_cif_files, get_model_data,
-                                   get_model_sequence_data,
-                                   output_open_html_script, plots,
-                                   render_template)
-from abcfold.processoutput.alphafold3 import AlphafoldOutput
-from abcfold.processoutput.boltz import BoltzOutput
-from abcfold.processoutput.chai import ChaiOutput
-from abcfold.processoutput.utils import (get_gap_indicies,
-                                         insert_none_by_minus_one,
-                                         make_dummy_m8_file)
-from abcfold.run_alphafold3 import run_alphafold3
+from abcfold.html.html_utils import (PORT, NoCacheHTTPRequestHandler,
+                                     get_all_cif_files, get_model_data,
+                                     get_model_sequence_data,
+                                     output_open_html_script, plots,
+                                     render_template)
+from abcfold.output.alphafold3 import AlphafoldOutput
+from abcfold.output.boltz import BoltzOutput
+from abcfold.output.chai import ChaiOutput
+from abcfold.output.utils import (get_gap_indicies, insert_none_by_minus_one,
+                                  make_dummy_m8_file)
+from abcfold.scripts.abc_script_utils import (check_input_json, make_dir,
+                                              setup_logger)
+from abcfold.scripts.add_mmseqs_msa import add_msa_to_json
 
 logger = setup_logger()
 
@@ -88,6 +88,11 @@ def run(args, config, defaults, config_file):
     if name is None:
         logger.error("Input JSON must contain a 'name' field")
         sys.exit(1)
+
+    if args.alphafold3:
+        from abcfold.alphafold3.check_install import check_af3_install
+
+        check_af3_install(interactive=False)
 
     if args.boltz1:
         from abcfold.boltz1.check_install import check_boltz1
@@ -150,7 +155,7 @@ def run(args, config, defaults, config_file):
             run_json = ao.input_json
 
         if args.boltz1:
-            from abcfold.run_boltz import run_boltz
+            from abcfold.boltz1.run_boltz import run_boltz
 
             run_boltz(
                 input_json=run_json,
@@ -164,7 +169,7 @@ def run(args, config, defaults, config_file):
             outputs.append(bo)
 
         if args.chai1:
-            from abcfold.run_chai1 import run_chai
+            from abcfold.chai1.run_chai1 import run_chai
 
             template_hits_path = None
             if args.templates and args.mmseqs2:

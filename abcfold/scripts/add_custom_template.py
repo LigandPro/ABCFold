@@ -4,8 +4,8 @@ import json
 import logging
 import os
 
-from abcfold.abc_script_utils import get_custom_template
 from abcfold.argparse_utils import custom_template_argpase_util
+from abcfold.scripts.abc_script_utils import get_custom_template
 
 logger = logging.getLogger("logger")
 
@@ -32,14 +32,7 @@ def run_custom_template(
             # Can only add templates to protein sequences, so check if there
             # are multiple protein sequences in the input json
             if (
-                len(
-                    [
-                        x
-                        for x in af3_json["sequences"]
-                        if "protein" in x.keys()
-                    ]
-                )
-                > 1
+                len([x for x in af3_json["sequences"] if "protein" in x.keys()]) > 1
                 and not target_id
             ):
                 msg = "Multiple sequences found in input json. \
@@ -53,9 +46,7 @@ Please specify target id so that custom template can be added to the correct seq
                 msg = "If providing templates for multiple targets, the number of \
 target ids must match the number of custom templates and custom template chains"
                 raise ValueError(msg)
-            custom_templates = zip(
-                target_id, custom_template, custom_template_chain
-                )
+            custom_templates = zip(target_id, custom_template, custom_template_chain)
         else:
             if len(custom_template) != len(custom_template_chain):
                 msg = "Number of custom templates must match the number of \
@@ -67,9 +58,7 @@ custom template chains"
                 target_ids = [target_id[0]] * len(custom_template)
             else:
                 target_ids = [None] * len(custom_template)
-            custom_templates = zip(
-                target_ids, custom_template, custom_template_chain
-                )
+            custom_templates = zip(target_ids, custom_template, custom_template_chain)
 
         for i in custom_templates:
             tid, c_tem, c_tem_chn = i
@@ -78,7 +67,7 @@ custom template chains"
                 tid,
                 c_tem,
                 c_tem_chn,
-                )
+            )
 
     if to_file:
         if not output_json:

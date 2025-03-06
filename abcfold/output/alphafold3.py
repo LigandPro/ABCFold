@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Union
 
-from abcfold.processoutput.file_handlers import CifFile, ConfidenceJsonFile
-from abcfold.processoutput.utils import Af3Pae
+from abcfold.output.file_handlers import CifFile, ConfidenceJsonFile
+from abcfold.output.utils import Af3Pae
 
 
 class AlphafoldOutput:

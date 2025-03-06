@@ -14,7 +14,7 @@ except ImportError:
 
 @pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_generate_chai_command():
-    from abcfold.run_chai1 import generate_chai_command
+    from abcfold.chai1.run_chai1 import generate_chai_command
 
     input_fasta = "/road/to/nowhere.fasta"
     msa_dir = "/road/to/nowhere"
@@ -45,7 +45,7 @@ def test_generate_chai_command():
 )
 def test_run_chai(test_data):
     pytest.importorskip("chai_lab")
-    from abcfold.run_chai1 import run_chai
+    from abcfold.chai1.run_chai1 import run_chai
 
     with tempfile.TemporaryDirectory() as temp_dir:
         try:

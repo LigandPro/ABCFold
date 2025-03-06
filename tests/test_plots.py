@@ -1,9 +1,9 @@
 import tempfile
 from pathlib import Path
 
+from abcfold.html.html_utils import get_model_sequence_data
 from abcfold.plots.pae_plot import create_pae_plots
 from abcfold.plots.plddt_plot import plot_plddt
-from abcfold.plots.plotter import get_model_sequence_data
 
 
 def test_plddt_plot(output_objs):

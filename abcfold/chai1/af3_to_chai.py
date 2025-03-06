@@ -10,7 +10,7 @@ import pandas as pd
 import pyarrow as _  # noqa F401
 import requests
 
-from abcfold.processoutput.atoms import VANDERWALLS
+from abcfold.output.atoms import VANDERWALLS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

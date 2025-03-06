@@ -43,9 +43,11 @@ homepage = "https://github.com/rigdenlab/ABCFold"
 [tool.setuptools]
 packages = [
     "abcfold",
+    "abcfold.alphafold3",
     "abcfold.boltz1",
     "abcfold.chai1",
-    "abcfold.processoutput",
+    "abcfold.html",
+    "abcfold.output",
     "abcfold.plots",
     "abcfold.plots.pae-viewer-main",
     "abcfold.plots.pae-viewer-main.src",
@@ -56,6 +58,7 @@ packages = [
     "abcfold.plots.pae-viewer-main.standalone.css",
     "abcfold.plots.pae-viewer-main.standalone.js",
     "abcfold.plots.pae-viewer-main.standalone.libs",
+    "abcfold.scripts",
 
 ]
 include-package-data = true
@@ -65,8 +68,8 @@ abcfold = ["data/config.ini"]
 
 [project.scripts]
 abcfold = "abcfold.abcfold:main"
-mmseqs2msa = "abcfold.add_mmseqs_msa:main"
-custom_templates = "abcfold.add_custom_template:main"
+mmseqs2msa = "abcfold.scripts.add_mmseqs_msa:main"
+custom_templates = "abcfold.scripts.add_custom_template:main"
 
 [tool.flake8]
 max-line-length = 88

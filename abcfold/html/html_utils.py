@@ -9,11 +9,11 @@ import numpy as np
 from Bio.SeqUtils import seq1
 from jinja2 import Environment, FileSystemLoader
 
+from abcfold.output.alphafold3 import AlphafoldOutput
+from abcfold.output.boltz import BoltzOutput
+from abcfold.output.chai import ChaiOutput
 from abcfold.plots.pae_plot import create_pae_plots
 from abcfold.plots.plddt_plot import plot_plddt
-from abcfold.processoutput.alphafold3 import AlphafoldOutput
-from abcfold.processoutput.boltz import BoltzOutput
-from abcfold.processoutput.chai import ChaiOutput
 
 PORT = 8000
 
