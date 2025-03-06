@@ -4,6 +4,9 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
+AF3_VERSION = "3.0.0"
+
+
 def check_af3_install(interactive: bool = True) -> None:
     """
     Check if Alphafold3 is installed by running the help command

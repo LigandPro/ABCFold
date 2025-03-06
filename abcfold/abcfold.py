@@ -27,7 +27,7 @@ from abcfold.output.chai import ChaiOutput
 from abcfold.output.utils import (get_gap_indicies, insert_none_by_minus_one,
                                   make_dummy_m8_file)
 from abcfold.scripts.abc_script_utils import (check_input_json, make_dir,
-                                              setup_logger)
+                                              make_dummy_af3_db, setup_logger)
 from abcfold.scripts.add_mmseqs_msa import add_msa_to_json
 
 logger = setup_logger()
@@ -132,12 +132,21 @@ def run(args, config, defaults, config_file):
             run_json = Path(args.input_json)
 
         if args.alphafold3:
+            af3_database = args.database_dir
+            if args.mmseqs2 or (
+                any(
+                    seq["protein"]["unpairedMsa"] is not None
+                    or seq["protein"]["unpairedMsaPath"] is not None
+                    for seq in input_params["sequences"]
+                )
+            ):
+                af3_database = make_dummy_af3_db(temp_dir)
 
             run_alphafold3(
                 input_json=run_json,
                 output_dir=args.output_dir,
                 model_params=args.model_params,
-                database_dir=args.database_dir,
+                database_dir=af3_database,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
             )
@@ -329,6 +338,7 @@ view the output pages"
                 httpd.serve_forever()
         except KeyboardInterrupt:
             logger.info("Server stopped")
+            httpd.server_close()
             sys.exit(0)
 
 
