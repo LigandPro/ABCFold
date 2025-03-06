@@ -25,7 +25,8 @@ from abcfold.processoutput.alphafold3 import AlphafoldOutput
 from abcfold.processoutput.boltz import BoltzOutput
 from abcfold.processoutput.chai import ChaiOutput
 from abcfold.processoutput.utils import (get_gap_indicies,
-                                         insert_none_by_minus_one)
+                                         insert_none_by_minus_one,
+                                         make_dummy_m8_file)
 from abcfold.run_alphafold3 import run_alphafold3
 
 logger = setup_logger()
@@ -55,7 +56,7 @@ def run(args, config, defaults, config_file):
     args.output_dir = Path(args.output_dir)
 
     if args.mmseqs2:
-        logger.error("MMSeqs2 Selected, all other MSAs will be ignored")
+        logger.info("MMSeqs2 Selected, all other MSAs will be ignored")
 
     make_dir(args.output_dir, overwrite=args.override)
     make_dir(args.output_dir.joinpath(PLOTS_DIR))
@@ -117,6 +118,7 @@ def run(args, config, defaults, config_file):
                 input_json=input_json,
                 templates=args.templates,
                 num_templates=args.num_templates,
+                chai_template_output=temp_dir.joinpath("all_chains.m8"),
                 custom_template=args.custom_template,
                 custom_template_chain=args.custom_template_chain,
                 target_id=args.target_id,
@@ -175,6 +177,14 @@ by default"
         if args.chai1:
             from abcfold.run_chai1 import run_chai
 
+            template_hits_path = None
+            if args.templates and args.mmseqs2:
+                template_hits_path = temp_dir.joinpath("all_chain.m8")
+            elif args.use_af3_template_search:
+                # Find the templates from the AlphaFold3 output
+                # Create a dummy m8 file to pass to Chai-1
+                template_hits_path = make_dummy_m8_file(run_json, temp_dir)
+
             chai_output_dir = args.output_dir.joinpath("chai1")
             run_chai(
                 input_json=run_json,
@@ -182,6 +192,7 @@ by default"
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
+                template_hits_path=template_hits_path,
             )
 
             co = ChaiOutput(chai_output_dir, input_params, name)

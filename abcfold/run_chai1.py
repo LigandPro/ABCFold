@@ -1,4 +1,5 @@
 import logging
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -18,6 +19,8 @@ def run_chai(
     test: bool = False,
     number_of_models: int = 5,
     num_recycles: int = 10,
+    use_templates_server: bool = False,
+    template_hits_path: Path | None = None,
 ) -> None:
     """
     Run Chai-1 using the input JSON file
@@ -29,6 +32,9 @@ def run_chai(
         directory
         test (bool): If True, run the test command
         number_of_models (int): Number of models to generate
+        num_recycles (int): Number of trunk recycles
+        use_templates_server (bool): If True, use templates from the server
+        template_hits_path (Path): Path to the template hits m8 file
 
     Returns:
         None
@@ -60,6 +66,7 @@ def run_chai(
                 output_dir,
                 number_of_models,
                 num_recycles=num_recycles,
+                use_templates_server=use_templates_server,
             )
             if not test
             else generate_chai_test_command()
@@ -87,6 +94,8 @@ def generate_chai_command(
     output_dir: Union[str, Path],
     number_of_models: int = 5,
     num_recycles: int = 10,
+    use_templates_server: bool = False,
+    template_hits_path: Path | None = None,
 ) -> list:
     """
     Generate the Chai-1 command
@@ -97,6 +106,9 @@ def generate_chai_command(
         input_constraints (Union[str, Path]): Path to the input constraints file
         output_dir (Union[str, Path]): Path to the output directory
         number_of_models (int): Number of models to generate
+        num_recycles (int): Number of trunk recycles
+        use_templates_server (bool): If True, use templates from the server
+        template_hits_path (Path): Path to the template hits m8 file
 
     Returns:
         list: The Chai-1 command
@@ -113,6 +125,22 @@ def generate_chai_command(
 
     cmd += ["--num-diffn-samples", str(number_of_models)]
     cmd += ["--num-trunk-recycles", str(num_recycles)]
+
+    assert not(
+        use_templates_server and template_hits_path
+        ), "Cannot specify both templates server and path"
+
+    if shutil.which("kalign") is None:
+        logger.warning(
+            "kalign not found, skipping template search kalign is required. \
+            Please install kalign to use templates with Chai-1."
+        )
+    else:
+        if use_templates_server:
+            cmd += ["--use-templates-server"]
+        if template_hits_path:
+            cmd += ["--template-hits-path", str(template_hits_path)]
+
     cmd += [str(output_dir)]
 
     return cmd
