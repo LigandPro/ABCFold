@@ -19,7 +19,7 @@ def test_alphafold3_script():
 
 def test_add_custom_template_script():
     with subprocess.Popen(
-        "python -m abcfold.add_custom_template --help",
+        "python -m abcfold.scripts.add_custom_template --help",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -33,7 +33,7 @@ def test_add_custom_template_script():
 
 def test_add_mmseqs_msa_script():
     with subprocess.Popen(
-        "python -m abcfold.add_mmseqs_msa --help",
+        "python -m abcfold.scripts.add_mmseqs_msa --help",
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
