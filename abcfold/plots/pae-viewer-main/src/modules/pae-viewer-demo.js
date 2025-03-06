@@ -7,7 +7,6 @@ import {readCrosslinks} from "./read-crosslinks.js";
 import {readScores} from "./read-scores.js";
 import {readStructure} from "./read-structure.js";
 
-new bootstrap.Modal(document.getElementById('cookieConsent')).show();
 
 const toast = document.querySelector('.toast-pae-max-warning');
 const maxPaeWarning = new bootstrap.Toast(toast);

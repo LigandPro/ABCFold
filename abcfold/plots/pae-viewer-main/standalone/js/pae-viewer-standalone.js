@@ -7,7 +7,6 @@ import {readScores} from "../../src/modules/read-scores.js";
 import {readStructure} from "../../src/modules/read-structure.js";
 import * as Utils from "../../src/modules/utils.js";
 
-new bootstrap.Modal(document.getElementById('cookieConsent')).show();
 
 const toast = document.querySelector('.toast-pae-max-warning');
 const maxPaeWarning = new bootstrap.Toast(toast);
