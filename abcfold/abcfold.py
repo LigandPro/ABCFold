@@ -169,11 +169,8 @@ def run(args, config, defaults, config_file):
             template_hits_path = None
             if args.templates and args.mmseqs2:
                 template_hits_path = temp_dir.joinpath("all_chain.m8")
-            elif args.use_af3_template_search or args.templates:
-                # Find the templates from the AlphaFold3 output
-                # or templates from mmseqs
-                # Create a dummy m8 file to pass to Chai-1
-                template_hits_path = make_dummy_m8_file(run_json, temp_dir)
+
+            template_hits_path = make_dummy_m8_file(run_json, temp_dir)
 
             chai_output_dir = args.output_dir.joinpath("chai1")
             run_chai(
