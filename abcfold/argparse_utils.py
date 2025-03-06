@@ -1,3 +1,10 @@
+import logging
+import sys
+from pathlib import Path
+
+logger = logging.getLogger("logger")
+
+
 def main_argpase_util(parser):
     parser.add_argument("input_json", help="Input sequence file")
     parser.add_argument("output_dir", help="Output directory")
@@ -26,14 +33,16 @@ def mmseqs2_argparse_util(parser):
 
 def custom_template_argpase_util(parser):
     parser.add_argument(
-        "--target_id", nargs='+',
-        help="Target id relating to the custom template")
-    parser.add_argument(
-        "--custom_template", nargs='+',
-        help="Custom template to include in the output json"
+        "--target_id", nargs="+", help="Target id relating to the custom template"
     )
     parser.add_argument(
-        "--custom_template_chain", nargs='+',
+        "--custom_template",
+        nargs="+",
+        help="Custom template to include in the output json",
+    )
+    parser.add_argument(
+        "--custom_template_chain",
+        nargs="+",
         help="Custom template chain to include in the output json",
     )
 
@@ -117,7 +126,8 @@ def alphafold_argparse_util(parser):
     parser.add_argument(
         "--use_af3_template_search",
         action="store_true",
-        help="If providing your own MSA, allow Alphafold3 to search for templates",
+        help="If providing your own custom MSA or the you've ran `--mmseqs`, allow \
+Alphafold3 to search for templates",
     )
 
     return parser
@@ -137,3 +147,59 @@ def visuals_argparse_util(parser):
 stil generated and is accessible in the output directory",
     )
     return parser
+
+
+def raise_argument_errors(args):
+    if not args.alphafold3 and not args.boltz1 and not args.chai1:
+        logger.info(
+            "Neither AlphaFold3, Boltz-1, or Chai-1 selected. Running AlphaFold3 \
+by default"
+        )
+        args.alphafold3 = True
+
+    if (
+        args.alphafold3
+        and (not args.database_dir or not Path(args.database_dir).exists())
+        and not args.mmseqs2
+    ):
+        logger.error(f"Database directory not found: {args.database_dir}")
+        sys.exit(1)
+    elif (
+        args.alphafold3
+        and (not args.model_params or not Path(args.model_params).exists())
+        and not args.mmseqs2
+    ):
+        logger.error(f"Model parameters directory not found: {args.model_params}")
+        sys.exit(1)
+
+    if args.templates and not args.mmseqs2:
+        logger.error("Cannot include templates without using MMseqs2")
+        sys.exit(1)
+
+    if args.custom_template_chain and not args.custom_template:
+        logger.error("Custom template chain provided without a custom template")
+        sys.exit(1)
+
+    if args.use_af3_template and not args.alphafold3:
+        logger.error(
+            "Cannot use the Alphafold3 template search without running Alphafold3"
+        )
+        sys.exit(1)
+
+    if args.num_templates < 1:
+        logger.error("Number of templates must be greater than 0")
+        sys.exit(1)
+
+    if args.num_recycles < 1:
+        logger.error("Number of recycles must be greater than 0")
+        sys.exit(1)
+
+    if args.number_of_models < 1:
+        logger.error("Number of models must be greater than 0")
+        sys.exit(1)
+
+    if args.num_templates and not args.templates:
+        logger.error("Number of templates provided without including templates")
+        sys.exit(1)
+
+    return args

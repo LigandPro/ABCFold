@@ -15,6 +15,7 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util,
                                     prediction_argparse_util,
+                                    raise_argument_errors,
                                     visuals_argparse_util)
 from abcfold.plots.plotter import (PORT, NoCacheHTTPRequestHandler,
                                    get_all_cif_files, get_model_data,
@@ -62,23 +63,17 @@ def run(args, config, defaults, config_file):
     make_dir(args.output_dir.joinpath(PLOTS_DIR))
 
     updated_config = False
-    if args.model_params != defaults["model_params"]:
+    if args.model_params is not None and args.model_params != defaults["model_params"]:
         config.set("Databases", "model_params", args.model_params)
         updated_config = True
-    if args.database_dir != defaults["database_dir"]:
+    if args.database_dir is not None and args.database_dir != defaults["database_dir"]:
         config.set("Databases", "database_dir", args.database_dir)
         updated_config = True
     if updated_config:
         with open(config_file, "w") as f:
             config.write(f)
 
-    if not args.database_dir or not Path(args.database_dir).exists():
-        logger.error(f"Database directory not found: {args.database_dir}")
-        sys.exit(1)
-    elif not args.model_params or not Path(args.model_params).exists():
-        logger.error(f"Model parameters directory not found: {args.model_params}")
-        sys.exit(1)
-
+    args = raise_argument_errors(args)
     # Ensure that the input json file is valid
     args.input_json = check_input_json(
         args.input_json,
@@ -98,6 +93,7 @@ def run(args, config, defaults, config_file):
         from abcfold.boltz1.check_install import check_boltz1
 
         check_boltz1()
+
     if args.chai1:
         from abcfold.chai1.check_install import check_chai1
 
@@ -129,13 +125,6 @@ def run(args, config, defaults, config_file):
 
         else:
             run_json = Path(args.input_json)
-
-        if not args.alphafold3 and not args.boltz1 and not args.chai1:
-            logger.info(
-                "Neither AlphaFold3, Boltz-1, or Chai-1 selected. Running AlphaFold3 \
-by default"
-            )
-            args.alphafold3 = True
 
         if args.alphafold3:
 
@@ -180,8 +169,9 @@ by default"
             template_hits_path = None
             if args.templates and args.mmseqs2:
                 template_hits_path = temp_dir.joinpath("all_chain.m8")
-            elif args.use_af3_template_search:
+            elif args.use_af3_template_search or args.templates:
                 # Find the templates from the AlphaFold3 output
+                # or templates from mmseqs
                 # Create a dummy m8 file to pass to Chai-1
                 template_hits_path = make_dummy_m8_file(run_json, temp_dir)
 
