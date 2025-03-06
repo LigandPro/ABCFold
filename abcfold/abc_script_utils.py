@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 import time
 from io import StringIO
 from pathlib import Path
@@ -333,10 +334,15 @@ def check_input_json(
 
     for sequence in input_data["sequences"]:
         for sequence_type in sequence:
-            if (
-                "unpairedMsa" in sequence[sequence_type]
-                or "unpairedMsaPath" in sequence[sequence_type]
-            ):
+            if "unpairedMsaPath" in sequence[sequence_type]:
+                msa_path = sequence[sequence_type]["unpairedMsaPath"]
+                if not os.path.exists(msa_path):
+                    logger.error(f"MSA file {msa_path} not found")
+                    sys.exit(1)
+                with open(msa_path, "r") as f:
+                    msa = f.read()
+                sequence[sequence_type]["unpairedMsa"] = msa
+            if "unpairedMsa" in sequence[sequence_type]:
                 if "templates" not in sequence[sequence_type]:
 
                     sequence[sequence_type]["templates"] = (
