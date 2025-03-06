@@ -288,18 +288,23 @@ def make_dummy_m8_file(run_json, output_dir):
     for sequence in input_json["sequences"]:
         if "protein" not in sequence:
             continue
-        for id in sequence["protein"]["id"]:
+        for id_ in sequence["protein"]["id"]:
             for template in sequence["protein"]["templates"]:
-                if id in templates:
-                    templates[id].append(template['mmcif'].split('\n')[0].split('_')[1])
+                if id_ in templates:
+                    templates[id_].append(
+                        template["mmcif"].split("\n")[0].split("_")[1]
+                    )
                 else:
-                    templates[id] = [template['mmcif'].split('\n')[0].split('_')[1]]
+                    templates[id_] = [template["mmcif"].split("\n")[0].split("_")[1]]
 
     m8_file = output_dir / "dummy.m8"
+    if not templates:
+        return None
     table = []
-    for id in templates:
+
+    for id_ in templates:
         for template in templates[id]:
             table.append([id, template, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    pd.DataFrame(table).to_csv(m8_file, sep='\t', header=False, index=False)
+    pd.DataFrame(table).to_csv(m8_file, sep="\t", header=False, index=False)
 
     return m8_file
