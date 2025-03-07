@@ -1,9 +1,8 @@
 import argparse
 
-from af3_mmseqs2.argparse_utils import (alphafold_argparse_util,
-                                        custom_template_argpase_util,
-                                        main_argpase_util,
-                                        mmseqs2_argparse_util)
+from abcfold.argparse_utils import (alphafold_argparse_util,
+                                    custom_template_argpase_util,
+                                    main_argpase_util, mmseqs2_argparse_util)
 
 
 def test_mmseqs2_argparse_util():
@@ -28,9 +27,31 @@ def test_custom_template_argpase_util():
             "B",
         ]
     )
-    assert args.target_id == "A"
-    assert args.custom_template == "test_data/test_6BJ9_cif"
-    assert args.custom_template_chain == "B"
+    assert args.target_id == ["A"]
+    assert args.custom_template == ["test_data/test_6BJ9_cif"]
+    assert args.custom_template_chain == ["B"]
+
+
+def test_custom_template_argpase_util_2():
+    parser = argparse.ArgumentParser()
+    parser = custom_template_argpase_util(parser)
+    args = parser.parse_args(
+        [
+            "--target_id",
+            "A",
+            "B",
+            "--custom_template",
+            "test_data/test_6BJ9_cif",
+            "test_data/test_6BJ9_cif",
+            "--custom_template_chain",
+            "A",
+            "B",
+        ]
+    )
+    assert args.target_id == ["A", "B"]
+    assert args.custom_template == ["test_data/test_6BJ9_cif",
+                                    "test_data/test_6BJ9_cif"]
+    assert args.custom_template_chain == ["A", "B"]
 
 
 def test_af3_argparse_main(test_data):

@@ -3,7 +3,7 @@
     "modelSeeds": [1],
     "sequences": [
       {
-        "dna": {
+        "rna": {
           "id": "A",
           "sequence": "AGCU"
         }

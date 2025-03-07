@@ -1,0 +1,2 @@
+recursive-include abcfold *.js *.css *.html *.svg *.png *.jinja2
+recursive-include abcfold/plots/pae-viewer-main/src/templates *.tpl

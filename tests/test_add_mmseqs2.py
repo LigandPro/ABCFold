@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from af3_mmseqs2.add_mmseqs_msa import (MMseqs2Exception, add_msa_to_json,
-                                        fetch_mmcif, run_mmseqs)
+from abcfold.scripts.add_mmseqs_msa import (MMseqs2Exception, add_msa_to_json,
+                                            fetch_mmcif, run_mmseqs)
 
 
 def test_add_msa_to_json(test_data):
@@ -15,10 +15,11 @@ def test_add_msa_to_json(test_data):
         input_json=test_data.test_inputA_json,
         templates=test_data.test_6BJ9_cif,
         num_templates=20,
+        chai_template_output=None,
         custom_template=None,
         custom_template_chain=None,
         target_id=None,
-        af3_json=None,
+        input_params=None,
         output_json=None,
     )
 
@@ -33,10 +34,11 @@ def test_add_msa_to_json(test_data):
             input_json=test_data.test_inputA_json,
             templates=None,
             num_templates=20,
+            chai_template_output=None,
             custom_template=None,
             custom_template_chain=None,
             target_id=None,
-            af3_json=input_dict,
+            input_params=input_dict,
             output_json=tmpdir / "output.json",
         )
 
@@ -52,10 +54,11 @@ def test_add_msa_to_json(test_data):
                 input_json=test_data.test_inputAB_json,
                 templates=None,
                 num_templates=20,
-                custom_template=test_data.test_6BJ9_cif,
-                custom_template_chain=None,
+                chai_template_output=None,
+                custom_template=[test_data.test_6BJ9_cif],
+                custom_template_chain=[None],
                 target_id=None,
-                af3_json=input_dict,
+                input_params=input_dict,
                 output_json=tmpdir / "output.json",
             )
         with pytest.raises(FileNotFoundError):
@@ -63,10 +66,11 @@ def test_add_msa_to_json(test_data):
                 input_json=test_data.test_inputAB_json,
                 templates=None,
                 num_templates=20,
-                custom_template="road/to/nowhere",
-                custom_template_chain=None,
+                chai_template_output=None,
+                custom_template=["road/to/nowhere"],
+                custom_template_chain=[None],
                 target_id=None,
-                af3_json=input_dict,
+                input_params=input_dict,
                 output_json=tmpdir / "output.json",
             )
 

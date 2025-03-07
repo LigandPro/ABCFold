@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from af3_mmseqs2.add_custom_template import main, run_custom_template
-from af3_mmseqs2.af3_script_utils import get_custom_template
+from abcfold.scripts.abc_script_utils import get_custom_template
+from abcfold.scripts.add_custom_template import main, run_custom_template
 
 
 def test_get_custom_template(test_data):
@@ -104,9 +104,9 @@ def test_run_custom_template(test_data):
         output_json = tmpdir / "output.json"
         run_custom_template(
             test_data.test_inputA_json,
-            "A",
-            test_data.test_6BJ9_cif,
-            "B",
+            ["A"],
+            [test_data.test_6BJ9_cif],
+            ["B"],
             output_json=output_json,
             to_file=True,
         )
@@ -114,18 +114,18 @@ def test_run_custom_template(test_data):
 
         run_custom_template(
             tmpdir / "input.json",
-            "A",
-            test_data.test_6BJ9_cif,
-            "B",
+            ["A"],
+            [test_data.test_6BJ9_cif],
+            ["B"],
             output_json=None,
             to_file=True,
         )
 
         run_custom_template(
             test_data.test_inputRNA_json,
-            "A",
-            test_data.test_6BJ9_cif,
-            "B",
+            ["A"],
+            [test_data.test_6BJ9_cif],
+            ["B"],
             output_json=output_json,
             to_file=True,
         )
@@ -133,9 +133,9 @@ def test_run_custom_template(test_data):
     with pytest.raises(FileNotFoundError):
         run_custom_template(
             test_data.test_inputA_json,
-            "A",
-            "road/to/nowhere",
-            "C",
+            ["A"],
+            ["road/to/nowhere"],
+            ["C"],
             output_json=None,
             to_file=False,
         )

@@ -1,0 +1,15 @@
+{
+    "name": "DNA_example",
+    "modelSeeds": [1],
+    "sequences": [
+      {
+        "dna": {
+          "id": ["A", "B"],
+          "sequence": "AGCT"
+        }
+      }
+    ],
+
+    "dialect": "alphafold3",
+    "version": 1
+  }

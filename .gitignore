@@ -10,3 +10,10 @@ build/
 .coverage
 
 .vscode/
+
+.history/
+
+
+# pip packages
+dist/
+*.egg-info/

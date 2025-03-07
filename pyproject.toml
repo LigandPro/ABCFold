@@ -3,9 +3,9 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "af3_mmseqs2"
-version = "0.1.0"
-description = "Alphafold3 input processing tools"
+name = "ABCFold"
+version = "1.0.0"
+description = "Input processing tools for AlphaFold3, Boltz-1 and Chai-1"
 readme = "README.md"
 license = { text = "BSD License" }
 authors = [
@@ -24,30 +24,52 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
-    "numpy",
+    "numpy==1.26.4",
     "colorama",
     "tqdm",
     "biopython==1.84",
     "requests",
     "types-requests",
-    "gemmi==0.7.0",
-    "pandas",
+    "pandas==2.2.3",
+    "plotly",
+    "jinja2",
+    "pyarrow==19.0.1",
+
 ]
 
 [project.urls]
-homepage = "https://github.com/rigdenlab/af3_mmseqs_scripts"
+homepage = "https://github.com/rigdenlab/ABCFold"
 
 [tool.setuptools]
-packages = ["af3_mmseqs2", "af3_mmseqs2.boltz1"]
+packages = [
+    "abcfold",
+    "abcfold.alphafold3",
+    "abcfold.boltz1",
+    "abcfold.chai1",
+    "abcfold.html",
+    "abcfold.output",
+    "abcfold.plots",
+    "abcfold.plots.pae-viewer-main",
+    "abcfold.plots.pae-viewer-main.src",
+    "abcfold.plots.pae-viewer-main.src.css",
+    "abcfold.plots.pae-viewer-main.src.modules",
+    "abcfold.plots.pae-viewer-main.src.templates",
+    "abcfold.plots.pae-viewer-main.standalone",
+    "abcfold.plots.pae-viewer-main.standalone.css",
+    "abcfold.plots.pae-viewer-main.standalone.js",
+    "abcfold.plots.pae-viewer-main.standalone.libs",
+    "abcfold.scripts",
+
+]
 include-package-data = true
 
 [tool.setuptools.package-data]
-af3_mmseqs2 = ["data/config.ini"]
+abcfold = ["data/config.ini"]
 
 [project.scripts]
-alphafold3 = "af3_mmseqs2.alphafold3:main"
-mmseqs2msa = "af3_mmseqs2.add_mmseqs_msa:main"
-custom_templates = "af3_mmseqs2.add_custom_template:main"
+abcfold = "abcfold.abcfold:main"
+mmseqs2msa = "abcfold.scripts.add_mmseqs_msa:main"
+custom_templates = "abcfold.scripts.add_custom_template:main"
 
 [tool.flake8]
 max-line-length = 88
