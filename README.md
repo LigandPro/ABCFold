@@ -57,7 +57,7 @@ python -m pre-commit install
 
 ### Running ABCfold
 
-This script will run Alphafold3, Boltz-1 and Chai-1 consecutively. The program takes an input of a json in the Alphafold3 format only. E.g.
+ABCFold will run Alphafold3, Boltz-1 and Chai-1 consecutively. The program takes an input of a JSON in the Alphafold3 format (For full instruction on how to format this, click [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/input.md)). An example JSON is shown below:
 
 ```json
 {
@@ -76,13 +76,24 @@ This script will run Alphafold3, Boltz-1 and Chai-1 consecutively. The program t
 }
 ```
 
-
 Please make sure you have AlphaFold3 installed on your system (Instructions [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/installation.md)) and have procured the model parameters. Boltz-1 and Chai-1 are installed upon runtime.
 
+For the majority of jobs, ABCFold can be run as follows:
 ```bash
-abcfold <input_json>  <output_dir> -abc --mmseqs2
-
+abcfold <input_json>  <output_dir> -abc --mmseqs2 --model_params <path_to_af3_model_params>
 ```
+> [!NOTE]
+> `--model_params` is stored after the first run, therefore subsequent ABCFold jobs don't require this flag.
+
+> [!NOTE]
+> If you wish to run ABCFold with the AlphaFold3 JACKHMMER MSA search, you need to remove the `--mmseqs2` flag and provide the `--database` flag with the path to the directory containing the AlphaFold3 databases.
+> The `--database` path will also be stored after the first run and won't be required in subsequent ABCFold jobs.
+
+>[!WARNING]
+>`--model_params` and `--database` will need to be provided again if you do a fresh install.
+
+However, there you may wish to use the following flags to add run time options such as the use of templates, or the number of models to create.
+
 #### Main arguments
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
 - `<output_dir>`: Path to the output directory.
@@ -104,7 +115,7 @@ abcfold <input_json>  <output_dir> -abc --mmseqs2
 
 - `--custom_template`: [optional] Path to a custom template file in mmCIF format or a list of custom templates. A more detailed decription on how to use the custom template argument can be found below Visualisation arguments.
 - `--custom_template_chain`: [conditionally required] The chain ID of the chain to use in your custom template, only required if using a multi-chain template. If providing a list of custom templates, you will need to provide a list of custom template chains.
-- `--target_id`: [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex. If providing a list of custom templates, if they all relate to the same target you can provide a single target ID, otherwise, you should provide a list of target IDs corresponding to the list of custom templates.
+- `--target_id`: [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex. If providing a list of custom templates, you can provide a single target ID if they all relate to the same target. Otherwise, you should provide a list of target IDs corresponding to the list of custom templates.
 
 #### Visualisation arguments
 - `--no_server`: [optional] Flag to not run the server for the output page (see below) but the pages are created , useful for running on a cluster.
@@ -151,7 +162,10 @@ you will find `open_output.py` in your `<output_dir>`. This needs to be run from
 
 ## Extra Features
 
-Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 input JSON files but will not run the folding software.
+Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 input JSON files.
+
+> [!WARNING]
+> These scripts will only modify the input JSON files, I.E. they will NOT run AlphaFold3, Boltz-1 and Chai-1.
 
 ### Adding MMseqs2 MSAs and templates
 
@@ -198,7 +212,7 @@ custom_templates --input_json <input_json> --output_json <output_json> --custom_
 - `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_custom_template.json).
 - `<custom_template>`: [optional] Path to a custom template file in mmCIF format or a list of custom templates.
 - `<custom_template_chain>`: [conditionally required] The chain ID of the chain to use in your custom template, only required if using a multi-chain template. If providing a list of custom templates, you will need to provide a list of custom template chains.
-- `<target_id>`: [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex. If providing a list of custom templates, if they all relate to the same target you can provide a single target ID, otherwise, you should provide a list of target IDs corresponding to the list of custom templates.
+- `<target_id>`: [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex. If providing a list of custom templates, you can provide a single target ID if they all relate to the same target. Otherwise, you should provide a list of target IDs corresponding to the list of custom templates.
 
 
 #### add_mmseqs_msa.py
@@ -214,7 +228,7 @@ mmseqs2msa --input_json <input_json> --output_json <output_json> --templates --n
 - `<num_templates>`: [optional] The number of templates to use (default: 20)
 - `<custom_template>`: [optional] Path to a custom template file in mmCIF format or a list of custom templates.
 - `<custom_template_chain>`: [conditionally required] The chain ID of the chain to use in your custom template, only required if using a multi-chain template. If providing a list of custom templates, you will need to provide a list of custom template chains.
-- `<target_id>`: [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex. If providing a list of custom templates, if they all relate to the same target you can provide a single target ID, otherwise, you should provide a list of target IDs corresponding to the list of custom templates.
+- `<target_id>`: [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex. If providing a list of custom templates, you can provide a single target ID if they all relate to the same target. Otherwise, you should provide a list of target IDs corresponding to the list of custom templates.
 
 
 ### Common Issues
