@@ -94,8 +94,9 @@ abcfold <input_json>  <output_dir> -abc --mmseqs2
 #### Alphafold3 arguments
 
 - `--model_params`: Path to the directory containing the AlphaFold3 model parameters.
-- `--database`: Path to the directory containing the AlphaFold3 databases #Note: This is not used if using the
+- `--database`: [optional] Path to the directory containing the AlphaFold3 databases #Note: This is not used if using the
 `--mmseqs2` flag.
+- `--use_af3_template_search`[optional] If providing your own custom MSA or you've ran `--mmseqs`, allow Alphafold3 to search for templates
 
 #### Template and MSA arguments
 
