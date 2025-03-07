@@ -126,7 +126,7 @@ def alphafold_argparse_util(parser):
     parser.add_argument(
         "--use_af3_template_search",
         action="store_true",
-        help="If providing your own custom MSA or the you've ran `--mmseqs`, allow \
+        help="If providing your own custom MSA or you've ran `--mmseqs`, allow \
 Alphafold3 to search for templates",
     )
 
