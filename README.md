@@ -138,10 +138,10 @@ python <output_dir>/open_output.py
 
 
 ## Main Page Example
-![main_page_example](abcfold/html/static/main_page_example.png)
+![main_page_example](https://raw.githubusercontent.com/rigdenlab/ABCFold/refs/heads/main/abcfold/html/static/main_page_example.png)
 
 ## PAE Viewer example
-![pae_viewer_example](abcfold/html/static/pae_viewer_example.png)
+![pae_viewer_example](https://raw.githubusercontent.com/rigdenlab/ABCFold/refs/heads/main/abcfold/html/static/pae_viewer_example.png)
 
 The output page will be available on `http://localhost:8000/index.html`. If you need to rerun the server to create the output,
 you will find `open_output.py` in your `<output_dir>`. This needs to be run from your `<output_dir>`.
