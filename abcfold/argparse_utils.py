@@ -198,8 +198,4 @@ by default"
         logger.error("Number of models must be greater than 0")
         sys.exit(1)
 
-    if args.num_templates and not args.templates:
-        logger.error("Number of templates provided without including templates")
-        sys.exit(1)
-
     return args
