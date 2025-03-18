@@ -15,7 +15,7 @@ def run_alphafold3(
     interactive: bool = False,
     number_of_models: int = 5,
     num_recycles: int = 10,
-) -> None:
+) -> bool:
     """
     Run Alphafold3 using the input JSON file
 
@@ -28,7 +28,7 @@ def run_alphafold3(
         number_of_models (int): Number of models to generate
 
     Returns:
-        None
+        Bool: True if the Alphafold3 run was successful, False otherwise
 
     Raises:
         subprocess.CalledProcessError: If the Alphafold3 command returns an error
@@ -54,9 +54,15 @@ def run_alphafold3(
         _, stderr = p.communicate()
         if p.returncode != 0:
             logger.error(stderr.decode())
-            raise subprocess.CalledProcessError(p.returncode, cmd, stderr)
+            output_err_file = output_dir / "af3_error.log"
+            with open(output_err_file, "w") as f:
+                f.write(stderr.decode())
+            logger.error("Alphafold3 run failed. Error log is in %s", output_err_file)
+            return False
+
     logger.info("Alphafold3 run complete")
     logger.info("Output files are in %s", output_dir)
+    return True
 
 
 def generate_af3_cmd(
