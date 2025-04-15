@@ -19,7 +19,7 @@ For instructions on installing micromamba, check their website [here](https://ma
 
 To set up a micromamba environment, run:
 ```bash
-micromamba env create -n abcfold python=3.11 -y
+micromamba create -n abcfold python=3.11 -y
 micromamba activate abcfold
 ```
 
