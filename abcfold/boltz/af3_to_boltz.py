@@ -251,10 +251,11 @@ class BoltzYaml:
             parts = [
                 f"'{item}'" if isinstance(item, str) else str(item) for item in value
             ]
-            formatted = "[" + ", ".join(parts) + "]"
-        else:
-            formatted = f'"{value}"'
-        return f"{DELIM}{DELIM}{key}: {formatted}\n"
+            value = "[" + ", ".join(parts) + "]"
+        if key == "smiles":
+            val = value.replace('"', '\\"')
+            value = f'"{val}"'
+        return f"{DELIM}{DELIM}{key}: {value}\n"
 
     def add_ligand_information(self, ligand_dict: dict, linked_id=None):
         """
