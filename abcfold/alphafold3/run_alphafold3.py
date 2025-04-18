@@ -22,6 +22,7 @@ def run_alphafold3(
     number_of_models: int = 5,
     num_recycles: int = 10,
     save_distogram: bool = False,
+    gpus: str = "all",
 ) -> bool:
     """
     Run Alphafold3 using the input JSON file
@@ -62,6 +63,7 @@ def run_alphafold3(
         number_of_models=number_of_models,
         num_recycles=num_recycles,
         save_distogram=save_distogram,
+        gpus=gpus,
     )
 
     logger.info("Running Alphafold3")
@@ -142,6 +144,7 @@ def generate_af3_cmd(
     num_recycles: int = 5,
     interactive: bool = False,
     save_distogram: bool = False,
+    gpus: str = "all",
 ) -> str:
     """
     Generate the Alphafold3 command
@@ -164,10 +167,20 @@ def generate_af3_cmd(
     input_json = Path(input_json)
     output_dir = Path(output_dir)
 
+    gpu_flag = ""
+    if gpus == "cpu":
+        gpu_flag = ""
+    elif gpus == "all":
+        gpu_flag = "--gpus all"
+    else:
+        gpu_ids = [g.strip() for g in gpus.split(",")]
+        gpu_flag = f'--gpus "device={",".join(gpu_ids)}"'
+
     if sif_path is not None and sif_path != "None":
+        singularity_gpu_flag = "--nv" if gpus != "cpu" else ""
         return f"""
         singularity exec \
-        --nv \
+        {singularity_gpu_flag} \
         --bind {input_json.parent.resolve()}:/root/af_input \
         --bind {output_dir.resolve()}:/root/af_output \
         --bind {model_params}:/root/models \
@@ -190,7 +203,7 @@ def generate_af3_cmd(
         --volume {output_dir.resolve()}:/root/af_output \
         --volume {model_params}:/root/models \
         --volume {database_dir}:/root/public_databases \
-        --gpus all \
+        {gpu_flag} \
         {config["af3_docker_env"]} \
         python run_alphafold.py \
         --json_path=/root/af_input/{input_json.name} \

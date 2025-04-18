@@ -165,7 +165,8 @@ def run(args, config, defaults, config_file):
                 num_recycles=args.num_recycles,
                 sif_path=af3_sif,
                 save_distogram=args.save_distogram,
-                config=rt_config
+                gpus=args.gpus,
+                config=rt_config,
             )
 
             if af3_success:
@@ -191,7 +192,8 @@ def run(args, config, defaults, config_file):
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
-                config=rt_config
+                gpus=args.gpus,
+                config=rt_config,
             )
 
             if boltz_success:
@@ -216,7 +218,8 @@ def run(args, config, defaults, config_file):
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
                 template_hits_path=template_hits_path,
-                config=rt_config
+                device=args.gpus,
+                config=rt_config,
             )
 
             if chai_success:

@@ -10,6 +10,21 @@ from abcfold.boltz.check_install import ensure_boltz_env
 logger = logging.getLogger("logger")
 
 
+def normalize_gpus(gpus: str) -> str | None:
+    if gpus == "cpu":
+        return ""
+    if gpus == "all":
+        return None
+
+    gpu_ids = []
+    for gpu in gpus.split(","):
+        gpu = gpu.strip()
+        if not gpu.isdigit():
+            raise ValueError(f"Invalid GPU ID: {gpu}")
+        gpu_ids.append(gpu)
+    return ",".join(gpu_ids)
+
+
 def run_boltz(
     input_json: Union[str, Path],
     output_dir: Union[str, Path],
@@ -18,6 +33,7 @@ def run_boltz(
     test: bool = False,
     number_of_models: int = 5,
     num_recycles: int = 10,
+    gpus: str = "all",
 ) -> bool:
     """
     Run Boltz using the input JSON file
@@ -74,6 +90,9 @@ def run_boltz(
             )
 
             try:
+                cuda_devices = normalize_gpus(gpus)
+                if not test and cuda_devices is not None:
+                    cmd = ["env", f"CUDA_VISIBLE_DEVICES={cuda_devices}", *cmd]
                 stdout = env.run(cmd, capture_output=True)
 
                 # Check for out-of-memory warnings
@@ -81,6 +100,9 @@ def run_boltz(
                     logger.error("Boltz ran out of memory")
                     return False
 
+            except ValueError as e:
+                logger.error("Invalid GPU configuration: %s", e)
+                return False
             except subprocess.CalledProcessError as e:
                 stderr = e.stderr or ""
                 if stderr:

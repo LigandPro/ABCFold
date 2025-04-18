@@ -38,6 +38,12 @@ def main_argpase_util(parser):
         can be used to run subsequent runs of ABCFold with the same input features \
         (e.g. MSA)"),
     )
+    parser.add_argument(
+        "--gpus",
+        type=str,
+        default="all",
+        help="GPU device(s) to use, e.g. 'all', '0', '0,1', 'cpu'",
+    )
 
     return parser
 

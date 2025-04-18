@@ -13,6 +13,26 @@ logger = logging.getLogger("logger")
 os.environ["DISABLE_PANDERA_IMPORT_WARNING"] = "True"
 
 
+def normalize_device(gpus: str | None) -> str | None:
+    if gpus is None:
+        return None
+    if gpus == "cpu":
+        return "cpu"
+    if gpus == "all":
+        return "cuda"
+
+    # Validate and normalize the GPU list.
+    gpu_ids = []
+    for gpu in gpus.split(","):
+        gpu = gpu.strip()
+        if not gpu.isdigit():
+            raise ValueError(f"Invalid GPU ID: {gpu}")
+        gpu_ids.append(gpu)
+
+    # Chai accepts a single device, so use the first requested GPU.
+    return f"cuda:{gpu_ids[0]}"
+
+
 def run_chai(
     input_json: Union[str, Path],
     output_dir: Union[str, Path],
@@ -23,6 +43,7 @@ def run_chai(
     num_recycles: int = 10,
     use_templates_server: bool = False,
     template_hits_path: Path | None = None,
+    device: str | None = None,
 ) -> bool:
     """
     Run Chai-1 using the input JSON file
@@ -38,6 +59,7 @@ def run_chai(
         num_recycles (int): Number of trunk recycles
         use_templates_server (bool): If True, use templates from the server
         template_hits_path (Path): Path to the template hits m8 file
+        device (str | None): If specified, use the specified GPU
 
     Returns:
         Bool: True if the Chai-1 run was successful, False otherwise
@@ -63,6 +85,7 @@ def run_chai(
         msa_dir = chai_fasta.working_dir
         out_constraints = chai_fasta.constraints
 
+        normalized_device = normalize_device(device)
         for seed in chai_fasta.seeds:
             chai_output_dir = output_dir / f"chai_output_seed-{seed}"
 
@@ -78,6 +101,7 @@ def run_chai(
                     seed=seed,
                     use_templates_server=use_templates_server,
                     template_hits_path=template_hits_path,
+                    device=normalized_device,
                 )
                 if not test
                 else generate_chai_test_command()
@@ -114,6 +138,7 @@ def generate_chai_command(
     seed: int = 42,
     use_templates_server: bool = False,
     template_hits_path: Path | None = None,
+    device: str | None = None,
 ) -> list:
     """
     Generate the Chai-1 command
@@ -128,6 +153,7 @@ def generate_chai_command(
         seed (int): Seed for the random number generator
         use_templates_server (bool): If True, use templates from the server
         template_hits_path (Path): Path to the template hits m8 file
+        device (str | None): If specified, use the specified GPU
 
     Returns:
         list: The Chai-1 command
@@ -165,6 +191,9 @@ Please install kalign to use templates with Chai-1."
             cmd += ["--use-templates-server"]
         if template_hits_path:
             cmd += ["--template-hits-path", str(template_hits_path)]
+
+    if device is not None and device != "all":
+        cmd += ["--device", device]
 
     cmd += [str(output_dir)]
 
