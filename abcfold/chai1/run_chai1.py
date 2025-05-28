@@ -42,14 +42,18 @@ def run_chai(
     """
     input_json = Path(input_json)
     output_dir = Path(output_dir)
+
     logger.debug("Checking if Chai-1 is installed")
     check_chai1()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
+        chai_output_dir = output_dir
         if save_input:
             logger.info("Saving input fasta file and msa to the output directory")
             working_dir = output_dir
+            working_dir.mkdir(parents=True, exist_ok=True)
+            chai_output_dir = output_dir / "chai_output"
 
         chai_fasta = ChaiFasta(working_dir)
         chai_fasta.json_to_fasta(input_json)
@@ -63,7 +67,7 @@ def run_chai(
                 out_fasta,
                 msa_dir,
                 out_constraints,
-                output_dir,
+                chai_output_dir,
                 number_of_models,
                 num_recycles=num_recycles,
                 use_templates_server=use_templates_server,
@@ -82,10 +86,10 @@ def run_chai(
             _, stderr = proc.communicate()
             if proc.returncode != 0:
                 if proc.stderr:
-                    if output_dir.exists():
-                        output_err_file = output_dir / "chai_error.log"
+                    if chai_output_dir.exists():
+                        output_err_file = chai_output_dir / "chai_error.log"
                     else:
-                        output_err_file = output_dir.parent / "chai_error.log"
+                        output_err_file = chai_output_dir.parent / "chai_error.log"
                     with open(output_err_file, "w") as f:
                         f.write(stderr.decode())
                     logger.error(

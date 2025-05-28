@@ -18,7 +18,7 @@ We recommend installing this package in a virtual environment or conda / microma
 
 To set up a conda/micromamba environment, run:
 ```bash
-conda env create -n abcfold python=3.11
+conda create -n abcfold python=3.11
 conda activate abcfold
 ```
 
@@ -50,7 +50,7 @@ If you wish to help develop this package, you can install the development depend
 ```bash
 python -m pip install -e .
 python -m pip install -r requirements-dev.txt
-python -m pre-commit install
+python -m pre_commit install
 ```
 
 ## Usage
@@ -90,6 +90,9 @@ abcfold <input_json>  <output_dir> -abc --mmseqs2 --model_params <path_to_af3_mo
 > The `--database` path will also be stored after the first run and won't be required in subsequent ABCFold jobs.
 
 >[!WARNING]
+> When using the `--mmseqs2` flag, AlphaFold3 will be run without pairedMSA information. If this is important for your target (e.g. modelling a complex), we recommend running the AlphaFold3 JACKHMMER MSA search as the pairedMSA is automatically generated.
+
+>[!WARNING]
 >`--model_params` and `--database` will need to be provided again if you do a fresh install.
 
 However, there you may wish to use the following flags to add run time options such as the use of templates, or the number of models to create.
@@ -98,7 +101,8 @@ However, there you may wish to use the following flags to add run time options s
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
 - `<output_dir>`: Path to the output directory.
 - `-a`, `-b`, `-c` (`--alphafold3`, `--boltz1`,`--chai1`): Flags to run Alphafold3, Boltz-1 and Chai-1 respectively. If none of these flags are provided, Alphafold3 will be run by default.
-- `--mmseqs2`: [optional] Flag to use MMseqs2 MSAs and templates.
+- `--mmseqs2`: [optional] Flag to use MMseqs2 MSAs and templates (if specified).
+- `--mmseqs_database`: [optional] The path to the database used by a local copy of MMSeqs2, provided mmseqs is installed, the inclusion of this flag allows MMseqs2 to be run locally.
 - `--override`: [optional] Flag to override the existing output directory.
 - `--save_input`: [optional] Flag to save the input JSON file in the output directory.
 
@@ -107,10 +111,12 @@ However, there you may wish to use the following flags to add run time options s
 - `--model_params`: Path to the directory containing the AlphaFold3 model parameters.
 - `--database`: [optional] Path to the directory containing the AlphaFold3 databases #Note: This is not used if using the
 `--mmseqs2` flag.
-- `--use_af3_template_search`[optional] If providing your own custom MSA or you've ran `--mmseqs`, allow Alphafold3 to search for templates
+- `--sif_path`: [optional] Path to sif file if using an AlphaFold3 singularity instead of Docker
+- `--use_af3_template_search`[optional] If providing your own custom MSA or you've ran `--mmseqs2`, allow Alphafold3 to search for templates
 
-#### Template and MSA arguments
+#### Template arguments
 
+- `--templates`: Flag to enable a template search
 - `--num_templates`: [optional] The number of templates to use (default: 20)
 
 - `--custom_template`: [optional] Path to a custom template file in mmCIF format or a list of custom templates. A more detailed decription on how to use the custom template argument can be found below Visualisation arguments.
@@ -143,10 +149,9 @@ ABCFold will output the AlphaFold, Boltz and/or Chai models in the `<output_dir>
 Unless the `--no_visuals` flag is used, you can then open the output pages by running:
 
 ```bash
-python <output_dir>/open_output.py
+cd <output_dir>
+python open_output.py
 ```
-
-
 
 ## Main Page Example
 ![main_page_example](https://raw.githubusercontent.com/rigdenlab/ABCFold/refs/heads/main/abcfold/html/static/main_page_example.png)
@@ -156,8 +161,6 @@ python <output_dir>/open_output.py
 
 The output page will be available on `http://localhost:8000/index.html`. If you need to rerun the server to create the output,
 you will find `open_output.py` in your `<output_dir>`. This needs to be run from your `<output_dir>`.
-
-
 
 
 ## Extra Features
@@ -182,6 +185,16 @@ mmseqs2msa --input_json <input_json> --output_json <output_json> --templates --n
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
 - `<output_json>`: [optional] Path to the output JSON file (default: `<input_json_stem>`_mmseqs.json).
 - `<num_templates>`: [optional] The number of templates to use (default: 20)
+- `<mmseqs_database>`: [optional] The path to the database used by a local copy of MMSeqs2, provided mmseqs is installed, the inclusion of this flag allows MMseqs2 to be run locally.
+
+> [!NOTE]
+> If you need to install the mmseqs databases you can use setup_mmseqs_databases.sh
+> This replicates the MMSeqs2 database setup from ColabFold
+
+```
+bash
+MMSEQS_NO_INDEX=1 ./setup_mmseqs_databases.sh /path/to/db_folder
+```
 
 
 #### Without Templates
@@ -231,7 +244,7 @@ mmseqs2msa --input_json <input_json> --output_json <output_json> --templates --n
 - `<target_id>`: [conditionally required] The ID of the sequence the custom template relates to, only required if modelling a complex. If providing a list of custom templates, you can provide a single target ID if they all relate to the same target. Otherwise, you should provide a list of target IDs corresponding to the list of custom templates.
 
 
-### Common Issues
+### Possible Issues
 
 #### Using `--target_id` with homo-oligomer
 
@@ -262,6 +275,52 @@ Below is an example of a hetero-3-mer. When modelling a homo-oligomer, id is giv
 
 If you want to add a custom template to the first sequence, you can use `--target_id A`. If you wish to add a custom template to the second sequence, use `--target_id B` or `--target_id C`.
 
+#### Boltz-1 limitations
+
+If modelling multiple copies of the same sequence in Boltz-1, the input JSON must be set up as follows:
+
+```json
+{
+  "name": "7ZYH",
+  "sequences": [
+    {
+      "protein": {
+        "id": ["A", "B"],
+        "sequence": "SNAESKIKDCPWYDRGFCKHGPLCRHRHTRRVICVNYLVGFCPEGPSCKFMHPRFELPMGTTEQ"
+      }
+    },
+  ],
+  "modelSeeds": [1],
+  "dialect": "alphafold3",
+  "version": 1
+}
+
+If the identical sequences are given as seperate entities (as shown below) you will encounter an error.
+
+```json
+{
+  "name": "7ZYH",
+  "sequences": [
+    {
+      "protein": {
+        "id": "A",
+        "sequence": "SNAESKIKDCPWYDRGFCKHGPLCRHRHTRRVICVNYLVGFCPEGPSCKFMHPRFELPMGTTEQ"
+      }
+    },
+    {
+      "protein": {
+        "id": "B",
+        "sequence": "SNAESKIKDCPWYDRGFCKHGPLCRHRHTRRVICVNYLVGFCPEGPSCKFMHPRFELPMGTTEQ"
+      }
+    }
+  ],
+  "modelSeeds": [1],
+  "dialect": "alphafold3",
+  "version": 1
+}
+```
+
+Additionally, Boltz-1 currently lacks the ability to create linked-ligands and therefore covalent bonds between the chain/ligand will be missing.
 
 ## Contributing
 

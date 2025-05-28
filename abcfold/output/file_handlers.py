@@ -13,6 +13,7 @@ from Bio.PDB.Atom import Atom
 from Bio.PDB.kdtrees import KDTree
 from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Residue import Residue
+from Bio.PDB.Superimposer import Superimposer
 from Bio.SeqUtils import seq1
 
 from abcfold.output.atoms import VANDERWALLS
@@ -57,6 +58,7 @@ class ResidueCountType(Enum):
 
     AVERAGE = "average"
     CARBONALPHA = "carbonalpha"
+    PHOSPHATE = "phosphate"
 
     @classmethod
     def values(cls):
@@ -187,6 +189,7 @@ class CifFile(FileBase):
         """
         The pLDDT scores for each residue in the model
         """
+
         self.__residue_plddts = [
             plddts
             for plddts in self.get_plddt_per_residue().values()
@@ -388,7 +391,7 @@ class CifFile(FileBase):
 
         return plddt
 
-    def get_plddt_per_residue(self, method=ResidueCountType.CARBONALPHA.value) -> dict:
+    def get_plddt_per_residue(self, method=ResidueCountType.AVERAGE.value) -> dict:
         """
         Get the pLDDT scores for each residue in the model
 
@@ -430,6 +433,12 @@ class CifFile(FileBase):
                     elif method == ResidueCountType.CARBONALPHA.value:
                         for atom in residue:
                             if atom.id == "CA":
+                                score = atom.bfactor
+                                break
+
+                    elif method == ResidueCountType.PHOSPHATE.value:
+                        for atom in residue:
+                            if atom.id == "P":
                                 score = atom.bfactor
                                 break
 
@@ -753,3 +762,56 @@ class ConfidenceJsonFile(FileBase):
             data = json.load(f)
 
         return data
+
+
+def superpose_models(models_list: List[Union[str, Path]]) -> None:
+    """
+    Superpose the models in the list and save them to a new file
+
+    Args:
+        models_list (List[Union[str, Path]]): List of models to superpose
+
+    Returns:
+        None
+    """
+
+    parser = MMCIFParser(QUIET=True)
+    structure = parser.get_structure(Path(models_list[0]).stem, Path(models_list[0]))
+    ref_model = structure[0]
+
+    for model in models_list[1:]:
+        alt_structure = parser.get_structure(Path(model).stem, Path(model))
+        alt_model = alt_structure[0]
+
+        ref_atoms = []
+        alt_atoms = []
+        for (ref_chain, alt_chain) in zip(ref_model, alt_model):
+            for ref_res, alt_res in zip(ref_chain, alt_chain):
+                if ref_res.resname != alt_res.resname or ref_res.id != alt_res.id:
+                    pass
+
+                # Handle nucleotides and proteins differently
+                if ref_res.resname in ["DA", "DT", "DG", "DC"]:
+                    ref_atoms.append(ref_res["C1'"])
+                    alt_atoms.append(alt_res["C1'"])
+                elif ref_res.resname in ["A", "U", "G", "C", "T"]:
+                    ref_atoms.append(ref_res["C1'"])
+                    alt_atoms.append(alt_res["C1'"])
+                elif 'CA' in ref_res:
+                    ref_atoms.append(ref_res['CA'])
+                    alt_atoms.append(alt_res['CA'])
+                else:  # Ignore anything else
+                    pass
+
+        if len(ref_atoms) == 0 or len(alt_atoms) == 0:
+            logger.warning(
+                f"No matching atoms found for superposition in {model}. Skipping."
+            )
+        else:
+            super_imposer = Superimposer()
+            super_imposer.set_atoms(ref_atoms, alt_atoms)
+            super_imposer.apply(alt_model.get_atoms())
+
+            io = MMCIFIO()
+            io.set_structure(alt_structure)
+            io.save(str(model))  # overwrite the original file

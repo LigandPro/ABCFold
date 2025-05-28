@@ -24,6 +24,7 @@ from abcfold.html.html_utils import (PORT, NoCacheHTTPRequestHandler,
 from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
+from abcfold.output.file_handlers import superpose_models
 from abcfold.output.utils import (get_gap_indicies, insert_none_by_minus_one,
                                   make_dummy_m8_file)
 from abcfold.scripts.abc_script_utils import (check_input_json, make_dir,
@@ -92,7 +93,7 @@ def run(args, config, defaults, config_file):
     if args.alphafold3:
         from abcfold.alphafold3.check_install import check_af3_install
 
-        check_af3_install(interactive=False)
+        check_af3_install(interactive=False, sif_path=args.sif_path)
 
     if args.boltz1:
         from abcfold.boltz1.check_install import check_boltz1
@@ -117,6 +118,7 @@ def run(args, config, defaults, config_file):
 
             input_params = add_msa_to_json(
                 input_json=input_json,
+                mmseqs_db=args.mmseqs_database,
                 templates=args.templates,
                 num_templates=args.num_templates,
                 chai_template_output=temp_dir.joinpath("all_chains.m8"),
@@ -149,6 +151,7 @@ def run(args, config, defaults, config_file):
                 database_dir=af3_database,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
+                sif_path=args.sif_path,
             )
 
             if af3_success:
@@ -201,7 +204,7 @@ def run(args, config, defaults, config_file):
             )
 
             if chai_success:
-                co = ChaiOutput(chai_output_dir, input_params, name)
+                co = ChaiOutput(chai_output_dir, input_params, name, args.save_input)
                 outputs.append(co)
             successful_runs.append(chai_success)
 
@@ -234,6 +237,7 @@ def run(args, config, defaults, config_file):
                     for idx in ao.output[seed].keys():
                         model = ao.output[seed][idx]["cif"]
                         model.check_clashes()
+                        score_file = ao.output[seed][idx]["summary"]
                         plddt = model.residue_plddts
                         if len(indicies) > 0:
                             plddt = insert_none_by_minus_one(
@@ -242,7 +246,8 @@ def run(args, config, defaults, config_file):
                                 )
                         index_counter += 1
                         model_data = get_model_data(
-                            model, plot_dict, "AlphaFold3", plddt, args.output_dir
+                            model, plot_dict, "AlphaFold3",
+                            plddt, score_file, args.output_dir
                         )
                         alphafold_models["models"].append(model_data)
 
@@ -253,6 +258,7 @@ def run(args, config, defaults, config_file):
                 for idx in bo.output.keys():
                     model = bo.output[idx]["cif"]
                     model.check_clashes()
+                    score_file = bo.output[idx]["json"]
                     plddt = model.residue_plddts
                     if len(indicies) > 0:
                         plddt = insert_none_by_minus_one(
@@ -261,7 +267,8 @@ def run(args, config, defaults, config_file):
                             )
                     index_counter += 1
                     model_data = get_model_data(
-                        model, plot_dict, "Boltz-1", plddt, args.output_dir
+                        model, plot_dict, "Boltz-1",
+                        plddt, score_file, args.output_dir
                     )
                     boltz_models["models"].append(model_data)
 
@@ -273,6 +280,7 @@ def run(args, config, defaults, config_file):
                     if idx >= 0:
                         model = co.output[idx]["cif"]
                         model.check_clashes()
+                        score_file = co.output[idx]["scores"]
                         plddt = model.residue_plddts
                         if len(indicies) > 0:
                             plddt = insert_none_by_minus_one(
@@ -281,13 +289,36 @@ def run(args, config, defaults, config_file):
                                 )
                         index_counter += 1
                         model_data = get_model_data(
-                            model, plot_dict, "Chai-1", plddt, args.output_dir
+                            model, plot_dict, "Chai-1",
+                            plddt, score_file, args.output_dir
                         )
                         chai_models["models"].append(model_data)
 
         combined_models = (
             alphafold_models["models"] + boltz_models["models"] + chai_models["models"]
         )
+
+        # Make the output directory for the models
+        os.makedirs(args.output_dir.joinpath("output_models"), exist_ok=True)
+        output_models = []
+        for model in combined_models:
+            cif_file = args.output_dir.joinpath(model["model_path"])
+            if model["model_source"] == "AlphaFold3":
+                output_name = "af3_model_" + model["model_id"][-1] + ".cif"
+            elif model["model_source"] == "Boltz-1":
+                output_name = "boltz_model_" + model["model_id"][-1] + ".cif"
+            elif model["model_source"] == "Chai-1":
+                output_name = "chai_model_" + model["model_id"][-1] + ".cif"
+            shutil.copy(
+                cif_file,
+                args.output_dir.joinpath("output_models").joinpath(output_name),
+            )
+            output_models.append(
+                args.output_dir.joinpath("output_models").joinpath(output_name)
+            )
+        # Superpose the models
+        if len(output_models) > 1:
+            superpose_models(output_models)
 
         sequence_data = get_model_sequence_data(cif_models)
         sequence = ""

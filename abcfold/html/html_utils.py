@@ -12,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader
 from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
+from abcfold.output.file_handlers import ConfidenceJsonFile, NpzFile
 from abcfold.plots.pae_plot import create_pae_plots
 from abcfold.plots.plddt_plot import plot_plddt
 
@@ -98,7 +99,7 @@ def get_model_sequence_data(cif_objs) -> dict:
     return sequence_data
 
 
-def get_model_data(model, plot_dict, method, plddt_scores, output_dir):
+def get_model_data(model, plot_dict, method, plddt_scores, score_file, output_dir):
     """
     Get the model data for the output page
 
@@ -106,16 +107,21 @@ def get_model_data(model, plot_dict, method, plddt_scores, output_dir):
         model (CifFile): Model object
         plot_dict (dict): Dictionary of plots
         method (str): Method used to generate the model
+        score_file (str): Path to the file containing model scores
         output_dir (Path): Path to the output directory
     """
     regions = get_plddt_regions(plddt_scores)
+    ptm_score, iptm_score = parse_scores(score_file)
+    model_path = Path(model.pathway).relative_to(output_dir)
     model_data = {
         "model_id": model.name,
         "model_source": method,
-        "model_path": model.pathway.as_posix(),
+        "model_path": model_path.as_posix(),
         "plddt_regions": regions,
         "avg_plddt": model.average_plddt,
         "h_score": model.h_score,
+        "ptm_score": ptm_score,
+        "iptm_score": iptm_score,
         "residue_clashes": model.clashes_residues,
         "atom_clashes": model.clashes,
         "pae_path": Path(plot_dict[model.pathway.as_posix()])
@@ -232,3 +238,30 @@ def get_all_cif_files(outputs) -> Dict[str, list]:
             method_cif_objs["Chai-1"] = output.cif_files
 
     return method_cif_objs
+
+
+def parse_scores(score_file: Union[ConfidenceJsonFile, NpzFile]) -> tuple:
+    """
+    Parse the scores from the score file
+
+    Args:
+        score_file (Union[ConfidenceJsonFile, NpzFile]): The score file object.
+
+    Returns:
+        tuple: A tuple containing ptm_score and iptm_score as floats.
+    """
+    ptm_score = None
+    iptm_score = None
+
+    if isinstance(score_file, ConfidenceJsonFile):
+        data = score_file.load_json_file()
+        if "ptm" in data and "iptm" in data:
+            ptm_score = round(float(data["ptm"]), 2)
+            iptm_score = round(float(data["iptm"]), 2)
+    elif isinstance(score_file, NpzFile):
+        data = score_file.load_npz_file()
+        if "ptm" in data and "iptm" in data:
+            ptm_score = round(float(data["ptm"]), 2)
+            iptm_score = round(float(data["iptm"]), 2)
+
+    return ptm_score, iptm_score
