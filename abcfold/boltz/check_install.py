@@ -55,3 +55,5 @@ def check_boltz():
                 if proc.stderr:
                     logger.error(proc.stderr.read().decode())
                 raise subprocess.CalledProcessError(proc.returncode, proc.args)
+
+    logger.info(f"Running Boltz version: {BOLTZ_VERSION}")

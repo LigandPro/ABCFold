@@ -5,7 +5,7 @@ import sys
 logger = logging.getLogger("logger")
 
 
-CHAI_VERSION = "0.6.0"
+CHAI_VERSION = "0.6.1"
 
 
 def check_chai1():
@@ -62,4 +62,4 @@ def check_chai1():
                     logger.error(proc.stderr.read().decode())
                 raise subprocess.CalledProcessError(proc.returncode, proc.args)
 
-        # add pytroch lightning to install
+    logger.info(f"Running Chai version: {CHAI_VERSION}")
