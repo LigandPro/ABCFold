@@ -23,12 +23,9 @@ def main_argpase_util(parser):
     parser.add_argument(
         "input_json",
         type=validate_json_file,
-        help="Path to the input JSON in AlphaFold3 format"
+        help="Path to the input JSON in AlphaFold3 format",
     )
-    parser.add_argument(
-        "output_dir",
-        help="Path to the output directory"
-    )
+    parser.add_argument("output_dir", help="Path to the output directory")
     parser.add_argument(
         "--override",
         help="[optional] Override the existing output directory, if it exists",
@@ -53,12 +50,10 @@ searching (if used with --templates flag)",
     parser.add_argument(
         "--mmseqs_database",
         help="[optional] The database directory for the generation of the MSA. This \
-is only required if using a local installation of MMseqs2"
+is only required if using a local installation of MMseqs2",
     )
     parser.add_argument(
-        "--templates",
-        action="store_true",
-        help="[optional] Enable template search"
+        "--templates", action="store_true", help="[optional] Enable template search"
     )
     parser.add_argument(
         "--num_templates",
@@ -118,9 +113,9 @@ def prediction_argparse_util(parser):
 def boltz_argparse_util(parser):
     parser.add_argument(
         "-b",
-        "--boltz1",
+        "--boltz",
         action="store_true",
-        help="Run Boltz1",
+        help="Run Boltz",
     )
     if "--save_input" not in parser._option_string_actions:
         parser.add_argument(
@@ -200,9 +195,9 @@ page is still generated and is accessible in the output directory",
 
 
 def raise_argument_errors(args):
-    if not args.alphafold3 and not args.boltz1 and not args.chai1:
+    if not args.alphafold3 and not args.boltz and not args.chai1:
         logger.info(
-            "Neither AlphaFold3, Boltz-1, or Chai-1 selected. Running AlphaFold3 \
+            "Neither AlphaFold3, Boltz, or Chai-1 selected. Running AlphaFold3 \
 by default"
         )
         args.alphafold3 = True
@@ -216,9 +211,7 @@ by default"
         sys.exit(1)
 
     if args.templates and not args.mmseqs2 and not args.alphafold3:
-        logger.error(
-            "Cannot use --templates flag without using MMseqs2 or Alphafold3"
-        )
+        logger.error("Cannot use --templates flag without using MMseqs2 or Alphafold3")
         sys.exit(1)
 
     if (

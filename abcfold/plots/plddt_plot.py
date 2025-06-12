@@ -29,7 +29,7 @@ def plot_plddt(
     Args:
         cif_models_dict: Dictionary of cif models to plot. The keys are the source of
             the models and the values are lists of CifFile objects.
-            e.g. {"Alphafold3": [CifFile, CifFile, ...], "Boltz-1": [CifFile, ...],
+            e.g. {"Alphafold3": [CifFile, CifFile, ...], "Boltz": [CifFile, ...],
             "Chai-1": [CifFile, ...]}
 
         output_name: Path to the output html file.
@@ -52,7 +52,7 @@ def plot_plddt(
     colours = list(px.colors.qualitative.T10)
     method_colours = {
         "Alphafold3": px.colors.qualitative.Set1,
-        "Boltz-1": px.colors.qualitative.Set2,
+        "Boltz": px.colors.qualitative.Set2,
         "Chai-1": px.colors.qualitative.Prism,
     }
 

@@ -58,7 +58,7 @@ def output_objs():
     d = {}
 
     adir = data_dir.joinpath("alphafold3_6BJ9")
-    bdir = data_dir.joinpath("boltz-1_6BJ9")
+    bdir = data_dir.joinpath("boltz_6BJ9")
     cdir = data_dir.joinpath("chai1_6BJ9")
     name = "6BJ9"
     input_params = adir.joinpath("6bj9_data.json")

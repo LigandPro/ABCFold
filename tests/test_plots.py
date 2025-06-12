@@ -15,7 +15,7 @@ def test_plddt_plot(output_objs):
     assert len(af3_files) == len(boltz_files) == len(chai_files)
     plot_files = {
         "Alphafold3": af3_files,
-        "Boltz-1": boltz_files,
+        "Boltz": boltz_files,
         "Chai-1": chai_files,
     }
 
@@ -60,12 +60,12 @@ model.cif"
             in plot_pathways
         )
         assert (
-            "tests/test_data/boltz-1_6BJ9/predictions/test_mmseqs/\
+            "tests/test_data/boltz_6BJ9/predictions/test_mmseqs/\
 test_mmseqs_model_0.cif"
             in plot_pathways
         )
         assert (
-            "tests/test_data/boltz-1_6BJ9/predictions/test_mmseqs/\
+            "tests/test_data/boltz_6BJ9/predictions/test_mmseqs/\
 test_mmseqs_model_1.cif"
             in plot_pathways
         )

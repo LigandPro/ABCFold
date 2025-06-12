@@ -34,7 +34,7 @@ def check_chai1():
                 )
     except (ImportError, ModuleNotFoundError):
         try:
-            import boltz1 as _  # noqa F401
+            import boltz as _  # noqa F401
 
             no_deps = True
         except (ImportError, ModuleNotFoundError):

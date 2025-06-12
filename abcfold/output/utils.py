@@ -108,7 +108,7 @@ class Af3Pae:
         return cls(af3_scores)
 
     @classmethod
-    def from_boltz1(cls, scores: dict, cif_file: CifFile):
+    def from_boltz(cls, scores: dict, cif_file: CifFile):
         af3_scores = AF3TEMPLATE.copy()
 
         chain_lengths = cif_file.chain_lengths(mode="residues", ligand_atoms=True)

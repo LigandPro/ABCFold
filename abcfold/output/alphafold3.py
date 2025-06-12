@@ -130,7 +130,7 @@ class AlphafoldOutput:
 
     def pae_to_af3(self):
         """
-        Convert the PAE data from Boltz-1 to the format used by Alphafold3
+        Convert the PAE data from Boltz to the format used by Alphafold3
 
         Returns:
             None

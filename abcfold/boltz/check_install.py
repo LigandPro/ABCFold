@@ -7,7 +7,7 @@ logger = logging.getLogger("logger")
 BOLTZ_VERSION = "1.0.0"
 
 
-def check_boltz1():
+def check_boltz():
     try:
         import boltz as _  # noqa F401
 

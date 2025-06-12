@@ -54,7 +54,7 @@ Vue.component('abc-table', {
             switch (modelSource) {
                 case 'AlphaFold3':
                     return 'btn-source1';
-                case 'Boltz-1':
+                case 'Boltz':
                     return 'btn-source2';
                 case 'Chai-1':
                     return 'btn-source3';

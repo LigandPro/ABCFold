@@ -30,7 +30,7 @@
                     </cite>
                 </p>
 
-                <h5>Boltz-1:</h5>
+                <h5>Boltz:</h5>
                 <p>
                     <cite style="font-style: normal">
                         Wohlwend J, <i>et al</i>.
