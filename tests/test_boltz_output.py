@@ -8,7 +8,7 @@ from abcfold.output.utils import Af3Pae
 def test_process_boltz_output(test_data, output_objs):
     boltz_output = output_objs.boltz_output
     assert str(boltz_output.output_dir) == str(
-        Path(test_data.test_boltz_1_6BJ9_).parent.joinpath("boltz_6BJ9")
+        Path(test_data.test_boltz_6BJ9_).parent.joinpath("boltz_6BJ9")
     )
 
     assert boltz_output.name == "6BJ9"
