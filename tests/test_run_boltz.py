@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from abcfold.boltz1.run_boltz import generate_boltz_command, run_boltz
+from abcfold.boltz.run_boltz import generate_boltz_command, run_boltz
 
 
 @pytest.mark.skipif(os.getenv("CI") == "true", reason="Skipping test in CI environment")

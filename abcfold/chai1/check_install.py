@@ -5,7 +5,7 @@ import sys
 logger = logging.getLogger("logger")
 
 
-CHAI_VERSION = "0.6.0"
+CHAI_VERSION = "0.6.1"
 
 
 def check_chai1():
@@ -34,7 +34,7 @@ def check_chai1():
                 )
     except (ImportError, ModuleNotFoundError):
         try:
-            import boltz1 as _  # noqa F401
+            import boltz as _  # noqa F401
 
             no_deps = True
         except (ImportError, ModuleNotFoundError):
@@ -62,4 +62,4 @@ def check_chai1():
                     logger.error(proc.stderr.read().decode())
                 raise subprocess.CalledProcessError(proc.returncode, proc.args)
 
-        # add pytroch lightning to install
+    logger.info(f"Running Chai version: {CHAI_VERSION}")

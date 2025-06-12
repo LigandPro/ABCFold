@@ -90,7 +90,7 @@ def create_pae_plots(
             template_file = plots_dir.joinpath("boltz_template.html")
             template_files.append(template_file)
             cmd = get_template_run_script(
-                "ABCFold - Boltz-1 Output",
+                "ABCFold - Boltz Output",
                 css_path,
                 template_file,
                 output_dir.joinpath(".pae_viewer"),

@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from abcfold.boltz1.af3_to_boltz1 import BoltzYaml
+from abcfold.boltz.af3_to_boltz import BoltzYaml
 from abcfold.output.file_handlers import (CifFile, ConfidenceJsonFile,
                                           FileTypes, ModelCount, NpzFile)
 from abcfold.output.utils import Af3Pae
@@ -18,21 +18,21 @@ class BoltzOutput:
         name: str,
     ):
         """
-        Object to process the output of an Boltz-1 run
+        Object to process the output of an Boltz run
 
         Args:
-            boltz_output_dir (Union[str, Path]): Path to the Boltz-1 output directory
+            boltz_output_dir (Union[str, Path]): Path to the Boltz output directory
             input_params (dict): Dictionary containing the input parameters used for the
-            Boltz-1 run
-            name (str): Name given to the Boltz-1 run
+            Boltz run
+            name (str): Name given to the Boltz run
 
         Attributes:
-            output_dir (Path): Path to the Boltz-1 output directory
+            output_dir (Path): Path to the Boltz output directory
             input_params (dict): Dictionary containing the input parameters used for the
-            Boltz-1 run
-            name (str): Name given to the Boltz-1 run
+            Boltz run
+            name (str): Name given to the Boltz run
             output (dict): Dictionary containing the processed output the contents
-            of the Boltz-1 output directory. The dictionary is structured as follows:
+            of the Boltz output directory. The dictionary is structured as follows:
 
             {
                 1: {
@@ -66,7 +66,7 @@ class BoltzOutput:
 
         if self.output_dir.name.startswith("boltz_results_"):
             self.output_dir = self.output_dir.rename(
-                self.output_dir.parent / f"boltz-1_{name}"
+                self.output_dir.parent / f"boltz_{name}"
             )
         self.yaml_input_obj = self.get_input_yaml()
         self.output = self.process_boltz_output()
@@ -81,7 +81,7 @@ class BoltzOutput:
 
     def process_boltz_output(self):
         """
-        Function to process the output of a Boltz-1 run
+        Function to process the output of a Boltz run
         """
         file_groups = {}
         for pathway in self.output_dir.rglob("*"):
@@ -116,7 +116,7 @@ class BoltzOutput:
                 elif file_.pathway.stem.startswith("pde"):
                     intermediate_dict["pde"] = file_
                 elif file_.pathway.suffix == ".cif":
-                    file_.name = f"Boltz-1_{model_number}"
+                    file_.name = f"Boltz_{model_number}"
                     file_ = self.update_chain_labels(file_)
                     intermediate_dict["cif"] = file_
                 else:
@@ -133,7 +133,7 @@ class BoltzOutput:
     def add_plddt_to_cif(self):
         """
         Add the PLDDT scores to the B-factors of the CIF files as this is not done
-        natively by Boltz-1
+        natively by Boltz
 
         Returns:
             None
@@ -173,13 +173,13 @@ class BoltzOutput:
 
     def pae_to_af3(self):
         """
-        Convert the PAE data from Boltz-1 to the format used by Alphafold3
+        Convert the PAE data from Boltz to the format used by Alphafold3
 
         Returns:
             None
         """
         for i, (pae_file, cif_file) in enumerate(zip(self.pae_files, self.cif_files)):
-            pae = Af3Pae.from_boltz1(
+            pae = Af3Pae.from_boltz(
                 pae_file.data,
                 cif_file,
             )
@@ -207,7 +207,7 @@ class BoltzOutput:
 
     def get_input_yaml(self) -> BoltzYaml:
         """
-        Get the input yaml file used for the Boltz-1 run
+        Get the input yaml file used for the Boltz run
 
         Returns:
             BoltzYaml: Object containing the input yaml file

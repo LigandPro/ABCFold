@@ -233,7 +233,7 @@ def get_all_cif_files(outputs) -> Dict[str, list]:
                 method_cif_objs["Alphafold3"].extend(output.cif_files[seed])
         elif isinstance(output, BoltzOutput):
 
-            method_cif_objs["Boltz-1"] = output.cif_files
+            method_cif_objs["Boltz"] = output.cif_files
         elif isinstance(output, ChaiOutput):
             method_cif_objs["Chai-1"] = output.cif_files
 

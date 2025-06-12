@@ -71,7 +71,7 @@ def test_check_input_json(test_data):
 
 
 def test_clash_checker(test_data):
-    cif_file = Path(test_data.test_boltz_1_6BJ9_).joinpath(
+    cif_file = Path(test_data.test_boltz_6BJ9_).joinpath(
         "predictions", "test_mmseqs", "test_mmseqs_model_0.cif"
     )
 

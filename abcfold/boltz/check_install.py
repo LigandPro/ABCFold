@@ -4,10 +4,10 @@ import sys
 
 logger = logging.getLogger("logger")
 
-BOLTZ_VERSION = "1.0.0"
+BOLTZ_VERSION = "2.1.1"
 
 
-def check_boltz1():
+def check_boltz():
     try:
         import boltz as _  # noqa F401
 
@@ -55,3 +55,5 @@ def check_boltz1():
                 if proc.stderr:
                     logger.error(proc.stderr.read().decode())
                 raise subprocess.CalledProcessError(proc.returncode, proc.args)
+
+    logger.info(f"Running Boltz version: {BOLTZ_VERSION}")
