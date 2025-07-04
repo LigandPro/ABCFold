@@ -218,19 +218,36 @@ class BoltzOutput:
         Returns:
             None
         """
-        for i, (pae_file, cif_file) in enumerate(zip(self.pae_files, self.cif_files)):
-            pae = Af3Pae.from_boltz(
-                pae_file.data,
-                cif_file,
-            )
+        new_pae_files = {}
+        for seed in self.seeds:
+            for i, (pae_file, cif_file) in enumerate(
+                zip(self.af3_pae_files[seed], self.cif_files[seed])
+            ):
+                pae = Af3Pae.from_alphafold3(
+                    pae_file.data,
+                    cif_file,
+                )
 
-            out_name = cif_file.pathway.parent.joinpath(
-                cif_file.pathway.stem + "_af3_pae.json"
-            )
+                out_name = pae_file.pathway
 
-            pae.to_file(out_name)
+                pae.to_file(out_name)
 
-            self.output[i]["af3_pae"] = ConfidenceJsonFile(out_name)
+                if seed not in new_pae_files:
+                    new_pae_files[seed] = []
+                new_pae_files[seed].append(ConfidenceJsonFile(out_name))
+
+        self.af3_pae_files = new_pae_files
+        self.output = {
+            seed: {
+                i: {
+                    "cif": cif_file,
+                    "af3_pae": new_pae_files[seed][i],
+                    "summary": self.output[seed][i]["summary"],
+                }
+                for i, cif_file in enumerate(self.cif_files[seed])
+            }
+            for seed in self.seeds
+        }
 
     def update_chain_labels(self, cif_file) -> CifFile:
         """
