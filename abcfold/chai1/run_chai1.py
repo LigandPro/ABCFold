@@ -70,6 +70,7 @@ def run_chai(
                 chai_output_dir,
                 number_of_models,
                 num_recycles=num_recycles,
+                seed=chai_fasta.seeds[0],
                 use_templates_server=use_templates_server,
                 template_hits_path=template_hits_path,
             )
@@ -110,6 +111,7 @@ def generate_chai_command(
     output_dir: Union[str, Path],
     number_of_models: int = 5,
     num_recycles: int = 10,
+    seed: int = 42,
     use_templates_server: bool = False,
     template_hits_path: Path | None = None,
 ) -> list:
@@ -123,6 +125,7 @@ def generate_chai_command(
         output_dir (Union[str, Path]): Path to the output directory
         number_of_models (int): Number of models to generate
         num_recycles (int): Number of trunk recycles
+        seed (int): Seed for the random number generator
         use_templates_server (bool): If True, use templates from the server
         template_hits_path (Path): Path to the template hits m8 file
 
@@ -141,6 +144,7 @@ def generate_chai_command(
 
     cmd += ["--num-diffn-samples", str(number_of_models)]
     cmd += ["--num-trunk-recycles", str(num_recycles)]
+    cmd += ["--seed", str(seed)]
 
     assert not (
         use_templates_server and template_hits_path

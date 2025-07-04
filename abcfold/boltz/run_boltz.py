@@ -57,7 +57,13 @@ def run_boltz(
         boltz_yaml.write_yaml(out_file)
         logger.info("Running Boltz")
         cmd = (
-            generate_boltz_command(out_file, output_dir, number_of_models, num_recycles)
+            generate_boltz_command(
+                out_file, 
+                output_dir, 
+                number_of_models, 
+                num_recycles,
+                seed=boltz_yaml.seeds[0]
+            )
             if not test
             else generate_boltz_test_command()
         )
@@ -100,6 +106,7 @@ def generate_boltz_command(
     output_dir: Union[str, Path],
     number_of_models: int = 5,
     num_recycles: int = 10,
+    seed: int = 42,
 ) -> list:
     """
     Generate the Boltz command
@@ -108,6 +115,7 @@ def generate_boltz_command(
         input_yaml (Union[str, Path]): Path to the input YAML file
         output_dir (Union[str, Path]): Path to the output directory
         number_of_models (int): Number of models to generate
+        seed (int): Seed for the random number generator
 
     Returns:
         list: The Boltz command
