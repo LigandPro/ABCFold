@@ -58,9 +58,9 @@ def run_boltz(
         logger.info("Running Boltz")
         cmd = (
             generate_boltz_command(
-                out_file, 
-                output_dir, 
-                number_of_models, 
+                out_file,
+                output_dir,
+                number_of_models,
                 num_recycles,
                 seed=boltz_yaml.seeds[0]
             )

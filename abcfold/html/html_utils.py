@@ -255,7 +255,7 @@ def parse_scores(score_file: Union[ConfidenceJsonFile, NpzFile]) -> tuple:
 
     if isinstance(score_file, ConfidenceJsonFile):
         data = score_file.load_json_file()
-    elif isinstance(score_file, NpzFile): 
+    elif isinstance(score_file, NpzFile):
         data = score_file.load_npz_file()
     else:
         return ptm_score, iptm_score
