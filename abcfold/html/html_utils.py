@@ -237,7 +237,10 @@ def get_all_cif_files(outputs) -> Dict[str, list]:
                     method_cif_objs["Boltz"] = []
                 method_cif_objs["Boltz"].extend(output.cif_files[seed])
         elif isinstance(output, ChaiOutput):
-            method_cif_objs["Chai-1"] = output.cif_files
+            for seed in output.seeds:
+                if "Chai-1" not in method_cif_objs:
+                    method_cif_objs["Chai-1"] = []
+                method_cif_objs["Chai-1"].extend(output.cif_files[seed])
 
     return method_cif_objs
 

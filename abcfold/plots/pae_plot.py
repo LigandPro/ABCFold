@@ -109,6 +109,8 @@ def create_pae_plots(
                     )
                 )
 
+            continue
+
         elif isinstance(output, ChaiOutput):
             css_path = CSSPATHS["C"]
             template_file = plots_dir.joinpath("chai_template.html")
@@ -120,6 +122,20 @@ def create_pae_plots(
                 output_dir.joinpath(".pae_viewer"),
             )
             run_script(cmd)
+
+            for seed in output.seeds:
+                run_scripts.extend(
+                    prepare_scripts(
+                        output.cif_files[seed],
+                        output.af3_pae_files[seed],
+                        plots_dir,
+                        pathway_plot,
+                        template_file,
+                        True,
+                    )
+                )
+
+            continue
 
         elif isinstance(output, AlphafoldOutput):
             css_path = CSSPATHS["A"]
@@ -146,20 +162,10 @@ def create_pae_plots(
                 )
 
             continue
+
         else:
             logger.error("Invalid output type")
             raise ValueError()
-
-        run_scripts.extend(
-            prepare_scripts(
-                output.cif_files,
-                output.af3_pae_files,
-                plots_dir,
-                pathway_plot,
-                template_file,
-                False,
-            )
-        )
 
     processes = [Process(target=run_script, args=(script,)) for script in run_scripts]
     for process in processes:

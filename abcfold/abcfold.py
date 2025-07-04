@@ -194,7 +194,7 @@ def run(args, config, defaults, config_file):
             elif args.templates:
                 template_hits_path = make_dummy_m8_file(run_json, temp_dir)
 
-            chai_output_dir = args.output_dir.joinpath("chai1")
+            chai_output_dir = args.output_dir.joinpath(f"chai1_{name}")
             chai_success = run_chai(
                 input_json=run_json,
                 output_dir=chai_output_dir,
@@ -205,7 +205,8 @@ def run(args, config, defaults, config_file):
             )
 
             if chai_success:
-                co = ChaiOutput(chai_output_dir, input_params, name, args.save_input)
+                chai_output_dirs = list(args.output_dir.glob("chai_outputs*"))
+                co = ChaiOutput(chai_output_dirs, input_params, name, args.save_input)
                 outputs.append(co)
             successful_runs.append(chai_success)
 
@@ -284,26 +285,27 @@ def run(args, config, defaults, config_file):
         if args.chai1:
             if chai_success:
                 programs_run.append("Chai-1")
-                for idx in co.output.keys():
-                    if idx >= 0:
-                        model = co.output[idx]["cif"]
-                        model.check_clashes()
-                        score_file = co.output[idx]["scores"]
-                        plddt = model.residue_plddts
-                        if len(indicies) > 0:
-                            plddt = insert_none_by_minus_one(
-                                indicies[index_counter], plddt
+                for seed in co.output.keys():
+                    for idx in co.output[seed].keys():
+                        if idx >= 0:
+                            model = co.output[seed][idx]["cif"]
+                            model.check_clashes()
+                            score_file = co.output[seed][idx]["scores"]
+                            plddt = model.residue_plddts
+                            if len(indicies) > 0:
+                                plddt = insert_none_by_minus_one(
+                                    indicies[index_counter], plddt
+                                )
+                            index_counter += 1
+                            model_data = get_model_data(
+                                model,
+                                plot_dict,
+                                "Chai-1",
+                                plddt,
+                                score_file,
+                                args.output_dir,
                             )
-                        index_counter += 1
-                        model_data = get_model_data(
-                            model,
-                            plot_dict,
-                            "Chai-1",
-                            plddt,
-                            score_file,
-                            args.output_dir,
-                        )
-                        chai_models["models"].append(model_data)
+                            chai_models["models"].append(model_data)
 
         combined_models = (
             alphafold_models["models"] + boltz_models["models"] + chai_models["models"]
