@@ -136,7 +136,7 @@ class BoltzOutput:
                     file_ = ConfidenceJsonFile(str(output))
                 else:
                     continue
-                if number not in file_groups:
+                if number not in file_groups[seed]:
                     file_groups[seed][number] = [file_]
                 else:
                     file_groups[seed][number].append(file_)
