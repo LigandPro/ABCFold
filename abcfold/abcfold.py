@@ -259,18 +259,26 @@ def run(args, config, defaults, config_file):
         if args.boltz:
             if boltz_success:
                 programs_run.append("Boltz")
-                for idx in bo.output.keys():
-                    model = bo.output[idx]["cif"]
-                    model.check_clashes()
-                    score_file = bo.output[idx]["json"]
-                    plddt = model.residue_plddts
-                    if len(indicies) > 0:
-                        plddt = insert_none_by_minus_one(indicies[index_counter], plddt)
-                    index_counter += 1
-                    model_data = get_model_data(
-                        model, plot_dict, "Boltz", plddt, score_file, args.output_dir
-                    )
-                    boltz_models["models"].append(model_data)
+                for seed in bo.output.keys():
+                    for idx in bo.output[seed].keys():
+                        model = bo.output[seed][idx]["cif"]
+                        model.check_clashes()
+                        score_file = bo.output[seed][idx]["json"]
+                        plddt = model.residue_plddts
+                        if len(indicies) > 0:
+                            plddt = insert_none_by_minus_one(
+                                indicies[index_counter], plddt
+                            )
+                        index_counter += 1
+                        model_data = get_model_data(
+                            model,
+                            plot_dict,
+                            "Boltz",
+                            plddt,
+                            score_file,
+                            args.output_dir
+                        )
+                        boltz_models["models"].append(model_data)
 
         chai_models = {"models": []}
         if args.chai1:

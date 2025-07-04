@@ -92,11 +92,6 @@ class BoltzOutput:
             seed: [value["cif"] for value in self.output[seed].values()]
             for seed in self.seeds
         }
-        self.pae_to_af3()
-        self.af3_pae_files = {
-            seed: [value["af3_pae"] for value in self.output[seed].values()]
-            for seed in self.seeds
-        }
         self.plddt_files = {
             seed: [value["plddt"] for value in self.output[seed].values()]
             for seed in self.seeds
@@ -106,7 +101,12 @@ class BoltzOutput:
             for seed in self.seeds
         }
         self.scores_files = {
-            seed: [value["summary"] for value in self.output[seed].values()]
+            seed: [value["json"] for value in self.output[seed].values()]
+            for seed in self.seeds
+        }
+        self.pae_to_af3()
+        self.af3_pae_files = {
+            seed: [value["af3_pae"] for value in self.output[seed].values()]
             for seed in self.seeds
         }
 
@@ -220,10 +220,8 @@ class BoltzOutput:
         """
         new_pae_files = {}
         for seed in self.seeds:
-            for i, (pae_file, cif_file) in enumerate(
-                zip(self.af3_pae_files[seed], self.cif_files[seed])
-            ):
-                pae = Af3Pae.from_alphafold3(
+            for (pae_file, cif_file) in zip(self.pae_files[seed], self.cif_files[seed]):
+                pae = Af3Pae.from_boltz(
                     pae_file.data,
                     cif_file,
                 )
@@ -236,13 +234,13 @@ class BoltzOutput:
                     new_pae_files[seed] = []
                 new_pae_files[seed].append(ConfidenceJsonFile(out_name))
 
-        self.af3_pae_files = new_pae_files
+        self.pae_files = new_pae_files
         self.output = {
             seed: {
                 i: {
                     "cif": cif_file,
                     "af3_pae": new_pae_files[seed][i],
-                    "summary": self.output[seed][i]["summary"],
+                    "json": self.output[seed][i]["json"],
                 }
                 for i, cif_file in enumerate(self.cif_files[seed])
             }

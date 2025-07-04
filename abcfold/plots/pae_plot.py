@@ -97,6 +97,18 @@ def create_pae_plots(
             )
             run_script(cmd)
 
+            for seed in output.seeds:
+                run_scripts.extend(
+                    prepare_scripts(
+                        output.cif_files[seed],
+                        output.af3_pae_files[seed],
+                        plots_dir,
+                        pathway_plot,
+                        template_file,
+                        True,
+                    )
+                )
+
         elif isinstance(output, ChaiOutput):
             css_path = CSSPATHS["C"]
             template_file = plots_dir.joinpath("chai_template.html")
