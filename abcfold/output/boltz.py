@@ -16,6 +16,7 @@ class BoltzOutput:
         boltz_output_dirs: list[Union[str, Path]],
         input_params: dict,
         name: str,
+        save_input: bool = False,
     ):
         """
         Object to process the output of an Boltz run
@@ -26,6 +27,7 @@ class BoltzOutput:
             input_params (dict): Dictionary containing the input parameters used for the
             Boltz run
             name (str): Name given to the Boltz run
+            save_input (bool): If True, Boltz was run with the save_input flag
 
         Attributes:
             output_dirs (list): List of paths to the Boltz output directory(s)
@@ -65,10 +67,19 @@ class BoltzOutput:
         self.output_dirs = [Path(x) for x in boltz_output_dirs]
         self.input_params = input_params
         self.name = name
+        self.save_input = save_input
 
         parent_dir = self.output_dirs[0].parent
         new_parent = parent_dir / f"boltz_{self.name}"
         new_parent.mkdir(parents=True, exist_ok=True)
+
+        if self.save_input:
+            boltz_yaml = list(parent_dir.glob("*.yaml"))[0]
+            if boltz_yaml.exists():
+                boltz_yaml.rename(new_parent / "boltz_input.yaml")
+            boltz_msa = list(parent_dir.glob("*.a3m"))[0]
+            if boltz_msa.exists():
+                boltz_msa.rename(new_parent / boltz_msa.name)
 
         new_output_dirs = []
         for output_dir in self.output_dirs:
@@ -154,7 +165,7 @@ class BoltzOutput:
                     elif file_.pathway.stem.startswith("pde"):
                         intermediate_dict["pde"] = file_
                     elif file_.pathway.suffix == ".cif":
-                        file_.name = f"Boltz_{model_number}"
+                        file_.name = f"Boltz_{seed}_{model_number}"
                         file_ = self.update_chain_labels(file_)
                         intermediate_dict["cif"] = file_
                     else:

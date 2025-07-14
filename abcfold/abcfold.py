@@ -181,7 +181,7 @@ def run(args, config, defaults, config_file):
 
             if boltz_success:
                 bolt_out_dirs = list(args.output_dir.glob("boltz_results*"))
-                bo = BoltzOutput(bolt_out_dirs, input_params, name)
+                bo = BoltzOutput(bolt_out_dirs, input_params, name, args.save_input)
                 outputs.append(bo)
             successful_runs.append(boltz_success)
 

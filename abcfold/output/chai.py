@@ -62,10 +62,17 @@ class ChaiOutput:
         self.name = name
         self.save_input = save_input
 
-        # TODO: Fixes needed here
         parent_dir = self.output_dirs[0].parent
         new_parent = parent_dir / f"chai1_{self.name}"
         new_parent.mkdir(parents=True, exist_ok=True)
+
+        if self.save_input:
+            chai_fasta = parent_dir / "chai1.fasta"
+            if chai_fasta.exists():
+                chai_fasta.rename(new_parent / "chai1.fasta")
+            chai_msa = list(parent_dir.glob("*.aligned.pqt"))[0]
+            if chai_msa.exists():
+                chai_msa.rename(new_parent / chai_msa.name)
 
         new_output_dirs = []
         for output_dir in self.output_dirs:
@@ -90,7 +97,6 @@ class ChaiOutput:
             seed: [value["cif"] for value in self.output[seed].values()]
             for seed in self.seeds
         }
-        self.pae_to_af3()
         self.scores_files = {
             seed: [value["scores"] for value in self.output[seed].values()]
             for seed in self.seeds
@@ -154,7 +160,7 @@ class ChaiOutput:
                     if file_.pathway.stem.startswith("scores.model"):
                         intermediate_dict["scores"] = file_
                     elif file_.pathway.stem.startswith("pred.model"):
-                        file_.name = f"Chai-1_{model_number}"
+                        file_.name = f"Chai-1_{seed}_{model_number}"
                         # Chai cif not recognised by pae-viewer, so we load and save
                         file_.to_file(file_.pathway)
                         intermediate_dict["cif"] = file_
@@ -183,6 +189,7 @@ class ChaiOutput:
             for i, (pae_file, cif_file) in enumerate(
                 zip(self.pae_files[seed], self.cif_files[seed])
             ):
+                print(pae_file)
                 pae = Af3Pae.from_chai1(
                     pae_file.data[i],
                     cif_file,
