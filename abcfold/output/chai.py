@@ -62,13 +62,14 @@ class ChaiOutput:
         self.name = name
         self.save_input = save_input
 
+        # TODO: Fixes needed here
         parent_dir = self.output_dirs[0].parent
         new_parent = parent_dir / f"chai1_{self.name}"
         new_parent.mkdir(parents=True, exist_ok=True)
 
         new_output_dirs = []
         for output_dir in self.output_dirs:
-            if output_dir.name.startswith("chai_outputs_"):
+            if output_dir.name.startswith("chai_output_"):
                 new_path = new_parent / output_dir.name
                 output_dir.rename(new_path)
                 new_output_dirs.append(new_path)
@@ -82,8 +83,8 @@ class ChaiOutput:
         self.seeds = list(self.output.keys())
 
         self.pae_files = {
-            seed: [value["pae"] for value in self.output[seed].values()]
-            for seed in self.seeds
+            seed: [value["pae"] for value in self.output[seed].values()
+                   if "pae" in value] for seed in self.seeds
         }
         self.cif_files = {
             seed: [value["cif"] for value in self.output[seed].values()]
@@ -130,15 +131,24 @@ class ChaiOutput:
                 if isinstance(number, str):
                     number = -1
 
-                if number not in file_groups:
-                    file_groups[number] = [file_]
+                if number not in file_groups[seed]:
+                    file_groups[seed][number] = [file_]
                 else:
-                    file_groups[number].append(file_)
+                    file_groups[seed][number].append(file_)
 
         seed_dict = {}
         for seed, models in file_groups.items():
             model_number_file_type_file = {}
+            pae_file = None
+            if -1 in models:
+                for file_ in models[-1]:
+                    if file_.pathway.stem.startswith("pae_scores"):
+                        pae_file = file_
+                        break
+
             for model_number, files in models.items():
+                if model_number == -1:
+                    continue
                 intermediate_dict = {}
                 for file_ in sorted(files, key=lambda x: x.suffix):
                     if file_.pathway.stem.startswith("scores.model"):
@@ -148,8 +158,8 @@ class ChaiOutput:
                         # Chai cif not recognised by pae-viewer, so we load and save
                         file_.to_file(file_.pathway)
                         intermediate_dict["cif"] = file_
-                    elif file_.pathway.stem.startswith("pae_scores"):
-                        intermediate_dict["pae"] = file_
+                if model_number != -1 and pae_file is not None:
+                    intermediate_dict["pae"] = pae_file
 
                 model_number_file_type_file[model_number] = intermediate_dict
 
@@ -170,9 +180,11 @@ class ChaiOutput:
         """
         new_pae_files = {}
         for seed in self.seeds:
-            for (pae_file, cif_file) in zip(self.pae_files[seed], self.cif_files[seed]):
+            for i, (pae_file, cif_file) in enumerate(
+                zip(self.pae_files[seed], self.cif_files[seed])
+            ):
                 pae = Af3Pae.from_chai1(
-                    pae_file.data,
+                    pae_file.data[i],
                     cif_file,
                 )
 

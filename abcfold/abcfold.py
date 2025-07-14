@@ -194,10 +194,9 @@ def run(args, config, defaults, config_file):
             elif args.templates:
                 template_hits_path = make_dummy_m8_file(run_json, temp_dir)
 
-            chai_output_dir = args.output_dir.joinpath(f"chai1_{name}")
             chai_success = run_chai(
                 input_json=run_json,
-                output_dir=chai_output_dir,
+                output_dir=args.output_dir,
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
@@ -205,7 +204,7 @@ def run(args, config, defaults, config_file):
             )
 
             if chai_success:
-                chai_output_dirs = list(args.output_dir.glob("chai_outputs*"))
+                chai_output_dirs = list(args.output_dir.glob("chai_output*"))
                 co = ChaiOutput(chai_output_dirs, input_params, name, args.save_input)
                 outputs.append(co)
             successful_runs.append(chai_success)
