@@ -58,8 +58,8 @@ def output_objs():
     d = {}
 
     adir = data_dir.joinpath("alphafold3_6BJ9")
-    bdir = data_dir.joinpath("boltz_6BJ9")
-    cdir = data_dir.joinpath("chai1_6BJ9")
+    bdir = data_dir.joinpath("boltz_6BJ9_seed-1")
+    cdir = data_dir.joinpath("chai1_6BJ9_seed-1")
     name = "6BJ9"
     input_params = adir.joinpath("6bj9_data.json")
 
@@ -72,13 +72,13 @@ def output_objs():
         name,
     )
     boltz_output = BoltzOutput(
-        bdir,
+        [bdir],
         input_params.copy(),
         name,
     )
 
     chai_output = ChaiOutput(
-        cdir,
+        [cdir],
         input_params.copy(),
         name,
     )

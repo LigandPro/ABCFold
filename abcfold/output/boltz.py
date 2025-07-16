@@ -138,11 +138,11 @@ class BoltzOutput:
                 number = int(number)
 
                 file_type = output.suffix[1:]
+
                 if file_type == FileTypes.NPZ.value:
                     file_ = NpzFile(str(output))
                 elif file_type == FileTypes.CIF.value:
                     file_ = CifFile(str(output), self.input_params)
-
                 elif file_type == FileTypes.JSON.value:
                     file_ = ConfidenceJsonFile(str(output))
                 else:
@@ -245,7 +245,6 @@ class BoltzOutput:
                     new_pae_files[seed] = []
                 new_pae_files[seed].append(ConfidenceJsonFile(out_name))
 
-        self.pae_files = new_pae_files
         self.output = {
             seed: {
                 i: {

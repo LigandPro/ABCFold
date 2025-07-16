@@ -189,7 +189,6 @@ class ChaiOutput:
             for i, (pae_file, cif_file) in enumerate(
                 zip(self.pae_files[seed], self.cif_files[seed])
             ):
-                print(pae_file)
                 pae = Af3Pae.from_chai1(
                     pae_file.data[i],
                     cif_file,
@@ -203,7 +202,6 @@ class ChaiOutput:
                     new_pae_files[seed] = []
                 new_pae_files[seed].append(ConfidenceJsonFile(out_name))
 
-        self.pae_files = new_pae_files
         self.output = {
             seed: {
                 i: {
