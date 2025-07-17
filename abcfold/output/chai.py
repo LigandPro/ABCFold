@@ -1,4 +1,5 @@
 import logging
+import shutil
 from pathlib import Path
 from typing import Union
 
@@ -165,7 +166,11 @@ class ChaiOutput:
                         file_.to_file(file_.pathway)
                         intermediate_dict["cif"] = file_
                 if model_number != -1 and pae_file is not None:
-                    intermediate_dict["pae"] = pae_file
+                    new_pae_path = (
+                        file_.pathway.parent / f"pae_scores_model_{model_number}.npy"
+                    )
+                    shutil.copy(pae_file.pathway, new_pae_path)
+                    intermediate_dict["pae"] = NpyFile(str(new_pae_path))
 
                 model_number_file_type_file[model_number] = intermediate_dict
 
