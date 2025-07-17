@@ -8,7 +8,9 @@ from abcfold.output.utils import Af3Pae
 def test_process_chai_output(test_data, output_objs):
     chai_output = output_objs.chai_output
 
-    assert str(chai_output.output_dirs[0]) == str(test_data.test_chai1_6BJ9_seed_1_)
+    assert chai_output.output_dirs[0].relative_to(
+        chai_output.output_dirs[0].parent
+    ) == Path(test_data.test_chai1_6BJ9_seed_1_).relative_to("tests/test_data")
 
     assert 0 in chai_output.output['seed-1']
     assert 1 in chai_output.output['seed-1']

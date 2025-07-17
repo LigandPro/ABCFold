@@ -1,5 +1,7 @@
 import json
 import logging
+import shutil
+import tempfile
 from collections import namedtuple
 from pathlib import Path
 
@@ -63,31 +65,41 @@ def output_objs():
     name = "6BJ9"
     input_params = adir.joinpath("6bj9_data.json")
 
-    with open(input_params, "r") as f:
-        input_params = json.load(f)
+    # Create temporary directories
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_adir = Path(temp_dir) / "alphafold3_6BJ9"
+        temp_bdir = Path(temp_dir) / "boltz_6BJ9_seed-1"
+        temp_cdir = Path(temp_dir) / "chai1_6BJ9_seed-1"
 
-    af3_output = AlphafoldOutput(
-        adir,
-        input_params.copy(),
-        name,
-    )
-    boltz_output = BoltzOutput(
-        [bdir],
-        input_params.copy(),
-        name,
-    )
+        shutil.copytree(adir, temp_adir)
+        shutil.copytree(bdir, temp_bdir)
+        shutil.copytree(cdir, temp_cdir)
 
-    chai_output = ChaiOutput(
-        [cdir],
-        input_params.copy(),
-        name,
-    )
+        with open(input_params, "r") as f:
+            input_params = json.load(f)
 
-    d["af3_output"] = af3_output
-    d["boltz_output"] = boltz_output
-    d["chai_output"] = chai_output
+        af3_output = AlphafoldOutput(
+            temp_adir,
+            input_params.copy(),
+            name,
+        )
+        boltz_output = BoltzOutput(
+            [temp_bdir],
+            input_params.copy(),
+            name,
+        )
 
-    nt = namedtuple("output_objs", d)
-    n = nt(**d)
+        chai_output = ChaiOutput(
+            [temp_cdir],
+            input_params.copy(),
+            name,
+        )
 
-    yield n
+        d["af3_output"] = af3_output
+        d["boltz_output"] = boltz_output
+        d["chai_output"] = chai_output
+
+        nt = namedtuple("output_objs", d)
+        n = nt(**d)
+
+        yield n

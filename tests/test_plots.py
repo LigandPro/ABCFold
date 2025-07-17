@@ -50,27 +50,33 @@ def test_pae_plots(output_objs):
         assert "pae_scores_model_1_chai1_6BJ9_seed-1_af3_pae_plot.html" in values
 
         assert (
-            "tests/test_data/alphafold3_6BJ9/seed-1_sample-0/\
-model.cif"
-            in plot_pathways
+            any(
+                "alphafold3_6BJ9/seed-1_sample-0/model.cif" in x for x in plot_pathways
+            )
         )
         assert (
-            "tests/test_data/alphafold3_6BJ9/seed-1_sample-1/\
-model.cif"
-            in plot_pathways
+            any(
+                "alphafold3_6BJ9/seed-1_sample-1/model.cif" in x for x in plot_pathways
+            )
         )
         assert (
-            "tests/test_data/boltz_6BJ9_seed-1/predictions/test_mmseqs/\
-test_mmseqs_model_0.cif"
-            in plot_pathways
+            any(
+                "boltz_6BJ9_seed-1/predictions/test_mmseqs/test_mmseqs_model_0.cif"
+                in x for x in plot_pathways
+            )
         )
         assert (
-            "tests/test_data/boltz_6BJ9_seed-1/predictions/test_mmseqs/\
-test_mmseqs_model_1.cif"
-            in plot_pathways
+            any(
+                "boltz_6BJ9_seed-1/predictions/test_mmseqs/test_mmseqs_model_1.cif"
+                in x for x in plot_pathways
+            )
         )
-        assert "tests/test_data/chai1_6BJ9_seed-1/pred.model_idx_0.cif" in plot_pathways
-        assert "tests/test_data/chai1_6BJ9_seed-1/pred.model_idx_1.cif" in plot_pathways
+        assert (
+            any("chai1_6BJ9_seed-1/pred.model_idx_0.cif" in x for x in plot_pathways)
+        )
+        assert (
+            any("chai1_6BJ9_seed-1/pred.model_idx_1.cif" in x for x in plot_pathways)
+        )
 
         assert len(list(temp_dir.glob("*.html"))) == 6
 
