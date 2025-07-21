@@ -232,36 +232,46 @@ def get_all_cif_files(outputs) -> Dict[str, list]:
                     method_cif_objs["Alphafold3"] = []
                 method_cif_objs["Alphafold3"].extend(output.cif_files[seed])
         elif isinstance(output, BoltzOutput):
-
-            method_cif_objs["Boltz"] = output.cif_files
+            for seed in output.seeds:
+                if "Boltz" not in method_cif_objs:
+                    method_cif_objs["Boltz"] = []
+                method_cif_objs["Boltz"].extend(output.cif_files[seed])
         elif isinstance(output, ChaiOutput):
-            method_cif_objs["Chai-1"] = output.cif_files
+            for seed in output.seeds:
+                if "Chai-1" not in method_cif_objs:
+                    method_cif_objs["Chai-1"] = []
+                method_cif_objs["Chai-1"].extend(output.cif_files[seed])
 
     return method_cif_objs
 
 
 def parse_scores(score_file: Union[ConfidenceJsonFile, NpzFile]) -> tuple:
     """
-    Parse the scores from the score file
+    Parse the scores from the score file.
 
     Args:
         score_file (Union[ConfidenceJsonFile, NpzFile]): The score file object.
 
     Returns:
-        tuple: A tuple containing ptm_score and iptm_score as floats.
+        tuple: A tuple containing ptm_score and iptm_score as floats, or None if invalid
     """
     ptm_score = None
     iptm_score = None
 
     if isinstance(score_file, ConfidenceJsonFile):
         data = score_file.load_json_file()
-        if "ptm" in data and "iptm" in data:
-            ptm_score = round(float(data["ptm"]), 2)
-            iptm_score = round(float(data["iptm"]), 2)
     elif isinstance(score_file, NpzFile):
         data = score_file.load_npz_file()
-        if "ptm" in data and "iptm" in data:
-            ptm_score = round(float(data["ptm"]), 2)
-            iptm_score = round(float(data["iptm"]), 2)
+    else:
+        return ptm_score, iptm_score
+    for key in ("ptm", "iptm"):
+        try:
+            value = float(data[key])
+            if key == "ptm":
+                ptm_score = round(value, 2)
+            else:
+                iptm_score = round(value, 2)
+        except (KeyError, TypeError, ValueError):
+            continue
 
     return ptm_score, iptm_score

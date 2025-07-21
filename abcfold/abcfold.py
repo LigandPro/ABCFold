@@ -180,8 +180,8 @@ def run(args, config, defaults, config_file):
             )
 
             if boltz_success:
-                bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
-                bo = BoltzOutput(bolt_out_dir, input_params, name)
+                bolt_out_dirs = list(args.output_dir.glob("boltz_results*"))
+                bo = BoltzOutput(bolt_out_dirs, input_params, name, args.save_input)
                 outputs.append(bo)
             successful_runs.append(boltz_success)
 
@@ -194,10 +194,9 @@ def run(args, config, defaults, config_file):
             elif args.templates:
                 template_hits_path = make_dummy_m8_file(run_json, temp_dir)
 
-            chai_output_dir = args.output_dir.joinpath("chai1")
             chai_success = run_chai(
                 input_json=run_json,
-                output_dir=chai_output_dir,
+                output_dir=args.output_dir,
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
@@ -205,7 +204,8 @@ def run(args, config, defaults, config_file):
             )
 
             if chai_success:
-                co = ChaiOutput(chai_output_dir, input_params, name, args.save_input)
+                chai_output_dirs = list(args.output_dir.glob("chai_output*"))
+                co = ChaiOutput(chai_output_dirs, input_params, name, args.save_input)
                 outputs.append(co)
             successful_runs.append(chai_success)
 
@@ -259,28 +259,11 @@ def run(args, config, defaults, config_file):
         if args.boltz:
             if boltz_success:
                 programs_run.append("Boltz")
-                for idx in bo.output.keys():
-                    model = bo.output[idx]["cif"]
-                    model.check_clashes()
-                    score_file = bo.output[idx]["json"]
-                    plddt = model.residue_plddts
-                    if len(indicies) > 0:
-                        plddt = insert_none_by_minus_one(indicies[index_counter], plddt)
-                    index_counter += 1
-                    model_data = get_model_data(
-                        model, plot_dict, "Boltz", plddt, score_file, args.output_dir
-                    )
-                    boltz_models["models"].append(model_data)
-
-        chai_models = {"models": []}
-        if args.chai1:
-            if chai_success:
-                programs_run.append("Chai-1")
-                for idx in co.output.keys():
-                    if idx >= 0:
-                        model = co.output[idx]["cif"]
+                for seed in bo.output.keys():
+                    for idx in bo.output[seed].keys():
+                        model = bo.output[seed][idx]["cif"]
                         model.check_clashes()
-                        score_file = co.output[idx]["scores"]
+                        score_file = bo.output[seed][idx]["json"]
                         plddt = model.residue_plddts
                         if len(indicies) > 0:
                             plddt = insert_none_by_minus_one(
@@ -290,12 +273,38 @@ def run(args, config, defaults, config_file):
                         model_data = get_model_data(
                             model,
                             plot_dict,
-                            "Chai-1",
+                            "Boltz",
                             plddt,
                             score_file,
-                            args.output_dir,
+                            args.output_dir
                         )
-                        chai_models["models"].append(model_data)
+                        boltz_models["models"].append(model_data)
+
+        chai_models = {"models": []}
+        if args.chai1:
+            if chai_success:
+                programs_run.append("Chai-1")
+                for seed in co.output.keys():
+                    for idx in co.output[seed].keys():
+                        if idx >= 0:
+                            model = co.output[seed][idx]["cif"]
+                            model.check_clashes()
+                            score_file = co.output[seed][idx]["scores"]
+                            plddt = model.residue_plddts
+                            if len(indicies) > 0:
+                                plddt = insert_none_by_minus_one(
+                                    indicies[index_counter], plddt
+                                )
+                            index_counter += 1
+                            model_data = get_model_data(
+                                model,
+                                plot_dict,
+                                "Chai-1",
+                                plddt,
+                                score_file,
+                                args.output_dir,
+                            )
+                            chai_models["models"].append(model_data)
 
         combined_models = (
             alphafold_models["models"] + boltz_models["models"] + chai_models["models"]

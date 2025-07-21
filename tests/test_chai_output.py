@@ -8,26 +8,34 @@ from abcfold.output.utils import Af3Pae
 def test_process_chai_output(test_data, output_objs):
     chai_output = output_objs.chai_output
 
-    assert str(chai_output.output_dir) == str(test_data.test_chai1_6BJ9_)
+    assert chai_output.output_dirs[0].relative_to(
+        chai_output.output_dirs[0].parent
+    ) == Path(test_data.test_chai1_6BJ9_seed_1_).relative_to("tests/test_data")
 
-    assert -1 in chai_output.output
-    assert 0 in chai_output.output
-    assert 1 in chai_output.output
+    assert 0 in chai_output.output['seed-1']
+    assert 1 in chai_output.output['seed-1']
 
-    assert all(isinstance(pae_file, NpyFile) for pae_file in chai_output.pae_files)
-    assert all(isinstance(cif_file, CifFile) for cif_file in chai_output.cif_files)
     assert all(
-        isinstance(scores_file, NpzFile) for scores_file in chai_output.scores_files
+        isinstance(pae_file, NpyFile) for pae_file in chai_output.pae_files['seed-1']
+    )
+    assert all(
+        isinstance(cif_file, CifFile) for cif_file in chai_output.cif_files['seed-1']
+    )
+    assert all(
+        isinstance(scores_file, NpzFile)
+        for scores_file in chai_output.scores_files['seed-1']
     )
 
 
 def test_chai_pae_to_af3_pae(output_objs):
     comparison_af3_output = output_objs.af3_output.af3_pae_files["seed-1"][0].data
-    pae_file = output_objs.chai_output.pae_files[-1]
-    for i, cif_file in enumerate(output_objs.chai_output.cif_files):
+    for pae_file, cif_file in zip(
+        output_objs.chai_output.pae_files['seed-1'],
+        output_objs.chai_output.cif_files['seed-1']
+    ):
         assert cif_file.input_params
         pae = Af3Pae.from_chai1(
-            pae_file.data[i],
+            pae_file.data,
             cif_file,
         )
 
@@ -38,9 +46,9 @@ def test_chai_pae_to_af3_pae(output_objs):
 
         # for some reason the lengths are different for atom - realted things
         # If it isn't breaking the output page generation, then it's fine
-        assert len(pae.scores["pae"]) == len(comparison_af3_output["pae"])
+        assert len(pae.scores["pae"][0]) == len(comparison_af3_output["pae"])
 
-        assert len(pae.scores["contact_probs"]) == len(
+        assert len(pae.scores["contact_probs"][0]) == len(
             comparison_af3_output["contact_probs"]
         )
         assert len(pae.scores["token_chain_ids"]) == len(

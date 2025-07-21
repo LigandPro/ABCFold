@@ -9,7 +9,7 @@ from abcfold.output import file_handlers
 
 
 def test_npz_file(test_data):
-    test_npz = Path(test_data.test_boltz_6BJ9_).joinpath(
+    test_npz = Path(test_data.test_boltz_6BJ9_seed_1_).joinpath(
         "predictions/test_mmseqs/pae_test_mmseqs_model_1.npz"
     )
     npz_file = file_handlers.NpzFile(test_npz)
@@ -19,7 +19,7 @@ def test_npz_file(test_data):
 
 
 def test_npy_file(test_data):
-    test_npy = Path(test_data.test_chai1_6BJ9_).joinpath("pae_scores.npy")
+    test_npy = Path(test_data.test_chai1_6BJ9_seed_1_).joinpath("pae_scores.npy")
     npy_file = file_handlers.NpyFile(test_npy)
 
     assert npy_file.data.shape == (2, 888, 888)
@@ -152,7 +152,7 @@ def test_superpose_models(test_data):
         model_1 = Path(test_data.test_alphafold3_6BJ9_).joinpath(
             "seed-1_sample-0/model.cif"
         )
-        model_2 = Path(test_data.test_boltz_6BJ9_).joinpath(
+        model_2 = Path(test_data.test_boltz_6BJ9_seed_1_).joinpath(
             "predictions/test_mmseqs/test_mmseqs_model_0.cif"
         )
 

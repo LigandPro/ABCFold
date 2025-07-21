@@ -42,7 +42,6 @@ class AlphafoldOutput:
                 },
                 etc...
             }
-            This is different to the boltz and chai equivalent as they do not have seeds
         """
         self.output_dir = Path(af3_output_dir)
         self.input_params = input_params

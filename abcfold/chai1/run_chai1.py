@@ -48,12 +48,10 @@ def run_chai(
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
-        chai_output_dir = output_dir
         if save_input:
             logger.info("Saving input fasta file and msa to the output directory")
             working_dir = output_dir
             working_dir.mkdir(parents=True, exist_ok=True)
-            chai_output_dir = output_dir / "chai_output"
 
         chai_fasta = ChaiFasta(working_dir)
         chai_fasta.json_to_fasta(input_json)
@@ -62,42 +60,46 @@ def run_chai(
         msa_dir = chai_fasta.working_dir
         out_constraints = chai_fasta.constraints
 
-        cmd = (
-            generate_chai_command(
-                out_fasta,
-                msa_dir,
-                out_constraints,
-                chai_output_dir,
-                number_of_models,
-                num_recycles=num_recycles,
-                use_templates_server=use_templates_server,
-                template_hits_path=template_hits_path,
-            )
-            if not test
-            else generate_chai_test_command()
-        )
+        for seed in chai_fasta.seeds:
+            chai_output_dir = output_dir / f"chai_output_seed-{seed}"
 
-        logger.info("Running Chai-1")
-        with subprocess.Popen(
-            cmd,
-            stdout=sys.stdout,
-            stderr=subprocess.PIPE,
-        ) as proc:
-            _, stderr = proc.communicate()
-            if proc.returncode != 0:
-                if proc.stderr:
-                    if chai_output_dir.exists():
-                        output_err_file = chai_output_dir / "chai_error.log"
+            logger.info(f"Running Chai-1 using seed {seed}")
+            cmd = (
+                generate_chai_command(
+                    out_fasta,
+                    msa_dir,
+                    out_constraints,
+                    chai_output_dir,
+                    number_of_models,
+                    num_recycles=num_recycles,
+                    seed=seed,
+                    use_templates_server=use_templates_server,
+                    template_hits_path=template_hits_path,
+                )
+                if not test
+                else generate_chai_test_command()
+            )
+
+            with subprocess.Popen(
+                cmd,
+                stdout=sys.stdout,
+                stderr=subprocess.PIPE,
+            ) as proc:
+                _, stderr = proc.communicate()
+                if proc.returncode != 0:
+                    if proc.stderr:
+                        if chai_output_dir.exists():
+                            output_err_file = chai_output_dir / "chai_error.log"
+                        else:
+                            output_err_file = chai_output_dir.parent / "chai_error.log"
+                        with open(output_err_file, "w") as f:
+                            f.write(stderr.decode())
+                        logger.error(
+                            "Chai-1 run failed. Error log is in %s", output_err_file
+                        )
                     else:
-                        output_err_file = chai_output_dir.parent / "chai_error.log"
-                    with open(output_err_file, "w") as f:
-                        f.write(stderr.decode())
-                    logger.error(
-                        "Chai-1 run failed. Error log is in %s", output_err_file
-                    )
-                else:
-                    logger.error("Chai-1 run failed")
-                return False
+                        logger.error("Chai-1 run failed")
+                    return False
 
         logger.info("Chai-1 run complete")
         return True
@@ -110,6 +112,7 @@ def generate_chai_command(
     output_dir: Union[str, Path],
     number_of_models: int = 5,
     num_recycles: int = 10,
+    seed: int = 42,
     use_templates_server: bool = False,
     template_hits_path: Path | None = None,
 ) -> list:
@@ -123,6 +126,7 @@ def generate_chai_command(
         output_dir (Union[str, Path]): Path to the output directory
         number_of_models (int): Number of models to generate
         num_recycles (int): Number of trunk recycles
+        seed (int): Seed for the random number generator
         use_templates_server (bool): If True, use templates from the server
         template_hits_path (Path): Path to the template hits m8 file
 
@@ -141,6 +145,7 @@ def generate_chai_command(
 
     cmd += ["--num-diffn-samples", str(number_of_models)]
     cmd += ["--num-trunk-recycles", str(num_recycles)]
+    cmd += ["--seed", str(seed)]
 
     assert not (
         use_templates_server and template_hits_path

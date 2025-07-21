@@ -100,7 +100,7 @@ class NpzFile(FileBase):
         self.data = self.load_npz_file()
 
     def load_npz_file(self) -> dict:
-        return dict(np.load(self.npz_file))
+        return dict(np.load(self.npz_file, allow_pickle=True))
 
 
 class NpyFile(FileBase):
@@ -121,7 +121,7 @@ class NpyFile(FileBase):
         self.data = self.load_npy_file()
 
     def load_npy_file(self) -> np.ndarray:
-        return np.load(self.npy_file)
+        return np.load(self.npy_file, allow_pickle=True)
 
 
 class CifFile(FileBase):
