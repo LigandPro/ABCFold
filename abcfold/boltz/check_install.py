@@ -4,7 +4,7 @@ import sys
 
 logger = logging.getLogger("logger")
 
-BOLTZ_VERSION = "2.1.1"
+BOLTZ_VERSION = "2.2.0"
 
 
 def check_boltz():
