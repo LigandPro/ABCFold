@@ -224,10 +224,17 @@ class BoltzYaml:
         yaml_string = ""
         yaml_string += f"{DELIM}{DELIM}modifications:\n"
         for modification in list_of_modifications:
-            yaml_string += (
-                f"{DELIM}{DELIM}{DELIM}- position: {modification['ptmPosition']}\n"
-            )
-            yaml_string += f"{DELIM}{DELIM}{DELIM}  ccd: {modification['ptmType']}\n"
+            if "ptmType" in modification and "ptmPosition" in modification:
+                yaml_string += (
+                    f"{DELIM}{DELIM}{DELIM}- position: {modification['ptmPosition']}\n"
+                    f"{DELIM}{DELIM}{DELIM}  ccd: {modification['ptmType']}\n"
+                )
+            elif "modificationType" in modification and "basePosition" in modification:
+                yaml_string += (
+                    f"{DELIM}{DELIM}{DELIM}- position: {modification['basePosition']}\n"
+                    f"{DELIM}{DELIM}{DELIM}  ccd: {modification['modificationType']}\n"
+                )
+
         return yaml_string
 
     def add_key_and_value(self, key: str, value: str):

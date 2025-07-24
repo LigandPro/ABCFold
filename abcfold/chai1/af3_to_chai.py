@@ -265,8 +265,15 @@ install chai_lab'"
         return nucleotide_str, fasta_data
 
     def _add_nucleotide(self, seq: dict, seq_type: str, nucl_id: str, fasta_data: dict):
-        nucleotide_str = f">{seq_type}|{nucl_id}\n{seq[seq_type]['sequence']}\n"
-        fasta_data[nucl_id] = seq[seq_type]["sequence"]
+        sequence = seq[seq_type]["sequence"]
+        fasta_data[nucl_id] = sequence
+
+        if "modifications" in seq[seq_type]:
+            sequence = self.add_modifications(
+                sequence, seq[seq_type]["modifications"]
+            )
+
+        nucleotide_str = f">{seq_type}|{nucl_id}\n{sequence}\n"
         return nucleotide_str, fasta_data
 
     def ccd_to_smiles(self, ccd_id: str):
@@ -347,9 +354,14 @@ install chai_lab'"
 
         sequence_list = list(sequence)
         for mod in modifications:
-            ptm_type = mod['ptmType']
-            position = int(mod['ptmPosition']) - 1
-            sequence_list[position] = f"({ptm_type})"
+            if "ptmType" in mod and "ptmPosition" in mod:
+                ptm_type = mod['ptmType']
+                position = int(mod['ptmPosition']) - 1
+                sequence_list[position] = f"({ptm_type})"
+            elif "modificationType" in mod and "basePosition" in mod:
+                mod_type = mod['modificationType']
+                position = int(mod['basePosition']) - 1
+                sequence_list[position] = f"({mod_type})"
 
         return ''.join(sequence_list)
 
