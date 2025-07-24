@@ -71,9 +71,11 @@ class ChaiOutput:
             chai_fasta = parent_dir / "chai1.fasta"
             if chai_fasta.exists():
                 chai_fasta.rename(new_parent / "chai1.fasta")
-            chai_msa = list(parent_dir.glob("*.aligned.pqt"))[0]
-            if chai_msa.exists():
-                chai_msa.rename(new_parent / chai_msa.name)
+            chai_msas = list(parent_dir.glob("*.aligned.pqt"))
+            if chai_msas:
+                for chai_msa in chai_msas:
+                    if chai_msa.exists():
+                        chai_msa.rename(new_parent / chai_msa.name)
 
         new_output_dirs = []
         for output_dir in self.output_dirs:
