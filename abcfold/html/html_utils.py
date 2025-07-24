@@ -28,7 +28,7 @@ def get_plddt_regions(plddts: Union[np.ndarray, list]) -> dict:
 
     regions = {}
     # replace none values with -1
-    plddts = np.where(plddts is None, -1, plddts)
+    plddts = np.where(plddts == None, -1, plddts) # noqa F401
 
     v_low = np.where((0 <= plddts) & (plddts <= 50))[0]
     regions["v_low"] = get_regions_helper(v_low)
