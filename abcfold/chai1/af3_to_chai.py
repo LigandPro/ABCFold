@@ -227,7 +227,6 @@ install chai_lab'"
         return protein_str, fasta_data
 
     def _add_protein(self, seq: dict, prot_id: str, fasta_data: dict):
-        protein_str = f">protein|{prot_id}\n{seq['protein']['sequence']}\n"
         sequence = seq["protein"]["sequence"]
         if "unpairedMsa" in seq["protein"].keys():
             seq_hash = hashlib.sha256(sequence.upper().encode()).hexdigest()
@@ -240,6 +239,11 @@ install chai_lab'"
                 else None
             )
         fasta_data[prot_id] = sequence
+
+        if "modifications" in seq["protein"]:
+            sequence = self.add_modifications(sequence, seq["protein"]["modifications"])
+
+        protein_str = f">protein|{prot_id}\n{sequence}\n"
 
         return protein_str, fasta_data
 
@@ -328,6 +332,26 @@ install chai_lab'"
                 fasta_data[lig_id] = "SMILES_PLACEHOLDER"
 
         return ligand_str
+
+    def add_modifications(self, sequence: str, modifications: list) -> str:
+        """
+        Add modifications to the fasta data
+
+        Args:
+            sequence (str): the sequence to add modifications to be added to
+            modifications (list): list of modifications to be added
+
+        Returns:
+            sequence (str): the sequence with modifications added
+        """
+
+        sequence_list = list(sequence)
+        for mod in modifications:
+            ptm_type = mod['ptmType']
+            position = int(mod['ptmPosition']) - 1
+            sequence_list[position] = f"({ptm_type})"
+
+        return ''.join(sequence_list)
 
     def get_atom_name(self, atom: str) -> str:
         for name in ATOMS_NAMES:
