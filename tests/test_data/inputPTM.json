@@ -1,0 +1,29 @@
+{
+    "name": "PTM example",
+    "modelSeeds": [1],
+    "sequences": [
+        {
+            "protein": {
+                "id": "A",
+                "sequence": "PVLSCGEWQL",
+                "modifications": [
+                    {"ptmType": "HY3", "ptmPosition": 1},
+                    {"ptmType": "P1L", "ptmPosition": 5}
+                ]
+            }
+        },
+        {
+        "rna": {
+                "id": "B",
+                "sequence": "AGCU",
+                "modifications": [
+                    {"modificationType": "2MG", "basePosition": 1},
+                    {"modificationType": "5MC", "basePosition": 4}
+                ]
+            }
+        }
+    ],
+
+    "dialect": "alphafold3",
+    "version": 1
+}

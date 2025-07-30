@@ -3,8 +3,8 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ABCFold"
-version = "1.0.7"
+name = "abcfold"
+version = "1.0.8"
 description = "Input processing tools for AlphaFold3, Boltz and Chai-1"
 readme = "README.md"
 license = { text = "BSD License" }

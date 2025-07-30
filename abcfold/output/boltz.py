@@ -77,9 +77,12 @@ class BoltzOutput:
             boltz_yaml = list(parent_dir.glob("*.yaml"))[0]
             if boltz_yaml.exists():
                 boltz_yaml.rename(new_parent / "boltz_input.yaml")
-            boltz_msa = list(parent_dir.glob("*.a3m"))[0]
-            if boltz_msa.exists():
-                boltz_msa.rename(new_parent / boltz_msa.name)
+
+            boltz_msas = list(parent_dir.glob("*.a3m"))
+            if boltz_msas:
+                for boltz_msa in boltz_msas:
+                    if boltz_msa.exists():
+                        boltz_msa.rename(new_parent / boltz_msa.name)
 
         new_output_dirs = []
         for output_dir in self.output_dirs:

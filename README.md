@@ -294,6 +294,7 @@ If modelling multiple copies of the same sequence in Boltz, the input JSON must 
   "dialect": "alphafold3",
   "version": 1
 }
+```
 
 If the identical sequences are given as seperate entities (as shown below) you will encounter an error.
 
