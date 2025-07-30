@@ -35,7 +35,6 @@ def test_af3_to_boltz(test_data):
         yaml_string_bonds = boltz_yaml.json_to_yaml(test_data.test_inputA_json)
         yaml_string_bonds = yaml_string_bonds.split("\n")
 
-        print(yaml_string_bonds)
         assert yaml_string_bonds[0] == "version: 1"
         assert yaml_string_bonds[1] == "sequences:"
         assert yaml_string_bonds[2] == f"{DELIM}- protein:"

@@ -125,6 +125,30 @@ def test_af3_to_chai_ligand(test_data):
 
 
 @pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
+def test_af3_to_chai_ptm(test_data):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        chai_fasta = ChaiFasta(temp_dir)
+
+        chai_fasta.json_to_fasta(test_data.test_inputPTM_json)
+
+        reference = (
+            ">protein|A\n"
+            "(HY3)VLS(P1L)GEWQL\n"
+            ">rna|B\n"
+            "(2MG)GC(5MC)\n"
+        )
+
+        filename = Path(temp_dir) / "chai1.fasta"
+
+        assert filename.exists()
+        with open(filename, "r") as f:
+            data = f.read()
+            print(data)
+
+        assert data == reference
+
+
+@pytest.mark.skipif(not run_chai1, reason="chai_lab not installed")
 def test_chai_output_constraints(test_data):
     with tempfile.TemporaryDirectory() as temp_dir:
         chai_fasta = ChaiFasta(temp_dir)
