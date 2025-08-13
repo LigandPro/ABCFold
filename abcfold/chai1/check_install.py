@@ -21,6 +21,11 @@ def check_chai1():
         ) as proc:
             stdout, stderr = proc.communicate()
             if proc.returncode != 0:
+                if "Package(s) not found:" in stderr.decode():
+                    
+                    raise ModuleNotFoundError(
+                        "Chai_lab package not found."
+                    )
                 raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
 
             version = None
@@ -35,7 +40,6 @@ def check_chai1():
                 )
     except (ImportError, ModuleNotFoundError):
         try:
-            import boltz as _  # noqa F401
             import boltz as _  # noqa F401
 
             no_deps = True
@@ -65,7 +69,7 @@ def check_chai1():
                 "jaxtyping",
                 "beartype",
                 "pandera",
-                "gemmi",
+                "matplotlib",
             ]
             logger.info("Installing dependencies: %s", " ".join(cmd))
             run_command_using_sys(cmd)

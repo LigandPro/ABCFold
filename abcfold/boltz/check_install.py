@@ -19,6 +19,11 @@ def check_boltz():
         ) as proc:
             stdout, stderr = proc.communicate()
             if proc.returncode != 0:
+                if "Package(s) not found:" in stderr.decode():
+                    
+                    raise ModuleNotFoundError(
+                        "Boltz package not found."
+                    )
                 raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
 
             version = None
@@ -41,7 +46,10 @@ def check_boltz():
             "pip",
             "install",
             f"boltz=={BOLTZ_VERSION}",
+            "cuequivariance_torch",
+            "cuequivariance_ops_torch"
             "--no-cache-dir",
+
         ]
 
         logger.info("Running %s", " ".join(cmd))
