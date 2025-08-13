@@ -63,6 +63,7 @@ def check_chai1():
                 "jaxtyping",
                 "beartype",
                 "pandera",
+                "gemmi",
             ]
             logger.info("Installing dependencies: %s", " ".join(cmd))
             run_command_using_sys(cmd)
@@ -78,10 +79,9 @@ def check_chai1():
 
 def run_command_using_sys(command: list[str]) -> None:
     """Run a command using sys.executable."""
-    cmd = [sys.executable] + command
-    logger.info("Running command: %s", " ".join(cmd))
+    logger.info("Running command: %s", " ".join(command))
     with subprocess.Popen(
-        cmd,
+        command,
         stdout=sys.stdout,
         stderr=subprocess.PIPE,
     ) as proc:
