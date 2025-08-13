@@ -47,7 +47,7 @@ def check_boltz():
             "install",
             f"boltz=={BOLTZ_VERSION}",
             "cuequivariance_torch",
-            "cuequivariance_ops_torch"
+            "cuequivariance_ops_torch-cu12",
             "--no-cache-dir",
 
         ]
