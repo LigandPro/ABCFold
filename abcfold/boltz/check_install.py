@@ -20,7 +20,7 @@ def check_boltz():
             stdout, stderr = proc.communicate()
             if proc.returncode != 0:
                 if "Package(s) not found:" in stderr.decode():
-                    
+
                     raise ModuleNotFoundError(
                         "Boltz package not found."
                     )

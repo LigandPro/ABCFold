@@ -22,7 +22,7 @@ def check_chai1():
             stdout, stderr = proc.communicate()
             if proc.returncode != 0:
                 if "Package(s) not found:" in stderr.decode():
-                    
+
                     raise ModuleNotFoundError(
                         "Chai_lab package not found."
                     )
