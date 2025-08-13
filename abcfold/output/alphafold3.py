@@ -42,7 +42,6 @@ class AlphafoldOutput:
                 },
                 etc...
             }
-            This is different to the boltz and chai equivalent as they do not have seeds
         """
         self.output_dir = Path(af3_output_dir)
         self.input_params = input_params
@@ -130,7 +129,7 @@ class AlphafoldOutput:
 
     def pae_to_af3(self):
         """
-        Convert the PAE data from Boltz-1 to the format used by Alphafold3
+        Convert the PAE data from Boltz to the format used by Alphafold3
 
         Returns:
             None

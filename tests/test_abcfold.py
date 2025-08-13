@@ -41,7 +41,7 @@ database_dir = None
             # interactive=False,
             override=True,
             alphafold3=False,
-            boltz1=True,
+            boltz=True,
             chai1=True,
             mmseqs2=True,
             output_json=None,
@@ -64,4 +64,4 @@ database_dir = None
         print(out_dirs)
 
         assert "chai1" in out_dirs
-        assert "boltz-1_inputAB_mmseqs" in out_dirs
+        assert "boltz_inputAB_mmseqs" in out_dirs

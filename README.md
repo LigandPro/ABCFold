@@ -4,7 +4,7 @@
 ![Coverage](https://raw.githubusercontent.com/rigdenlab/ABCFold/refs/heads/main/.blob/coverage.svg)
 
 
-Scripts to run AlphaFold3, Boltz-1 and Chai-1 with MMseqs2 Multiple sequence alignments (MSAs) and custom templates.
+Scripts to run AlphaFold3, Boltz and Chai-1 with MMseqs2 Multiple sequence alignments (MSAs) and custom templates.
 
 ## Table of Contents
 - [Installation](#installation)
@@ -57,7 +57,7 @@ python -m pre_commit install
 
 ### Running ABCfold
 
-ABCFold will run Alphafold3, Boltz-1 and Chai-1 consecutively. The program takes an input of a JSON in the Alphafold3 format (For full instruction on how to format this, click [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/input.md)). An example JSON is shown below:
+ABCFold will run Alphafold3, Boltz and Chai-1 consecutively. The program takes an input of a JSON in the Alphafold3 format (For full instruction on how to format this, click [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/input.md)). An example JSON is shown below:
 
 ```json
 {
@@ -76,7 +76,7 @@ ABCFold will run Alphafold3, Boltz-1 and Chai-1 consecutively. The program takes
 }
 ```
 
-Please make sure you have AlphaFold3 installed on your system (Instructions [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/installation.md)) and have procured the model parameters. Boltz-1 and Chai-1 are installed upon runtime.
+Please make sure you have AlphaFold3 installed on your system (Instructions [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/installation.md)) and have procured the model parameters. Boltz and Chai-1 are installed upon runtime.
 
 For the majority of jobs, ABCFold can be run as follows:
 ```bash
@@ -100,7 +100,7 @@ However, there you may wish to use the following flags to add run time options s
 #### Main arguments
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
 - `<output_dir>`: Path to the output directory.
-- `-a`, `-b`, `-c` (`--alphafold3`, `--boltz1`,`--chai1`): Flags to run Alphafold3, Boltz-1 and Chai-1 respectively. If none of these flags are provided, Alphafold3 will be run by default.
+- `-a`, `-b`, `-c` (`--alphafold3`, `--boltz`,`--chai1`): Flags to run Alphafold3, Boltz and Chai-1 respectively. If none of these flags are provided, Alphafold3 will be run by default.
 - `--mmseqs2`: [optional] Flag to use MMseqs2 MSAs and templates (if specified).
 - `--mmseqs_database`: [optional] The path to the database used by a local copy of MMSeqs2, provided mmseqs is installed, the inclusion of this flag allows MMseqs2 to be run locally.
 - `--override`: [optional] Flag to override the existing output directory.
@@ -168,7 +168,7 @@ you will find `open_output.py` in your `<output_dir>`. This needs to be run from
 Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 input JSON files.
 
 > [!WARNING]
-> These scripts will only modify the input JSON files, I.E. they will NOT run AlphaFold3, Boltz-1 and Chai-1.
+> These scripts will only modify the input JSON files, I.E. they will NOT run AlphaFold3, Boltz and Chai-1.
 
 ### Adding MMseqs2 MSAs and templates
 
@@ -275,9 +275,9 @@ Below is an example of a hetero-3-mer. When modelling a homo-oligomer, id is giv
 
 If you want to add a custom template to the first sequence, you can use `--target_id A`. If you wish to add a custom template to the second sequence, use `--target_id B` or `--target_id C`.
 
-#### Boltz-1 limitations
+#### Boltz limitations
 
-If modelling multiple copies of the same sequence in Boltz-1, the input JSON must be set up as follows:
+If modelling multiple copies of the same sequence in Boltz, the input JSON must be set up as follows:
 
 ```json
 {
@@ -294,6 +294,7 @@ If modelling multiple copies of the same sequence in Boltz-1, the input JSON mus
   "dialect": "alphafold3",
   "version": 1
 }
+```
 
 If the identical sequences are given as seperate entities (as shown below) you will encounter an error.
 
@@ -320,7 +321,7 @@ If the identical sequences are given as seperate entities (as shown below) you w
 }
 ```
 
-Additionally, Boltz-1 currently lacks the ability to create linked-ligands and therefore covalent bonds between the chain/ligand will be missing.
+Additionally, Boltz currently lacks the ability to create linked-ligands and therefore covalent bonds between the chain/ligand will be missing.
 
 ## Contributing
 

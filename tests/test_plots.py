@@ -9,13 +9,13 @@ from abcfold.plots.plddt_plot import plot_plddt
 def test_plddt_plot(output_objs):
 
     af3_files = output_objs.af3_output.cif_files["seed-1"]
-    boltz_files = output_objs.boltz_output.cif_files
-    chai_files = output_objs.chai_output.cif_files
+    boltz_files = output_objs.boltz_output.cif_files["seed-1"]
+    chai_files = output_objs.chai_output.cif_files["seed-1"]
 
     assert len(af3_files) == len(boltz_files) == len(chai_files)
     plot_files = {
         "Alphafold3": af3_files,
-        "Boltz-1": boltz_files,
+        "Boltz": boltz_files,
         "Chai-1": chai_files,
     }
 
@@ -44,41 +44,47 @@ def test_pae_plots(output_objs):
 
         assert "confidences_seed-1_sample-0_af3_pae_plot.html" in values
         assert "confidences_seed-1_sample-1_af3_pae_plot.html" in values
-        assert "test_mmseqs_model_0_af3_pae_pae_plot.html" in values
-        assert "test_mmseqs_model_1_af3_pae_pae_plot.html" in values
-        assert "pred.model_idx_0_af3_pae_pae_plot.html" in values
-        assert "pred.model_idx_1_af3_pae_pae_plot.html" in values
+        assert "pae_test_mmseqs_model_0_test_mmseqs_af3_pae_plot.html" in values
+        assert "pae_test_mmseqs_model_1_test_mmseqs_af3_pae_plot.html" in values
+        assert "pae_scores_model_0_chai1_6BJ9_seed-1_af3_pae_plot.html" in values
+        assert "pae_scores_model_1_chai1_6BJ9_seed-1_af3_pae_plot.html" in values
 
         assert (
-            "tests/test_data/alphafold3_6BJ9/seed-1_sample-0/\
-model.cif"
-            in plot_pathways
+            any(
+                "alphafold3_6BJ9/seed-1_sample-0/model.cif" in x for x in plot_pathways
+            )
         )
         assert (
-            "tests/test_data/alphafold3_6BJ9/seed-1_sample-1/\
-model.cif"
-            in plot_pathways
+            any(
+                "alphafold3_6BJ9/seed-1_sample-1/model.cif" in x for x in plot_pathways
+            )
         )
         assert (
-            "tests/test_data/boltz-1_6BJ9/predictions/test_mmseqs/\
-test_mmseqs_model_0.cif"
-            in plot_pathways
+            any(
+                "boltz_6BJ9_seed-1/predictions/test_mmseqs/test_mmseqs_model_0.cif"
+                in x for x in plot_pathways
+            )
         )
         assert (
-            "tests/test_data/boltz-1_6BJ9/predictions/test_mmseqs/\
-test_mmseqs_model_1.cif"
-            in plot_pathways
+            any(
+                "boltz_6BJ9_seed-1/predictions/test_mmseqs/test_mmseqs_model_1.cif"
+                in x for x in plot_pathways
+            )
         )
-        assert "tests/test_data/chai1_6BJ9/pred.model_idx_0.cif" in plot_pathways
-        assert "tests/test_data/chai1_6BJ9/pred.model_idx_1.cif" in plot_pathways
+        assert (
+            any("chai1_6BJ9_seed-1/pred.model_idx_0.cif" in x for x in plot_pathways)
+        )
+        assert (
+            any("chai1_6BJ9_seed-1/pred.model_idx_1.cif" in x for x in plot_pathways)
+        )
 
         assert len(list(temp_dir.glob("*.html"))) == 6
 
 
 def test_get_sequence_data(output_objs):
     af3_files = output_objs.af3_output.cif_files["seed-1"]
-    boltz_files = output_objs.boltz_output.cif_files
-    chai_files = output_objs.chai_output.cif_files
+    boltz_files = output_objs.boltz_output.cif_files["seed-1"]
+    chai_files = output_objs.chai_output.cif_files["seed-1"]
 
     cif_files = []
 

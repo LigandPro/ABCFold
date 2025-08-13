@@ -6,6 +6,7 @@ logger = logging.getLogger("logger")
 
 
 CHAI_VERSION = "0.6.1"
+CHAI_VERSION = "0.6.1"
 
 
 def check_chai1():
@@ -34,6 +35,7 @@ def check_chai1():
                 )
     except (ImportError, ModuleNotFoundError):
         try:
+            import boltz as _  # noqa F401
             import boltz as _  # noqa F401
 
             no_deps = True

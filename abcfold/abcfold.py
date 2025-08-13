@@ -95,10 +95,10 @@ def run(args, config, defaults, config_file):
 
         check_af3_install(interactive=False, sif_path=args.sif_path)
 
-    if args.boltz1:
-        from abcfold.boltz1.check_install import check_boltz1
+    if args.boltz:
+        from abcfold.boltz.check_install import check_boltz
 
-        check_boltz1()
+        check_boltz()
 
     if args.chai1:
         from abcfold.chai1.check_install import check_chai1
@@ -141,7 +141,8 @@ def run(args, config, defaults, config_file):
                     seq.get("protein", {}).get("unpairedMsa")
                     or seq.get("protein", {}).get("unpairedMsaPath")
                     for seq in input_params["sequences"]
-                    )):
+                )
+            ):
                 af3_database = make_dummy_af3_db(temp_dir)
 
             af3_success = run_alphafold3(
@@ -167,8 +168,8 @@ def run(args, config, defaults, config_file):
                 run_json = ao.input_json
             successful_runs.append(af3_success)
 
-        if args.boltz1:
-            from abcfold.boltz1.run_boltz import run_boltz
+        if args.boltz:
+            from abcfold.boltz.run_boltz import run_boltz
 
             boltz_success = run_boltz(
                 input_json=run_json,
@@ -179,8 +180,8 @@ def run(args, config, defaults, config_file):
             )
 
             if boltz_success:
-                bolt_out_dir = list(args.output_dir.glob("boltz_results*"))[0]
-                bo = BoltzOutput(bolt_out_dir, input_params, name)
+                bolt_out_dirs = list(args.output_dir.glob("boltz_results*"))
+                bo = BoltzOutput(bolt_out_dirs, input_params, name, args.save_input)
                 outputs.append(bo)
             successful_runs.append(boltz_success)
 
@@ -193,10 +194,9 @@ def run(args, config, defaults, config_file):
             elif args.templates:
                 template_hits_path = make_dummy_m8_file(run_json, temp_dir)
 
-            chai_output_dir = args.output_dir.joinpath("chai1")
             chai_success = run_chai(
                 input_json=run_json,
-                output_dir=chai_output_dir,
+                output_dir=args.output_dir,
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
@@ -204,7 +204,8 @@ def run(args, config, defaults, config_file):
             )
 
             if chai_success:
-                co = ChaiOutput(chai_output_dir, input_params, name, args.save_input)
+                chai_output_dirs = list(args.output_dir.glob("chai_output*"))
+                co = ChaiOutput(chai_output_dirs, input_params, name, args.save_input)
                 outputs.append(co)
             successful_runs.append(chai_success)
 
@@ -241,58 +242,69 @@ def run(args, config, defaults, config_file):
                         plddt = model.residue_plddts
                         if len(indicies) > 0:
                             plddt = insert_none_by_minus_one(
-                                indicies[index_counter],
-                                plddt
-                                )
+                                indicies[index_counter], plddt
+                            )
                         index_counter += 1
                         model_data = get_model_data(
-                            model, plot_dict, "AlphaFold3",
-                            plddt, score_file, args.output_dir
+                            model,
+                            plot_dict,
+                            "AlphaFold3",
+                            plddt,
+                            score_file,
+                            args.output_dir,
                         )
                         alphafold_models["models"].append(model_data)
 
         boltz_models = {"models": []}
-        if args.boltz1:
+        if args.boltz:
             if boltz_success:
-                programs_run.append("Boltz-1")
-                for idx in bo.output.keys():
-                    model = bo.output[idx]["cif"]
-                    model.check_clashes()
-                    score_file = bo.output[idx]["json"]
-                    plddt = model.residue_plddts
-                    if len(indicies) > 0:
-                        plddt = insert_none_by_minus_one(
-                            indicies[index_counter],
-                            plddt
+                programs_run.append("Boltz")
+                for seed in bo.output.keys():
+                    for idx in bo.output[seed].keys():
+                        model = bo.output[seed][idx]["cif"]
+                        model.check_clashes()
+                        score_file = bo.output[seed][idx]["json"]
+                        plddt = model.residue_plddts
+                        if len(indicies) > 0:
+                            plddt = insert_none_by_minus_one(
+                                indicies[index_counter], plddt
                             )
-                    index_counter += 1
-                    model_data = get_model_data(
-                        model, plot_dict, "Boltz-1",
-                        plddt, score_file, args.output_dir
-                    )
-                    boltz_models["models"].append(model_data)
+                        index_counter += 1
+                        model_data = get_model_data(
+                            model,
+                            plot_dict,
+                            "Boltz",
+                            plddt,
+                            score_file,
+                            args.output_dir
+                        )
+                        boltz_models["models"].append(model_data)
 
         chai_models = {"models": []}
         if args.chai1:
             if chai_success:
                 programs_run.append("Chai-1")
-                for idx in co.output.keys():
-                    if idx >= 0:
-                        model = co.output[idx]["cif"]
-                        model.check_clashes()
-                        score_file = co.output[idx]["scores"]
-                        plddt = model.residue_plddts
-                        if len(indicies) > 0:
-                            plddt = insert_none_by_minus_one(
-                                indicies[index_counter],
-                                plddt
+                for seed in co.output.keys():
+                    for idx in co.output[seed].keys():
+                        if idx >= 0:
+                            model = co.output[seed][idx]["cif"]
+                            model.check_clashes()
+                            score_file = co.output[seed][idx]["scores"]
+                            plddt = model.residue_plddts
+                            if len(indicies) > 0:
+                                plddt = insert_none_by_minus_one(
+                                    indicies[index_counter], plddt
                                 )
-                        index_counter += 1
-                        model_data = get_model_data(
-                            model, plot_dict, "Chai-1",
-                            plddt, score_file, args.output_dir
-                        )
-                        chai_models["models"].append(model_data)
+                            index_counter += 1
+                            model_data = get_model_data(
+                                model,
+                                plot_dict,
+                                "Chai-1",
+                                plddt,
+                                score_file,
+                                args.output_dir,
+                            )
+                            chai_models["models"].append(model_data)
 
         combined_models = (
             alphafold_models["models"] + boltz_models["models"] + chai_models["models"]
@@ -305,7 +317,7 @@ def run(args, config, defaults, config_file):
             cif_file = args.output_dir.joinpath(model["model_path"])
             if model["model_source"] == "AlphaFold3":
                 output_name = "af3_model_" + model["model_id"][-1] + ".cif"
-            elif model["model_source"] == "Boltz-1":
+            elif model["model_source"] == "Boltz":
                 output_name = "boltz_model_" + model["model_id"][-1] + ".cif"
             elif model["model_source"] == "Chai-1":
                 output_name = "chai_model_" + model["model_id"][-1] + ".cif"
@@ -399,11 +411,11 @@ view the output pages"
 
 def main():
     """
-    Run AlphaFold3 / Boltz1 / Chai-1
+    Run AlphaFold3 / Boltz / Chai-1
     """
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz1 / Chai-1")
+    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz / Chai-1")
 
     defaults = {}
     config_file = Path(__file__).parent.joinpath("data", "config.ini")
