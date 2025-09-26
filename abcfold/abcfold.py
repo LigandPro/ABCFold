@@ -1,6 +1,7 @@
 import configparser
 import json
 import os
+import re
 import shutil
 import socketserver
 import sys
@@ -157,11 +158,12 @@ def run(args, config, defaults, config_file):
             )
 
             if af3_success:
+                pattern = re.compile(f"^{name}.*", re.IGNORECASE)
                 af3_out_dir = list(
                     [
                         dir_
-                        for dir_ in args.output_dir.glob(f"*{name.replace(' ','_')}*")
-                        if dir_.is_dir()
+                        for dir_ in args.output_dir.glob("*")
+                        if dir_.is_dir() and pattern.match(dir_.name)
                     ]
                 )[0]
                 ao = AlphafoldOutput(af3_out_dir, input_params, name)
