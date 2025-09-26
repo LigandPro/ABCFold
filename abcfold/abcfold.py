@@ -153,13 +153,14 @@ def run(args, config, defaults, config_file):
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
                 sif_path=args.sif_path,
+                save_distogram=args.save_distogram
             )
 
             if af3_success:
                 af3_out_dir = list(
                     [
                         dir_
-                        for dir_ in args.output_dir.glob(f"*{name.lower()}*")
+                        for dir_ in args.output_dir.glob(f"*{name.replace(' ','_')}*")
                         if dir_.is_dir()
                     ]
                 )[0]
