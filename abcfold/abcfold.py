@@ -115,6 +115,7 @@ def run(args, config, defaults, config_file):
                     input_json.name.replace(".json", "_mmseqs.json")
                 )
             else:
+                input_json = Path(args.input_json)
                 run_json = Path(args.output_json)
 
             input_params = add_msa_to_json(
