@@ -16,6 +16,7 @@ def run_alphafold3(
     interactive: bool = False,
     number_of_models: int = 5,
     num_recycles: int = 10,
+    save_distogram: bool = False
 ) -> bool:
     """
     Run Alphafold3 using the input JSON file
@@ -48,6 +49,7 @@ def run_alphafold3(
         interactive=interactive,
         number_of_models=number_of_models,
         num_recycles=num_recycles,
+        save_distogram=save_distogram
     )
 
     logger.info("Running Alphafold3")
@@ -77,6 +79,7 @@ def generate_af3_cmd(
     number_of_models: int = 10,
     num_recycles: int = 5,
     interactive: bool = False,
+    save_distogram: bool = False,
 ) -> str:
     """
     Generate the Alphafold3 command
@@ -111,7 +114,8 @@ def generate_af3_cmd(
         --output_dir=/root/af_output \
         --db_dir=/root/public_databases \
         --num_diffusion_samples {number_of_models}\
-        --num_recycles {num_recycles}
+        --num_recycles {num_recycles}\
+        --save_distogram {str(save_distogram).lower()}
     """
 
     else:
@@ -128,5 +132,6 @@ def generate_af3_cmd(
         --model_dir=/root/models \
         --output_dir=/root/af_output \
         --num_diffusion_samples {number_of_models}\
-        --num_recycles {num_recycles}
+        --num_recycles {num_recycles}\
+        --save_distogram {str(save_distogram).lower()}
         """
