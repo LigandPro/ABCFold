@@ -15,6 +15,7 @@ from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import ConfidenceJsonFile, NpzFile
 from abcfold.plots.pae_plot import create_pae_plots
 from abcfold.plots.plddt_plot import plot_plddt
+from abcfold.scripts.ipsae import Ipsae
 
 PORT = 8000
 
@@ -112,21 +113,32 @@ def get_model_data(model, plot_dict, method, plddt_scores, score_file, output_di
     """
     regions = get_plddt_regions(plddt_scores)
     ptm_score, iptm_score = parse_scores(score_file)
-    model_path = Path(model.pathway).relative_to(output_dir)
+    model_path = Path(model.pathway).relative_to(output_dir).as_posix()
+    pae_path = Path(
+        plot_dict[model.pathway.as_posix()]
+        ).relative_to(output_dir).as_posix()
+
+    ipsae = Ipsae(model_path, pae_path)
+    distances = ipsae.get_cb_distance()
+    ipsae_scores = ipsae.compute_iptm_ipsae(distances)
+    ipsae_score = []
+    for k, v in ipsae_scores["ipsae_d0res_asym"].items:
+        for k2, v2 in v.items:
+            ipsae_score.append(f"{k}{k2}:{np.round(v2, 4)}")
+
     model_data = {
         "model_id": model.name,
         "model_source": method,
-        "model_path": model_path.as_posix(),
+        "model_path": model_path,
         "plddt_regions": regions,
         "avg_plddt": model.average_plddt,
         "h_score": model.h_score,
         "ptm_score": ptm_score,
         "iptm_score": iptm_score,
+        "ipsae_score": ",".join(ipsae_score),
         "residue_clashes": model.clashes_residues,
         "atom_clashes": model.clashes,
-        "pae_path": Path(plot_dict[model.pathway.as_posix()])
-        .relative_to(output_dir)
-        .as_posix(),
+        "pae_path": pae_path,
     }
     return model_data
 

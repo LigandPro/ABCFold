@@ -59,6 +59,7 @@ class ResidueCountType(Enum):
     AVERAGE = "average"
     CARBONALPHA = "carbonalpha"
     PHOSPHATE = "phosphate"
+    IPSAE = "ipsae"
 
     @classmethod
     def values(cls):
@@ -440,6 +441,15 @@ class CifFile(FileBase):
                         for atom in residue:
                             if atom.id == "P":
                                 score = atom.bfactor
+                                break
+                    elif method == ResidueCountType.IPSAE.value:
+                        for atom in residue:
+                            ca_atom = atom.id == "CA"
+                            cb_atom = atom.id == "CB"
+                            c3_atom = "C3" in atom.id
+                            gly_res = residue.resname == "GLY"
+                            if cb_atom or c3_atom or (gly_res and ca_atom):
+                                score = np.round(atom.bfactor, 2)
                                 break
 
                     if chain.id in plddts:
