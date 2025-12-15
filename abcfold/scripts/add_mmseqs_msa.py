@@ -80,7 +80,7 @@ def add_msa_to_json(
                 if mmseqs_db:
                     logger.info(f"Running Local MMseqs2 on sequence: {input_sequence}")
                     if templates:
-                        a3m_lines, templates = run_local_mmseqs(
+                        a3m_lines, template_files = run_local_mmseqs(
                             input_sequence,
                             Path(tmpdir),
                             use_templates=True,
@@ -216,7 +216,7 @@ custom template chains"
                 # Add unpaired MSA to the json
                 sequence["protein"]["unpairedMsa"] = a3m_lines[0]
                 sequence["protein"]["pairedMsa"] = ""
-                # sequence["protein"]["templates"] = templates
+                sequence["protein"]["templates"] = template_files
             updated_sequences.append(sequence)
     input_params["sequences"] = updated_sequences
 
