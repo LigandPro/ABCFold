@@ -243,6 +243,7 @@ def run(args, config, defaults, config_file):
                         model.check_clashes()
                         score_file = ao.output[seed][idx]["summary"]
                         plddt = model.residue_plddts
+                        pae = ao.output[seed][idx]["af3_pae"]
                         if len(indicies) > 0:
                             plddt = insert_none_by_minus_one(
                                 indicies[index_counter], plddt
@@ -253,6 +254,7 @@ def run(args, config, defaults, config_file):
                             plot_dict,
                             "AlphaFold3",
                             plddt,
+                            pae,
                             score_file,
                             args.output_dir,
                         )
@@ -268,6 +270,7 @@ def run(args, config, defaults, config_file):
                         model.check_clashes()
                         score_file = bo.output[seed][idx]["json"]
                         plddt = model.residue_plddts
+                        pae = bo.output[seed][idx]["af3_pae"]
                         if len(indicies) > 0:
                             plddt = insert_none_by_minus_one(
                                 indicies[index_counter], plddt
@@ -278,6 +281,7 @@ def run(args, config, defaults, config_file):
                             plot_dict,
                             "Boltz",
                             plddt,
+                            pae,
                             score_file,
                             args.output_dir
                         )
@@ -294,6 +298,7 @@ def run(args, config, defaults, config_file):
                             model.check_clashes()
                             score_file = co.output[seed][idx]["scores"]
                             plddt = model.residue_plddts
+                            pae = co.output[seed][idx]["af3_pae"]
                             if len(indicies) > 0:
                                 plddt = insert_none_by_minus_one(
                                     indicies[index_counter], plddt
@@ -304,6 +309,7 @@ def run(args, config, defaults, config_file):
                                 plot_dict,
                                 "Chai-1",
                                 plddt,
+                                pae,
                                 score_file,
                                 args.output_dir,
                             )

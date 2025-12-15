@@ -100,7 +100,13 @@ def get_model_sequence_data(cif_objs) -> dict:
     return sequence_data
 
 
-def get_model_data(model, plot_dict, method, plddt_scores, score_file, output_dir):
+def get_model_data(model,
+                   plot_dict,
+                   method,
+                   plddt_scores,
+                   pae_obj,
+                   score_file,
+                   output_dir):
     """
     Get the model data for the output page
 
@@ -109,21 +115,19 @@ def get_model_data(model, plot_dict, method, plddt_scores, score_file, output_di
         plot_dict (dict): Dictionary of plots
         method (str): Method used to generate the model
         score_file (str): Path to the file containing model scores
+        pae_obj (ConfidenceJsonFile): Obj containing PAE data
         output_dir (Path): Path to the output directory
     """
     regions = get_plddt_regions(plddt_scores)
     ptm_score, iptm_score = parse_scores(score_file)
     model_path = Path(model.pathway).relative_to(output_dir).as_posix()
-    pae_path = Path(
-        plot_dict[model.pathway.as_posix()]
-        ).relative_to(output_dir).as_posix()
 
-    ipsae = Ipsae(model_path, pae_path)
+    ipsae = Ipsae(model_path, pae_obj)
     distances = ipsae.get_cb_distance()
     ipsae_scores = ipsae.compute_iptm_ipsae(distances)
     ipsae_score = []
-    for k, v in ipsae_scores["ipsae_d0res_asym"].items:
-        for k2, v2 in v.items:
+    for k, v in ipsae_scores["ipsae_d0res_asym"].items():
+        for k2, v2 in v.items():
             ipsae_score.append(f"{k}{k2}:{np.round(v2, 4)}")
 
     model_data = {
@@ -138,7 +142,9 @@ def get_model_data(model, plot_dict, method, plddt_scores, score_file, output_di
         "ipsae_score": ",".join(ipsae_score),
         "residue_clashes": model.clashes_residues,
         "atom_clashes": model.clashes,
-        "pae_path": pae_path,
+        "pae_path": Path(plot_dict[model.pathway.as_posix()])
+        .relative_to(output_dir)
+        .as_posix(),
     }
     return model_data
 

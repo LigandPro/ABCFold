@@ -106,16 +106,20 @@ class Ipsae():
         Process input files and setup data types
         """
 
-        # Find PAE data format
-        suffix = Path(self.pae_file).suffix[1:]
-        if suffix == FileTypes.NPZ.value:
-            file_ = NpzFile(self.pae_file)
-        elif suffix == FileTypes.NPY.value:
-            file_ = NpyFile(self.pae_file)
-        elif suffix == FileTypes.JSON.value:
-            file_ = ConfidenceJsonFile(self.pae_file)
+        if isinstance(self.pae_file, ConfidenceJsonFile):
+            file_ = self.pae_file
         else:
-            raise ValueError(f"Unsupported PAE file type: {suffix}")
+            # Find PAE data format
+            suffix = Path(self.pae_file).suffix[1:]
+            if suffix == FileTypes.NPZ.value:
+                file_ = NpzFile(self.pae_file)
+            elif suffix == FileTypes.NPY.value:
+                file_ = NpyFile(self.pae_file)
+            elif suffix == FileTypes.JSON.value:
+                file_ = ConfidenceJsonFile(self.pae_file)
+            else:
+                raise ValueError(f"Unsupported PAE file type: {suffix}")
+        print(file_.data)
 
         # Construct input_params obj dict with protein seqs to avoid error msg
         self.struct.input_params = {"sequences": []}
