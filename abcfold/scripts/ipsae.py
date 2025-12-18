@@ -35,7 +35,10 @@ class Ipsae():
         self.distance_cutoff = distance_cutoff
 
         # Read structure + PAE data
-        self.struct = CifFile(self.input_model)
+        if isinstance(self.input_model, CifFile):
+            self.struct = self.input_model
+        else:
+            self.struct = CifFile(self.input_model)
         self.process_input()
 
     @staticmethod
