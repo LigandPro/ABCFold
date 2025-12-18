@@ -10,7 +10,7 @@ from Bio.PDB.Polypeptide import is_aa
 from Bio.SeqUtils import seq1
 
 from abcfold.output.file_handlers import (CifFile, ConfidenceJsonFile,
-                                          FileTypes, NpyFile, NpzFile,
+                                          FileTypes, NpyFile, NpzFile, PklFile,
                                           ResidueCountType)
 from abcfold.output.utils import Af3Pae
 
@@ -117,9 +117,10 @@ class Ipsae():
                 file_ = NpyFile(self.pae_file)
             elif suffix == FileTypes.JSON.value:
                 file_ = ConfidenceJsonFile(self.pae_file)
+            elif suffix == FileTypes.PKL.value:
+                file_ = PklFile(self.pae_file)
             else:
                 raise ValueError(f"Unsupported PAE file type: {suffix}")
-        print(file_.data)
 
         # Construct input_params obj dict with protein seqs to avoid error msg
         self.struct.input_params = {"sequences": []}
@@ -134,7 +135,12 @@ class Ipsae():
                 self.struct.input_params["sequences"].append(seq_data)
 
         # Get PAE data for different formats
-        if self.pae_format == "alphafold3":
+        if self.pae_format == "alphafold2":
+            self.pae_data = Af3Pae.from_alphafold2(
+                file_.data,
+                self.struct,
+            ).scores
+        elif self.pae_format == "alphafold3":
             self.pae_data = Af3Pae.from_alphafold3(
                 file_.data,
                 self.struct,
@@ -145,7 +151,12 @@ class Ipsae():
                 self.struct,
             ).scores
         elif self.pae_format == "chai":
-            self.pae_data = Af3Pae.from_chai(
+            self.pae_data = Af3Pae.from_chai1(
+                file_.data,
+                self.struct,
+            ).scores
+        elif self.pae_format == "colabfold":
+            self.pae_data = Af3Pae.from_colabfold(
                 file_.data,
                 self.struct,
             ).scores
@@ -599,6 +610,8 @@ class Ipsae():
 if __name__ == "__main__":
     import argparse
 
+    from Bio.PDB import MMCIFIO, PDBParser
+
     parser = argparse.ArgumentParser(
         prog="ipsae",
         description="Compute IPSAE metrics from structure and PAE file"
@@ -609,7 +622,9 @@ if __name__ == "__main__":
     parser.add_argument("--pae_cutoff", type=float, default=10.0,
                         help="PAE cutoff used in some scores (default: 10.0)")
     parser.add_argument("--pae_format",
-                        choices=["alphafold2", "alphafold3", "boltz", "chai"],
+                        choices=[
+                            "alphafold2", "alphafold3", "boltz", "chai", "colabfold"
+                        ],
                         default="alphafold3",
                         help="Format of the PAE file (default: alphafold3)")
     parser.add_argument("--distance_cutoff", type=float, default=10.0,
@@ -621,10 +636,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if Path(args.input_model).suffix == ".pdb" or args.pae_format == "alphafold2":
-        raise RuntimeError(
-            "Not implemented, use input model in CIF format or AF3 style PAE"
-        )
+    tmp_cif = None
+    pdb_path = Path(args.input_model)
+    if pdb_path.suffix == ".pdb":
+        pdb_parser = PDBParser(QUIET=True)
+        structure = pdb_parser.get_structure(pdb_path.stem, str(pdb_path))
+        io = MMCIFIO()
+        io.set_structure(structure)
+        tmp_cif = pdb_path.with_suffix(".cif")
+        io.save(str(tmp_cif))
+        args.input_model = tmp_cif
 
     ipsae_calculator = Ipsae(
         args.input_model,
@@ -640,3 +661,9 @@ if __name__ == "__main__":
         verbose = True
 
     results = ipsae_calculator.main(verbose=verbose, output_csv=args.output)
+
+    if tmp_cif is not None:
+        try:
+            Path(tmp_cif).unlink()
+        except FileNotFoundError:
+            pass

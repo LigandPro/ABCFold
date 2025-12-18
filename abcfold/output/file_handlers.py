@@ -30,6 +30,7 @@ class FileTypes(Enum):
 
     NPZ = "npz"
     NPY = "npy"
+    PKL = "pkl"
     CIF = "cif"
     JSON = "json"
 
@@ -122,6 +123,27 @@ class NpyFile(FileBase):
         self.data = self.load_npy_file()
 
     def load_npy_file(self) -> np.ndarray:
+        return np.load(self.npy_file, allow_pickle=True)
+
+
+class PklFile(FileBase):
+    def __init__(self, pkl_file: Union[str, Path]):
+        """
+        Object to handle pkl files
+
+        Args:
+            pkl_file (Union[str, Path]): Path to the pkl file
+
+        Attributes:
+            pkl_file (Path): Path to the pkl file
+            data (np.ndarray): Numpy array containing the data from the np
+        """
+
+        super().__init__(pkl_file)
+        self.npy_file = Path(pkl_file)
+        self.data = self.load_pkl_file()
+
+    def load_pkl_file(self) -> np.ndarray:
         return np.load(self.npy_file, allow_pickle=True)
 
 
