@@ -120,7 +120,8 @@ def get_model_data(model,
     """
     regions = get_plddt_regions(plddt_scores)
     ptm_score, iptm_score = parse_scores(score_file)
-    model_path = Path(model.pathway).relative_to(output_dir).as_posix()
+    full_model_path = Path(model.pathway)
+    model_path = full_model_path.relative_to(output_dir).as_posix()
 
     ipsae = Ipsae(model, pae_obj)
     distances = ipsae.get_cb_distance()
@@ -133,8 +134,11 @@ def get_model_data(model,
             ipsae_score.append(f"{k}{k2}:{np.round(v2, 4)}")
 
     # Output full ipsae scores for each model as we are only outputting d0res_asym
-    ipsae_output_file = Path(model).parent / f"{Path(model_path).stem}_ipsae.csv"
-    ipsae.output_results(ipsae_scores=ipsae_scores,
+    ipsae_output_file = full_model_path.parent / f"{Path(model_path).stem}_ipsae.csv"
+    ipsae.output_results(pdockq_scores=None,
+                         pdockq2_scores=None,
+                         lis_scores=None,
+                         ipsae_scores=ipsae_scores,
                          verbose=False,
                          output_csv=ipsae_output_file)
 
