@@ -125,36 +125,22 @@ def run(args, config, defaults, config_file):
                 templates=args.templates,
                 num_templates=args.num_templates,
                 chai_template_output=temp_dir.joinpath("all_chains.m8"),
-                custom_template=args.custom_template,
-                custom_template_chain=args.custom_template_chain,
-                target_id=args.target_id,
                 input_params=input_params,
                 output_json=run_json,
                 to_file=True,
             )
-
         else:
-            if args.custom_template is not None:
-                if not args.output_json:
-                    input_json = Path(args.input_json)
-                    run_json = temp_dir.joinpath(
-                        input_json.name.replace(".json", "_custom_template.json")
-                    )
-                else:
-                    input_json = Path(args.input_json)
-                    run_json = Path(args.output_json)
+            run_json = Path(args.input_json)
 
-                run_json = add_custom_template(
-                    args.input_json,
-                    args.target_id,
-                    args.custom_template,
-                    args.custom_template_chain,
-                    output_json=run_json,
-                    to_file=True
-                )
-
-            else:
-                run_json = Path(args.input_json)
+        if args.custom_template is not None:
+            run_json = add_custom_template(
+                args.input_json,
+                args.target_id,
+                args.custom_template,
+                args.custom_template_chain,
+                output_json=run_json,
+                to_file=True
+            )
 
         successful_runs = []
         if args.alphafold3:
