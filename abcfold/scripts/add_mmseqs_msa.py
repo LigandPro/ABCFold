@@ -218,6 +218,9 @@ custom template chains"
                 sequence["protein"]["pairedMsa"] = ""
                 sequence["protein"]["templates"] = template_files
             updated_sequences.append(sequence)
+        else:
+            # Capture non-protein sequences
+            updated_sequences.append(sequence)
     input_params["sequences"] = updated_sequences
 
     if to_file:

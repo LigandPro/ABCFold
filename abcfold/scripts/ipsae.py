@@ -610,7 +610,7 @@ class Ipsae():
         return
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     from Bio.PDB import MMCIFIO, PDBParser
@@ -663,10 +663,14 @@ if __name__ == "__main__":
     else:
         verbose = True
 
-    results = ipsae_calculator.main(verbose=verbose, output_csv=args.output)
+    ipsae_calculator.main(verbose=verbose, output_csv=args.output)
 
     if tmp_cif is not None:
         try:
             Path(tmp_cif).unlink()
         except FileNotFoundError:
             pass
+
+
+if __name__ == "__main__":
+    main()
