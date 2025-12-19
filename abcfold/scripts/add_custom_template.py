@@ -10,7 +10,7 @@ from abcfold.scripts.abc_script_utils import get_custom_template
 logger = logging.getLogger("logger")
 
 
-def run_custom_template(
+def add_custom_template(
     input_json,
     target_id,
     custom_template,
@@ -92,7 +92,7 @@ def main():
 
     args = parser.parse_args()
 
-    run_custom_template(  # pragma: no cover
+    add_custom_template(  # pragma: no cover
         args.input_json,
         args.target_id,
         args.custom_template,

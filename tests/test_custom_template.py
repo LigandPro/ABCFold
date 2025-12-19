@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from abcfold.scripts.abc_script_utils import get_custom_template
-from abcfold.scripts.add_custom_template import main, run_custom_template
+from abcfold.scripts.add_custom_template import add_custom_template, main
 
 
 def test_get_custom_template(test_data):
@@ -102,7 +102,7 @@ def test_run_custom_template(test_data):
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         output_json = tmpdir / "output.json"
-        run_custom_template(
+        add_custom_template(
             test_data.test_inputA_json,
             ["A"],
             [test_data.test_6BJ9_cif],
@@ -112,7 +112,7 @@ def test_run_custom_template(test_data):
         )
         shutil.copyfile(test_data.test_inputA_json, tmpdir / "input.json")
 
-        run_custom_template(
+        add_custom_template(
             tmpdir / "input.json",
             ["A"],
             [test_data.test_6BJ9_cif],
@@ -121,7 +121,7 @@ def test_run_custom_template(test_data):
             to_file=True,
         )
 
-        run_custom_template(
+        add_custom_template(
             test_data.test_inputRNA_json,
             ["A"],
             [test_data.test_6BJ9_cif],
@@ -131,7 +131,7 @@ def test_run_custom_template(test_data):
         )
 
     with pytest.raises(FileNotFoundError):
-        run_custom_template(
+        add_custom_template(
             test_data.test_inputA_json,
             ["A"],
             ["road/to/nowhere"],

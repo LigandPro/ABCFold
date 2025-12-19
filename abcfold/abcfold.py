@@ -30,6 +30,7 @@ from abcfold.output.utils import (get_gap_indicies, insert_none_by_minus_one,
                                   make_dummy_m8_file)
 from abcfold.scripts.abc_script_utils import (check_input_json, make_dir,
                                               make_dummy_af3_db, setup_logger)
+from abcfold.scripts.add_custom_template import add_custom_template
 from abcfold.scripts.add_mmseqs_msa import add_msa_to_json
 
 logger = setup_logger()
@@ -133,7 +134,27 @@ def run(args, config, defaults, config_file):
             )
 
         else:
-            run_json = Path(args.input_json)
+            if args.custom_template is not None:
+                if not args.output_json:
+                    input_json = Path(args.input_json)
+                    run_json = temp_dir.joinpath(
+                        input_json.name.replace(".json", "_custom_template.json")
+                    )
+                else:
+                    input_json = Path(args.input_json)
+                    run_json = Path(args.output_json)
+
+                run_json = add_custom_template(
+                    args.input_json,
+                    args.target_id,
+                    args.custom_template,
+                    args.custom_template_chain,
+                    output_json=run_json,
+                    to_file=True
+                )
+
+            else:
+                run_json = Path(args.input_json)
 
         successful_runs = []
         if args.alphafold3:
