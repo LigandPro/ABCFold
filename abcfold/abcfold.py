@@ -133,8 +133,8 @@ def run(args, config, defaults, config_file):
             run_json = Path(args.input_json)
 
         if args.custom_template is not None:
-            run_json = add_custom_template(
-                args.input_json,
+            add_custom_template(
+                run_json,
                 args.target_id,
                 args.custom_template,
                 args.custom_template_chain,
