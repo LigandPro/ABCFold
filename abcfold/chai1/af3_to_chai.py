@@ -2,7 +2,6 @@ import hashlib
 import json
 import logging
 import textwrap
-import warnings
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Dict, List, Optional, Union
@@ -155,7 +154,7 @@ check back for updates"
             f.write(code)
 
         try:
-            chai_env.run(["python", str(script_path)])
+            chai_env.run(["python", str(script_path)], quiet=True)
             logger.info("Successfully wrote PQT file to %s", file_path)
         finally:
             script_path.unlink()
@@ -234,14 +233,11 @@ check back for updates"
             pqt_path = Path(self.working_dir) / f"{seq_hash}.aligned.pqt"
             msa = seq["protein"]["unpairedMsa"]
 
-            # Mute FutureWarning from Chai lab/Pandas about grouping columns
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=FutureWarning)
-                (
-                    self.msa_to_file(msa=msa, file_path=pqt_path)
-                    if self.__create_files
-                    else None
-                )
+            (
+                self.msa_to_file(msa=msa, file_path=pqt_path)
+                if self.__create_files
+                else None
+            )
         fasta_data[prot_id] = sequence
 
         if "modifications" in seq["protein"]:

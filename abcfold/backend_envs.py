@@ -102,10 +102,13 @@ class MicromambaEnv:
             "pip", "install", *packages,
         ])
 
-    def run(self, command: list[str], capture_output: bool = False) -> Optional[str]:
+    def run(self,
+            command: list[str],
+            capture_output: bool = False,
+            quiet: bool = False) -> Optional[str]:
         cmd = [self.micromamba, "run", "-n", self.env_name, *command]
 
-        if capture_output:
+        if capture_output or quiet:
             stdout_lines = []
             with subprocess.Popen(
                 cmd,
@@ -115,15 +118,17 @@ class MicromambaEnv:
             ) as proc:
                 if proc.stdout is None:
                     return None
+
                 for line in proc.stdout:
-                    sys.stdout.write(line)
-                    sys.stdout.flush()
+                    if not quiet:
+                        sys.stdout.write(line)
+                        sys.stdout.flush()
                     stdout_lines.append(line)
 
                 _, stderr = proc.communicate()
 
                 if proc.returncode != 0:
-                    if stderr:
+                    if stderr and not quiet:
                         sys.stderr.write(stderr)
                         sys.stderr.flush()
                     raise subprocess.CalledProcessError(
@@ -133,8 +138,10 @@ class MicromambaEnv:
                         stderr=stderr
                     )
 
-            return "".join(stdout_lines)
+            return "".join(stdout_lines) if capture_output else None
+
         else:
+            # Quiet is False and capture_output is False → just run
             subprocess.check_call(cmd)
             return None
 
