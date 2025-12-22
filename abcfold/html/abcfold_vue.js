@@ -78,9 +78,9 @@ Vue.component('abc-table', {
                         onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 3)">pTM score</th>
                     <th title="The ipTM score of the model"
                         onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 4)">ipTM score</th>
-                    <th title="The H-score of the model"
-                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1',  5)">ipSAE</th>
                     <th title="The ipSAE(interaction prediction Score from Aligned Errors) d0res_asym score"
+                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1',  5)">ipSAE</th>
+                    <th title="The number of possible residue clashes found in the model - lower is better"
                         onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 6)">Residue Clashes</th>
                      <th title="The number of possible atom clashes found in the model - lower is better"
                         onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 7)">Atom Clashes</th>

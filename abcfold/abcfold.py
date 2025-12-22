@@ -101,16 +101,6 @@ def run(args, config, defaults, config_file):
 
         check_af3_install(interactive=False, sif_path=af3_sif)
 
-    if args.boltz:
-        from abcfold.boltz.check_install import ensure_boltz_env
-
-        ensure_boltz_env()
-
-    if args.chai1:
-        from abcfold.chai1.check_install import ensure_chai_env
-
-        ensure_chai_env()
-
     with tempfile.TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
         if args.mmseqs2:
@@ -444,6 +434,7 @@ def main():
     if config_file.exists():
         config.read(str(config_file))
         defaults.update(dict(config.items("Databases")))
+        defaults.update(dict(config.items("Sif_paths")))
 
     parser = main_argpase_util(parser)
     parser = alphafold_argparse_util(parser)
