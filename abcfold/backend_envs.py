@@ -44,7 +44,6 @@ class MicromambaEnv:
                 [
                     self.micromamba,
                     "run",
-                    "--no-rc",  # optional, helps avoid env variable issues
                     "-n", self.env_name,
                     "python",
                     "-c", code,
