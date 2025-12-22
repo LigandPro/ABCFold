@@ -155,7 +155,7 @@ check back for updates"
 
         try:
             chai_env.run(["python", str(script_path)], quiet=True)
-            logger.info("Successfully wrote PQT file to %s", file_path)
+            logger.debug("Successfully wrote PQT file to %s", file_path)
         finally:
             script_path.unlink()
 

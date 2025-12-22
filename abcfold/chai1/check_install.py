@@ -8,6 +8,9 @@ logger = logging.getLogger("logger")
 CHAI_VERSION = "0.6.1"
 CHAI_ENV = "abcfold-chai-py311"
 
+# Set requirment versions for chai dependencies
+PANDERA_VERSION = "0.24.0"
+
 
 def ensure_chai_env():
     env = MicromambaEnv(CHAI_ENV)
@@ -30,6 +33,11 @@ def ensure_chai_env():
         env.pip_install([f"chai_lab=={CHAI_VERSION}"])
     else:
         logger.info("chai_lab is already up-to-date (%s)", CHAI_VERSION)
+
+    installed_pandera = env.get_installed_version("pandera")
+    if installed_pandera != PANDERA_VERSION:
+        logger.info("Installing pandera==%s for Chai compatibility", PANDERA_VERSION)
+        env.pip_install([f"pandera=={PANDERA_VERSION}"])
 
     # 3. Ensure runtime deps you *actually* need
     env.ensure_package("numpy")
