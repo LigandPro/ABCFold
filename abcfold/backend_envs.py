@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
+from typing import Optional
 
 
 class MicromambaEnv:
@@ -23,17 +24,19 @@ class MicromambaEnv:
             "Ensure micromamba is installed and on PATH."
         )
 
-    def get_installed_version(self, package: str) -> str | None:
+    def get_installed_version(self, package: str) -> Optional[str]:
         """
         Return installed version of `package` inside the env,
         or None if the package is not installed.
         """
         code = (
-            "from importlib.metadata import version, PackageNotFoundError; "
-            f"import sys; "
-            f"pkg='{package}'; "
-            "try: print(version(pkg)); "
-            "except PackageNotFoundError: sys.exit(1)"
+            "from importlib.metadata import version, PackageNotFoundError\n"
+            "import sys\n"
+            f"pkg='{package}'\n"
+            "try:\n"
+            "    print(version(pkg))\n"
+            "except PackageNotFoundError:\n"
+            "    sys.exit(1)"
         )
 
         try:
@@ -41,6 +44,7 @@ class MicromambaEnv:
                 [
                     self.micromamba,
                     "run",
+                    "--no-rc",  # optional, helps avoid env variable issues
                     "-n", self.env_name,
                     "python",
                     "-c", code,
@@ -51,7 +55,7 @@ class MicromambaEnv:
         except subprocess.CalledProcessError:
             return None
 
-    def ensure_package(self, package: str, version: str | None = None):
+    def ensure_package(self, package: str, version: Optional[str] = None):
         """
         Ensure a package (optionally pinned to a version) is installed.
         """
