@@ -236,11 +236,7 @@ check back for updates"
 
             # Mute FutureWarning from Chai lab/Pandas about grouping columns
             with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore",
-                    category=FutureWarning,
-                    message=r"DataFrameGroupBy.apply operated on the grouping columns.*"
-                )
+                warnings.filterwarnings("ignore", category=FutureWarning)
                 (
                     self.msa_to_file(msa=msa, file_path=pqt_path)
                     if self.__create_files

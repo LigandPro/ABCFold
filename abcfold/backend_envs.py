@@ -102,7 +102,7 @@ class MicromambaEnv:
             "pip", "install", *packages,
         ])
 
-    def run(self, command: list[str], capture_output: bool = False) -> str | None:
+    def run(self, command: list[str], capture_output: bool = False) -> Optional[str]:
         cmd = [self.micromamba, "run", "-n", self.env_name, *command]
 
         if capture_output:
