@@ -72,6 +72,10 @@ def run(args, config, defaults, config_file):
     if args.database_dir is not None and args.database_dir != defaults["database_dir"]:
         config.set("Databases", "database_dir", args.database_dir)
         updated_config = True
+    af3_sif = args.af3_sif_path
+    if af3_sif is not None and af3_sif != defaults.get("af3_sif_path"):
+        config.set("Sif_paths", "af3_sif_path", af3_sif)
+        updated_config = True
     if updated_config:
         with open(config_file, "w") as f:
             config.write(f)

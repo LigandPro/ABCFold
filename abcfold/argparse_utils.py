@@ -154,7 +154,7 @@ is only required if using the built in AlphaFold3 MSA generation",
     )
 
     parser.add_argument(
-        "--sif_path",
+        "--af3_sif_path",
         help="[conditionally required] The path to the sif image of AlphaFold3 if \
 using Singularity",
         default=None,

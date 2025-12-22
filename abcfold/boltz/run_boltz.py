@@ -1,12 +1,11 @@
 import logging
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Union
 
 from abcfold.boltz.af3_to_boltz import BoltzYaml
-from abcfold.boltz.check_install import check_boltz
+from abcfold.boltz.check_install import ensure_boltz_env
 
 logger = logging.getLogger("logger")
 
@@ -42,7 +41,7 @@ def run_boltz(
     output_dir = Path(output_dir)
 
     logger.debug("Checking if boltz is installed")
-    check_boltz()
+    env = ensure_boltz_env()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
@@ -70,37 +69,30 @@ def run_boltz(
                 else generate_boltz_test_command()
             )
 
-            with subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            ) as proc:
-                stdout = ""
-                if proc.stdout:
-                    for line in proc.stdout:
-                        sys.stdout.write(line.decode())
-                        sys.stdout.flush()
-                        stdout += line.decode()
-                _, stderr = proc.communicate()
-                if proc.returncode != 0:
-                    if proc.stderr:
-                        logger.error(stderr.decode())
-                        output_err_file = output_dir / "boltz_error.log"
-                        with open(output_err_file, "w") as f:
-                            f.write(stderr.decode())
-                        logger.error(
-                            "Boltz run failed. Error log is in %s", output_err_file
-                        )
-                    else:
-                        logger.error("Boltz run failed")
-                    return False
-                elif "WARNING: ran out of memory" in stdout:
+            try:
+                stdout = env.run(cmd, capture_output=True)
+
+                # Check for out-of-memory warnings
+                if "WARNING: ran out of memory" in stdout:
                     logger.error("Boltz ran out of memory")
                     return False
 
-        logger.info("Boltz run complete")
-        logger.info("Output files are in %s", output_dir)
-        return True
+            except subprocess.CalledProcessError as e:
+                stderr = e.stderr or ""
+                if stderr:
+                    logger.error(stderr)
+                    output_err_file = output_dir / "boltz_error.log"
+                    output_err_file.write_text(stderr)
+                    logger.error(
+                        "Boltz run failed. Error log is in %s", output_err_file
+                    )
+                else:
+                    logger.error("Boltz run failed")
+                return False
+
+    logger.info("Boltz run complete")
+    logger.info("Output files are in %s", output_dir)
+    return True
 
 
 def generate_boltz_command(
