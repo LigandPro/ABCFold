@@ -102,14 +102,14 @@ def run(args, config, defaults, config_file):
         check_af3_install(interactive=False, sif_path=af3_sif)
 
     if args.boltz:
-        from abcfold.boltz.check_install import check_boltz
+        from abcfold.boltz.check_install import ensure_boltz_env
 
-        check_boltz()
+        ensure_boltz_env()
 
     if args.chai1:
-        from abcfold.chai1.check_install import check_chai1
+        from abcfold.chai1.check_install import ensure_chai_env
 
-        check_chai1()
+        ensure_chai_env()
 
     with tempfile.TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
