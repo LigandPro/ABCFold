@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 import subprocess
 import tempfile
@@ -9,6 +10,7 @@ from abcfold.chai1.af3_to_chai import ChaiFasta
 from abcfold.chai1.check_install import ensure_chai_env
 
 logger = logging.getLogger("logger")
+os.environ["DISABLE_PANDERA_IMPORT_WARNING"] = "True"
 
 
 def run_chai(
