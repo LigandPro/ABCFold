@@ -99,7 +99,7 @@ def run(args, config, defaults, config_file):
     if args.alphafold3:
         from abcfold.alphafold3.check_install import check_af3_install
 
-        check_af3_install(interactive=False, sif_path=args.sif_path)
+        check_af3_install(interactive=False, sif_path=af3_sif)
 
     if args.boltz:
         from abcfold.boltz.check_install import check_boltz
@@ -165,7 +165,7 @@ def run(args, config, defaults, config_file):
                 database_dir=af3_database,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
-                sif_path=args.sif_path,
+                sif_path=af3_sif,
             )
 
             if af3_success:
