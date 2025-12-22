@@ -14,20 +14,19 @@ Scripts to run AlphaFold3, Boltz and Chai-1 with MMseqs2 Multiple sequence align
 
 ## Installation
 
-We recommend installing this package in a virtual environment or conda / micromamba environment. Python 3.11 is recommended, but the package should work with Python 3.9 and above.
+We recommend installing this package in a micromamba environment. Python 3.11 is recommended, but the package should work with Python 3.9 and above.
 
-To set up a conda/micromamba environment, run:
+To set up a micromamba environment, run:
 ```bash
-conda create -n abcfold python=3.11
-conda activate abcfold
-```
-
-or
-
-```bash
-micromamba env create -n abcfold python=3.11
+micromamba env create -n abcfold python=3.11 -y
 micromamba activate abcfold
 ```
+
+> **Environment note**
+>
+> - Your main Python environment can be Conda, micromamba, or virtualenv.
+> - `abcfold` will automatically create **internal micromamba environments** to run Chai-1 and Boltz safely.
+> - This prevents package conflicts with your main environment and ensures reproducible results.
 
 
 To install the package from PyPI, run:
@@ -111,7 +110,7 @@ However, there you may wish to use the following flags to add run time options s
 - `--model_params`: Path to the directory containing the AlphaFold3 model parameters.
 - `--database`: [optional] Path to the directory containing the AlphaFold3 databases #Note: This is not used if using the
 `--mmseqs2` flag.
-- `--sif_path`: [optional] Path to sif file if using an AlphaFold3 singularity instead of Docker
+- `--af3_sif_path`: [optional] Path to sif file if using an AlphaFold3 singularity instead of Docker
 - `--use_af3_template_search`[optional] If providing your own custom MSA or you've ran `--mmseqs2`, allow Alphafold3 to search for templates
 
 #### Template arguments
