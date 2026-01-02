@@ -29,6 +29,14 @@
             "smiles": "CCCCCCCCCCCC(O)=O"
 
       }
+    },
+
+    {
+        "ligand":{
+            "id": "F",
+            "ccdCodes": ["MG"]
+
+      }
     }
     ],
 

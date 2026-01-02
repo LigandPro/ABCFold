@@ -45,7 +45,6 @@
                     </cite>
                 </p>
 
-
                 <h5>Chai-1:</h5>
                 <p>
                     <cite style="font-style: normal">
@@ -56,6 +55,19 @@
                         BioRxiv [preprint]. 2024 Dec 27.
                         <br>
                         doi: <a href="https://doi.org/10.1101/2024.10.10.615955" target="_blank">10.1101/2024.10.10.615955</a>.
+                    </cite>
+                </p>
+
+                <h5>Protenix:</h5>
+                <p>
+                    <cite style="font-style: normal">
+                        ByteDance AML AI4Science Team and Chen X, <i>et al</i>.
+                        <br>
+                        Protenix - Advancing Structure Prediction Through a Comprehensive AlphaFold3 Reproduction.
+                        <br>
+                        BioRxiv [preprint]. 2025.
+                        <br>
+                        doi: <a href="https://doi.org/10.1101/2025.01.08.631967" target="_blank">10.1101/2025.01.08.631967</a>.
                     </cite>
                 </p>
 

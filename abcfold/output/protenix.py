@@ -120,6 +120,7 @@ class ProtenixOutput:
                 file_groups[seed] = {}
 
             for output in pathway.rglob("*"):
+                print(output)
                 number = output.stem.split("_sample_")[-1]
                 if not number.isdigit():
                     continue

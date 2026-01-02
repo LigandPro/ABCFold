@@ -28,12 +28,13 @@ class ProtenixJson:
     def __init__(self, working_dir: Union[str, Path], create_files: bool = True):
         self.working_dir = working_dir
         self.seeds: list = [42]
-        self.__ids: List[Union[str, int]] = []
+        self.__ids: Dict = {}
+        self.__id_counter: int = 1
         self.__create_files = create_files
         self.protenix_dict: Dict = {}
 
     @property
-    def chain_ids(self) -> List[Union[str, int]]:
+    def chain_ids(self) -> Dict:
         return self.__ids
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
@@ -62,7 +63,7 @@ class ProtenixJson:
             json_file_or_dict (Union[dict, str, Path]): json file or dict
 
         Returns:
-            str: a string representation of string
+            Dict: protenix dictionary
         """
         logger.info("Converting input json to a Protenix compatible json file")
         if isinstance(json_file_or_dict, str) or isinstance(json_file_or_dict, Path):
@@ -97,6 +98,10 @@ class ProtenixJson:
                         ligand_entry = self.convert_ligand(entry["ligand"])
                         protenix_sequences.append(ligand_entry)
 
+            if key == "bondedAtomPairs":
+                contact = self.convert_bonded_atom_pairs(value)
+                self.protenix_dict["contact"] = contact
+
         self.protenix_dict["sequences"] = protenix_sequences
 
         return self.protenix_dict
@@ -104,6 +109,9 @@ class ProtenixJson:
     def convert_protein(self, seq_dict) -> Dict[str, Any]:
         sequence = seq_dict["sequence"]
         chain_ids = seq_dict.get("id", [])
+        for chain in chain_ids:
+            self.__ids[chain] = self.__id_counter
+            self.__id_counter += 1
         count = len(chain_ids) if chain_ids else 1
 
         protein_chain = {
@@ -148,6 +156,9 @@ class ProtenixJson:
     def convert_rna(self, seq_dict) -> Dict[str, Any]:
         sequence = seq_dict["sequence"]
         chain_ids = seq_dict.get("id", [])
+        for chain in chain_ids:
+            self.__ids[chain] = self.__id_counter
+            self.__id_counter += 1
         count = len(chain_ids) if chain_ids else 1
 
         rna_chain = {
@@ -166,6 +177,9 @@ class ProtenixJson:
     def convert_dna(self, seq_dict) -> Dict[str, Any]:
         sequence = seq_dict["sequence"]
         chain_ids = seq_dict.get("id", [])
+        for chain in chain_ids:
+            self.__ids[chain] = self.__id_counter
+            self.__id_counter += 1
         count = len(chain_ids) if chain_ids else 1
 
         dna_chain = {
@@ -183,14 +197,19 @@ class ProtenixJson:
 
     def convert_ligand(self, seq_dict) -> Dict[str, Any]:
         chain_ids = seq_dict.get("id", [])
+        for chain in chain_ids:
+            self.__ids[chain] = self.__id_counter
+            self.__id_counter += 1
         count = len(chain_ids) if chain_ids else 1
 
         if "ccdCodes" in seq_dict:
-            ligand = seq_dict["ccdCodes"][0]
+            ligand_id = seq_dict["ccdCodes"][0]
+            ligand = f"CCD_{ligand_id}"
         else:
             ligand = seq_dict["smiles"]
+            ligand_id = ligand
 
-        if ligand.upper() in ION_CCD_CODES:
+        if ligand_id.upper() in ION_CCD_CODES:
             ligand_chain = {
                 "ion": ligand,
                 "count": count,
@@ -206,6 +225,27 @@ class ProtenixJson:
             return {
                 "ligand": ligand_chain
             }
+
+    def convert_bonded_atom_pairs(self,
+                                  bonded_atom_pairs: List[List[List[Union[str, int]]]]):
+        contacts = []
+        for pair in bonded_atom_pairs:
+            entity1, position1, atom1 = pair[0]
+            entity2, position2, atom2 = pair[1]
+            contact = {
+                "entity1": self.__ids[entity1],
+                "position1": position1,
+                "copy1": 1,
+                "atom1": atom1,
+                "entity2": self.__ids[entity2],
+                "position2": position2,
+                "copy2": 1,
+                "atom2": atom2,
+                "max_distance": 6,
+                "min_distance": 0
+            }
+            contacts.append(contact)
+        return contacts
 
     def write_json(self, out_file: Union[str, Path]):
         """

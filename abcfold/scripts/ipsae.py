@@ -163,6 +163,11 @@ class Ipsae():
                 file_.data,
                 self.struct,
             ).scores
+        elif self.pae_format == "protenix":
+            self.pae_data = Af3Pae.from_protenix(
+                file_.data,
+                self.struct,
+            ).scores
         else:
             raise ValueError(f"Unsupported PAE format: {self.pae_format}")
 
@@ -607,7 +612,7 @@ class Ipsae():
         if output_csv:
             df.to_csv(output_csv, index=False)
 
-        return
+        return df
 
 
 def main():
@@ -626,7 +631,8 @@ def main():
                         help="PAE cutoff used in some scores (default: 10.0)")
     parser.add_argument("--pae_format",
                         choices=[
-                            "alphafold2", "alphafold3", "boltz", "chai", "colabfold"
+                            "alphafold2", "alphafold3", "boltz",
+                            "chai", "colabfold", "protenix"
                         ],
                         default="alphafold3",
                         help="Format of the PAE file (default: alphafold3)")
