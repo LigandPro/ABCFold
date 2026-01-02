@@ -15,6 +15,7 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util,
                                     prediction_argparse_util,
+                                    protenix_argparse_util,
                                     raise_argument_errors,
                                     visuals_argparse_util)
 from abcfold.html.html_utils import (PORT, NoCacheHTTPRequestHandler,
@@ -26,6 +27,7 @@ from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import superpose_models
+from abcfold.output.protenix import ProtenixOutput
 from abcfold.output.utils import (get_gap_indicies, insert_none_by_minus_one,
                                   make_dummy_m8_file)
 from abcfold.scripts.abc_script_utils import (check_input_json, make_dir,
@@ -95,11 +97,6 @@ def run(args, config, defaults, config_file):
     if name is None:
         logger.error("Input JSON must contain a 'name' field")
         sys.exit(1)
-
-    if args.alphafold3:
-        from abcfold.alphafold3.check_install import check_af3_install
-
-        check_af3_install(interactive=False, sif_path=af3_sif)
 
     with tempfile.TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
@@ -213,6 +210,25 @@ def run(args, config, defaults, config_file):
                 outputs.append(co)
             successful_runs.append(chai_success)
 
+        if args.protenix:
+            from abcfold.protenix.run_protenix import run_protenix
+
+            protenix_success = run_protenix(
+                input_json=run_json,
+                output_dir=args.output_dir,
+                save_input=args.save_input,
+                number_of_models=args.number_of_models,
+                num_recycles=args.num_recycles,
+            )
+
+            if protenix_success:
+                protenix_output_dirs = list(args.output_dir.glob("protenix_results*"))
+                po = ProtenixOutput(
+                    protenix_output_dirs, input_params, name, args.save_input
+                )
+                outputs.append(po)
+            successful_runs.append(protenix_success)
+
         if args.no_visuals:
             logger.info("Visuals disabled")
             return
@@ -316,8 +332,39 @@ def run(args, config, defaults, config_file):
                             )
                             chai_models["models"].append(model_data)
 
+        protenix_models = {"models": []}
+        if args.protenix:
+            if protenix_success:
+                programs_run.append("Protenix")
+                for seed in po.output.keys():
+                    for idx in po.output[seed].keys():
+                        if idx >= 0:
+                            model = po.output[seed][idx]["cif"]
+                            model.check_clashes()
+                            score_file = po.output[seed][idx]["scores"]
+                            plddt = model.residue_plddts
+                            pae = po.output[seed][idx]["af3_pae"]
+                            if len(indicies) > 0:
+                                plddt = insert_none_by_minus_one(
+                                    indicies[index_counter], plddt
+                                )
+                            index_counter += 1
+                            model_data = get_model_data(
+                                model,
+                                plot_dict,
+                                "Protenix",
+                                plddt,
+                                pae,
+                                score_file,
+                                args.output_dir,
+                            )
+                            protenix_models["models"].append(model_data)
+
         combined_models = (
-            alphafold_models["models"] + boltz_models["models"] + chai_models["models"]
+            alphafold_models["models"] +
+            boltz_models["models"] +
+            chai_models["models"] +
+            protenix_models["models"]
         )
 
         # Make the output directory for the models
@@ -331,6 +378,8 @@ def run(args, config, defaults, config_file):
                 output_name = "boltz_model_" + model["model_id"][-1] + ".cif"
             elif model["model_source"] == "Chai-1":
                 output_name = "chai_model_" + model["model_id"][-1] + ".cif"
+            elif model["model_source"] == "Protenix":
+                output_name = "protenix_model_" + model["model_id"][-1] + ".cif"
             shutil.copy(
                 cif_file,
                 args.output_dir.joinpath("output_models").joinpath(output_name),
@@ -440,6 +489,7 @@ def main():
     parser = alphafold_argparse_util(parser)
     parser = boltz_argparse_util(parser)
     parser = chai_argparse_util(parser)
+    parser = protenix_argparse_util(parser)
     parser = mmseqs2_argparse_util(parser)
     parser = custom_template_argpase_util(parser)
     parser = prediction_argparse_util(parser)

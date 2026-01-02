@@ -58,6 +58,8 @@ Vue.component('abc-table', {
                     return 'btn-source2';
                 case 'Chai-1':
                     return 'btn-source3';
+                case 'Protenix':
+                    return 'btn-source4';
                 default:
                     return 'btn-default';
             }
