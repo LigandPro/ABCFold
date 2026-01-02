@@ -41,12 +41,12 @@ class ProtenixOutput:
                 "seed-1": {
                     1: {
                         "cif": CifFile,
-                        "json": ConfidenceJsonFile,
+                        "scores": ConfidenceJsonFile,
                         "af3_pae": ConfidenceJsonFile,
                     },
                     2: {
                         "cif": CifFile,
-                        "json": ConfidenceJsonFile,
+                        "scores": ConfidenceJsonFile,
                         "af3_pae": ConfidenceJsonFile,
                     },
                 },
@@ -194,7 +194,7 @@ class ProtenixOutput:
                 i: {
                     "cif": cif_file,
                     "af3_pae": new_pae_files[seed][i],
-                    "json": self.output[seed][i]["score"],
+                    "scores": self.output[seed][i]["score"],
                 }
                 for i, cif_file in enumerate(self.cif_files[seed])
             }

@@ -118,7 +118,7 @@ def generate_protenix_command(
     use_msa = False
     with open(str(input_json), "r") as f:
         data = json.load(f)
-    for key, value in data.items():
+    for key, value in data[0].items():
         if key == "sequences":
             for entry in value:
                 if "proteinChain" in entry:
