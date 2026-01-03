@@ -1,3 +1,5 @@
+import copy
+
 import pytest
 
 from abcfold.scripts.ipsae import Ipsae
@@ -6,10 +8,12 @@ from abcfold.scripts.ipsae import Ipsae
 def test_af3_ipsae(output_objs):
     af3_file = output_objs.af3_output.cif_files["seed-1"][0]
     af3_pae_file = output_objs.af3_output.af3_pae_files["seed-1"][0]
+    af3_file_copy = copy.deepcopy(af3_file)
+    af3_pae_file_copy = copy.deepcopy(af3_pae_file)
 
     ipsae_calculator = Ipsae(
-        af3_file,
-        af3_pae_file,
+        af3_file_copy,
+        af3_pae_file_copy,
         pae_cutoff=10.0,
         pae_format="alphafold3",
         distance_cutoff=5.0
@@ -42,10 +46,12 @@ def test_af3_ipsae(output_objs):
 def test_boltz_ipsae(output_objs):
     boltz_file = output_objs.boltz_output.cif_files["seed-1"][0]
     boltz_pae_file = output_objs.boltz_output.af3_pae_files["seed-1"][0]
+    boltz_file_copy = copy.deepcopy(boltz_file)
+    boltz_pae_file_copy = copy.deepcopy(boltz_pae_file)
 
     ipsae_calculator = Ipsae(
-        boltz_file,
-        boltz_pae_file,
+        boltz_file_copy,
+        boltz_pae_file_copy,
         pae_cutoff=10.0,
         pae_format="alphafold3",
         distance_cutoff=5.0
@@ -78,10 +84,12 @@ def test_boltz_ipsae(output_objs):
 def test_chai_ipsae(output_objs):
     chai_file = output_objs.chai_output.cif_files["seed-1"][0]
     chai_pae_file = output_objs.chai_output.af3_pae_files["seed-1"][0]
+    chai_file_copy = copy.deepcopy(chai_file)
+    chai_pae_file_copy = copy.deepcopy(chai_pae_file)
 
     ipsae_calculator = Ipsae(
-        chai_file,
-        chai_pae_file,
+        chai_file_copy,
+        chai_pae_file_copy,
         pae_cutoff=10.0,
         pae_format="alphafold3",
         distance_cutoff=5.0
@@ -114,10 +122,12 @@ def test_chai_ipsae(output_objs):
 def test_protenix_ipsae(output_objs):
     protenix_file = output_objs.protenix_output.cif_files["seed-1"][0]
     protenix_pae_file = output_objs.protenix_output.af3_pae_files["seed-1"][0]
+    protenix_file_copy = copy.deepcopy(protenix_file)
+    protenix_pae_file_copy = copy.deepcopy(protenix_pae_file)
 
     ipsae_calculator = Ipsae(
-        protenix_file,
-        protenix_pae_file,
+        protenix_file_copy,
+        protenix_pae_file_copy,
         pae_cutoff=10.0,
         pae_format="alphafold3",
         distance_cutoff=5.0
