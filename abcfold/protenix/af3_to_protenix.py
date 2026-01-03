@@ -98,7 +98,7 @@ class ProtenixJson:
                         ligand_entry = self.convert_ligand(entry["ligand"])
                         protenix_sequences.append(ligand_entry)
 
-            if key == "bondedAtomPairs":
+            if key == "bondedAtomPairs" and value is not None:
                 contact = self.convert_bonded_atom_pairs(value)
                 self.protenix_dict["contact"] = contact
 
@@ -168,7 +168,15 @@ class ProtenixJson:
 
         modifications = seq_dict.get("modifications")
         if modifications:
-            rna_chain["modifications"] = modifications
+            prefixed = []
+            for mod in modifications:
+                m = dict(mod)
+                typ = str(m.get("modificationType", ""))
+                if not typ.startswith("CCD_"):
+                    typ = "CCD_" + typ
+                m["modificationType"] = typ
+                prefixed.append(m)
+            rna_chain["modifications"] = prefixed
 
         return {
             "rnaSequence": rna_chain
@@ -189,7 +197,15 @@ class ProtenixJson:
 
         modifications = seq_dict.get("modifications")
         if modifications:
-            dna_chain["modifications"] = modifications
+            prefixed = []
+            for mod in modifications:
+                m = dict(mod)
+                typ = str(m.get("modificationType", ""))
+                if not typ.startswith("CCD_"):
+                    typ = "CCD_" + typ
+                m["modificationType"] = typ
+                prefixed.append(m)
+            dna_chain["modifications"] = prefixed
 
         return {
             "dnaSequence": dna_chain
