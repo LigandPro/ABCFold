@@ -124,11 +124,11 @@ def get_model_data(model,
     full_model_path = Path(model.pathway)
     model_path = full_model_path.relative_to(output_dir).as_posix()
 
+    ipsae_score = []
     try:
         ipsae = Ipsae(model, pae_obj)
         distances = ipsae.get_cb_distance()
         ipsae_scores = ipsae.compute_iptm_ipsae(distances)
-        ipsae_score = []
 
         # Currently displaying all chain variations, might alter to max in future
         for k, v in ipsae_scores["ipsae_d0res_asym"].items():
@@ -144,7 +144,7 @@ def get_model_data(model,
                              verbose=False,
                              output_csv=ipsae_out)
     except ValueError:
-        ipsae_score = None
+        pass
 
     model_data = {
         "model_id": model.name,
