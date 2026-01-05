@@ -121,7 +121,15 @@ class ProtenixJson:
 
         modifications = seq_dict.get("modifications")
         if modifications:
-            protein_chain["modifications"] = modifications
+            prefixed = []
+            for mod in modifications:
+                m = dict(mod)
+                typ = str(m.get("ptmType", ""))
+                if not typ.startswith("CCD_"):
+                    typ = "CCD_" + typ
+                m["ptmType"] = typ
+                prefixed.append(m)
+            protein_chain["modifications"] = prefixed
 
         unpaired_msa = seq_dict.get("unpairedMsa")
         paired_msa = seq_dict.get("pairedMsa")

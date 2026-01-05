@@ -100,8 +100,8 @@ def test_af3_to_protenix_ptm(test_data):
                     {'proteinChain': {'sequence': 'PVLSCGEWQL',
                                       'count': 1,
                                       'modifications': [
-                                          {'ptmType': 'HY3', 'ptmPosition': 1},
-                                          {'ptmType': 'P1L', 'ptmPosition': 5}
+                                          {'ptmType': 'CCD_HY3', 'ptmPosition': 1},
+                                          {'ptmType': 'CCD_P1L', 'ptmPosition': 5}
                                       ]
                                      }
                     },
