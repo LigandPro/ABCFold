@@ -186,6 +186,12 @@ def alphafold_argparse_util(parser):
         allow Alphafold3 to search for templates"),
     )
 
+    parser.add_argument(
+        "--save_distogram",
+        action="store_true",
+        help="[optional] store AlphaFold3 distograms",
+    )
+
     return parser
 
 
