@@ -30,6 +30,7 @@ def ensure_boltz_env():
             f"boltz=={BOLTZ_VERSION}",
             "cuequivariance_torch",
             "cuequivariance_ops_torch-cu12",
+            "--no-cache-dir",
         ])
     else:
         logger.info("boltz is already up-to-date (%s)", BOLTZ_ENV)

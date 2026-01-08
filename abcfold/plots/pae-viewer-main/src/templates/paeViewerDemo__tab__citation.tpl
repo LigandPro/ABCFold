@@ -18,6 +18,21 @@
                 <h5>Alphafold3:</h5>
                 <p>
                     <cite style="font-style: normal">
+                        Elliott L and Simpkin A <i>et al</i>.
+                        <br>
+                        ABCFold: easier running and comparison of AlphaFold 3, Boltz-1, and Chai-1
+                        <br>
+                        Bioinformatic advances. 2025;5(1):vbaf153.
+                        <br>
+                        doi: <a href="https://doi.org/10.1093/bioadv/vbaf153" target="_blank">10.1038/s41586-024-07487-w</a>.
+                        PMID: 40708869;
+                        PMCID: <a href="https://pubmed.ncbi.nlm.nih.gov/40708869/" target="_blank">PMC11168924</a>.
+                    </cite>
+                </p>
+
+                <h5>Alphafold3:</h5>
+                <p>
+                    <cite style="font-style: normal">
                         Abramson J, <i>et al</i>.
                         <br>
                         Accurate structure prediction of biomolecular interactions with AlphaFold 3

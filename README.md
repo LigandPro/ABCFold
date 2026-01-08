@@ -15,6 +15,7 @@ Scripts to run AlphaFold3, Boltz, Chai-1 and Protenix with MMseqs2 Multiple sequ
 ## Installation
 
 We recommend installing this package in a micromamba environment. Python 3.11 is recommended, but the package should work with Python 3.9 and above.
+For instructions on installing micromamba, check their website [here](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html).
 
 To set up a micromamba environment, run:
 ```bash
@@ -25,7 +26,7 @@ micromamba activate abcfold
 > **Environment note**
 >
 > - Your main Python environment can be Conda, micromamba, or virtualenv.
-> - `abcfold` will automatically create **internal micromamba environments** to run Chai-1 and Boltz safely.
+> - `abcfold` will automatically create **internal micromamba environments** to run Boltz, Chai-1 and Protenix safely, therefore a micromamba installation is required.
 > - This prevents package conflicts with your main environment and ensures reproducible results.
 
 
