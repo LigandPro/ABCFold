@@ -522,7 +522,7 @@ class CifFile(FileBase):
     def check_other(self, chain: Chain, check_list) -> bool:
         sequences = self.input_params.get("sequences")
         if sequences is None:
-            logger.warning("Unable to gain sequence infromation from input file")
+            logger.warning("Unable to gain sequence information from input file")
             return False
         for sequence in sequences:
             for sequence_type, sequence_data in sequence.items():

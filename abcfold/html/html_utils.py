@@ -1,4 +1,5 @@
 import http.server
+import logging
 import textwrap
 from itertools import groupby
 from operator import itemgetter
@@ -19,6 +20,7 @@ from abcfold.plots.plddt_plot import plot_plddt
 from abcfold.scripts.ipsae import Ipsae
 
 PORT = 8000
+logger = logging.getLogger("logger")
 
 
 def get_plddt_regions(plddts: Union[np.ndarray, list]) -> dict:
@@ -144,6 +146,7 @@ def get_model_data(model,
                              verbose=False,
                              output_csv=ipsae_out)
     except ValueError:
+        logger.error("ValueError when calculating ipSAE score, bypassing ipSAE")
         pass
 
     model_data = {

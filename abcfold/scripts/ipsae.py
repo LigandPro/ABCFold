@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import logging
 from collections import defaultdict
 from pathlib import Path
@@ -36,7 +37,7 @@ class Ipsae():
 
         # Read structure + PAE data
         if isinstance(self.input_model, CifFile):
-            self.struct = self.input_model
+            self.struct = copy.deepcopy(self.input_model)
         else:
             self.struct = CifFile(self.input_model)
         self.process_input()

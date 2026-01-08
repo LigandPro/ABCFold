@@ -471,11 +471,13 @@ view the output pages"
 
 def main():
     """
-    Run AlphaFold3 / Boltz / Chai-1
+    Run AlphaFold3 / Boltz / Chai-1 / Protenix
     """
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run AlphaFold3 / Boltz / Chai-1")
+    parser = argparse.ArgumentParser(
+        description="Run AlphaFold3 / Boltz / Chai-1 / Protenix"
+    )
 
     defaults = {}
     config_file = Path(__file__).parent.joinpath("data", "config.ini")

@@ -86,6 +86,18 @@
                     </cite>
                 </p>
 
+                <h5>ipSAE:</h5>
+                <p>
+                    <cite style="font-style: normal">
+                        Dunbrack Jr. RL.
+                        <br>
+                        Rēs ipSAE loquunt: What’s wrong with AlphaFold’s ipTM score and how to fix it.
+                        <br>
+                        BioRxiv [preprint]. 2025.
+                        <br>
+                        doi: <a href="https://doi.org/10.1101/2025.02.10.637595" target="_blank">10.1101/2025.01.08.631967</a>.
+                    </cite>
+                </p>
 
                 <h5>PAE Viewer:</h5>
                 <p>
