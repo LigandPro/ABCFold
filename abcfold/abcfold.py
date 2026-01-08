@@ -153,6 +153,7 @@ def run(args, config, defaults, config_file):
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
                 sif_path=af3_sif,
+                save_distogram=args.save_distogram
             )
 
             if af3_success:

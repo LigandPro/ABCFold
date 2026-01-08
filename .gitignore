@@ -13,7 +13,6 @@ build/
 
 .history/
 
-
 # pip packages
 dist/
 *.egg-info/
