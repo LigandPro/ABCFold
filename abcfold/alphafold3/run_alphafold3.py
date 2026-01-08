@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 from typing import Union
 
+from abcfold.alphafold3.check_install import check_af3_install
+
 logger = logging.getLogger("logger")
 
 
@@ -40,6 +42,9 @@ def run_alphafold3(
 
     input_json = Path(input_json)
     output_dir = Path(output_dir)
+
+    check_af3_install(interactive=False, sif_path=sif_path)
+
     cmd = generate_af3_cmd(
         input_json=input_json,
         output_dir=output_dir,

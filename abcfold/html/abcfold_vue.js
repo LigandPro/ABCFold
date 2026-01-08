@@ -58,6 +58,8 @@ Vue.component('abc-table', {
                     return 'btn-source2';
                 case 'Chai-1':
                     return 'btn-source3';
+                case 'Protenix':
+                    return 'btn-source4';
                 default:
                     return 'btn-default';
             }
@@ -74,12 +76,12 @@ Vue.component('abc-table', {
                         onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 1)">Model Source</th>
                     <th title="The average pLDDT score of the model"
                         onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 2)">Average pLDDT</th>
-                    <th title="The H-score of the model"
-                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1',  3)">H-score</th>
                     <th title="The pTM score of the model"
-                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 4)">pTM score</th>
+                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 3)">pTM score</th>
                     <th title="The ipTM score of the model"
-                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 5)">ipTM score</th>
+                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 4)">ipTM score</th>
+                    <th title="The ipSAE(interaction prediction Score from Aligned Errors) d0res_asym score"
+                        onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1',  5)">ipSAE</th>
                     <th title="The number of possible residue clashes found in the model - lower is better"
                         onclick="sortTableAndFeatures('abc_table', sequence, ft1, ABC_rowFeatureMap, '#div1', 6)">Residue Clashes</th>
                      <th title="The number of possible atom clashes found in the model - lower is better"
@@ -92,9 +94,9 @@ Vue.component('abc-table', {
                     <td><a v-bind:href="abcmodel.model_path" target="_blank">{{ abcmodel.model_id }}</a></td>
                     <td>{{ abcmodel.model_source }}</td>
                     <td>{{ abcmodel.avg_plddt | decimalPlaces }}</td>
-                    <td>{{ abcmodel.h_score }}</td>
                     <td>{{ abcmodel.ptm_score }}</td>
                     <td>{{ abcmodel.iptm_score }}</td>
+                    <td>{{ abcmodel.ipsae_score }}</td>
                     <td>{{ abcmodel.residue_clashes }}</td>
                     <td>{{ abcmodel.atom_clashes }}</td>
                     <td><a v-bind:href="abcmodel.pae_path" target="_blank"><button :class="getButtonClass(abcmodel.model_source)">Click for PAE Plot</button></a></td>

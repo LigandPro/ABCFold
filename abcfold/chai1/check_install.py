@@ -1,98 +1,47 @@
 import logging
-import subprocess
-import sys
+
+from abcfold.backend_envs import MicromambaEnv
 
 logger = logging.getLogger("logger")
 
 
 CHAI_VERSION = "0.6.1"
-CHAI_VERSION = "0.6.1"
+CHAI_ENV = "abcfold-chai-py311"
+
+# Set requirment versions for chai dependencies
+PANDERA_VERSION = "0.24.0"
 
 
-def check_chai1():
-    try:
-        import chai_lab as _  # noqa F40
+def ensure_chai_env():
+    env = MicromambaEnv(CHAI_ENV)
 
-        cmd = [sys.executable, "-m", "pip", "show", "chai_lab"]
-        with subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        ) as proc:
-            stdout, stderr = proc.communicate()
-            if proc.returncode != 0:
-                if "Package(s) not found:" in stderr.decode():
+    # 1. Ensure env exists
+    env.create(python_version="3.11")
 
-                    raise ModuleNotFoundError(
-                        "Chai_lab package not found."
-                    )
-                raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
+    # 2. Check installed chai version
+    installed = env.get_installed_version("chai_lab")
 
-            version = None
-            for line in stdout.decode().split("\n"):
-                if line.startswith("Version:"):
-                    version = line.split(":", 1)[1].strip()
-                    break
+    if installed != CHAI_VERSION:
+        if installed is None:
+            logger.info("chai_lab not found. Installing version: %s", CHAI_VERSION)
+        else:
+            logger.info(
+                "chai_lab version mismatch (found %s). Installing correct version: %s",
+                installed,
+                CHAI_VERSION,
+            )
+        env.pip_install([f"chai_lab=={CHAI_VERSION}"])
+    else:
+        logger.info("chai_lab is already up-to-date (%s)", CHAI_VERSION)
 
-            if version != CHAI_VERSION:
-                raise ImportError(
-                    f"Expected Chai-1 version {CHAI_VERSION}, found {version}"
-                )
-    except (ImportError, ModuleNotFoundError):
-        try:
-            import boltz as _  # noqa F401
+    installed_pandera = env.get_installed_version("pandera")
+    if installed_pandera != PANDERA_VERSION:
+        logger.info("Installing pandera==%s for Chai compatibility", PANDERA_VERSION)
+        env.pip_install([f"pandera=={PANDERA_VERSION}"])
 
-            no_deps = True
-        except (ImportError, ModuleNotFoundError):
-            no_deps = False
-        logger.info("Installing chai_lab package")
-        logger.info("No dependencies will be installed") if no_deps else None
-        cmd = [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            f"chai_lab=={CHAI_VERSION}",
-            "--no-cache-dir",
-        ]
-        cmd.append("--no-deps") if no_deps else None
-        logger.info("Running %s", " ".join(cmd))
-        run_command_using_sys(cmd)
-        if no_deps:
-            cmd = [
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                "antipickle",
-                "typer",
-                "jaxtyping",
-                "beartype",
-                "pandera",
-                "matplotlib",
-            ]
-            logger.info("Installing dependencies: %s", " ".join(cmd))
-            run_command_using_sys(cmd)
-    except Exception as e:
-        logger.error("Error while checking or installing chai_lab: %s", e)
-        raise ImportError(
-            "chai_lab package is not installed. "
-            "Please install it using `pip install chai_lab`."
-        ) from e
+    # 3. Ensure runtime deps you *actually* need
+    env.ensure_package("numpy")
+    env.ensure_package("typer")
+    env.ensure_package("matplotlib")
 
-    logger.info(f"Running Chai version: {CHAI_VERSION}")
-
-
-def run_command_using_sys(command: list[str]) -> None:
-    """Run a command using sys.executable."""
-    logger.info("Running command: %s", " ".join(command))
-    with subprocess.Popen(
-        command,
-        stdout=sys.stdout,
-        stderr=subprocess.PIPE,
-    ) as proc:
-        proc.wait()
-        if proc.returncode != 0:
-            if proc.stderr:
-                logger.error(proc.stderr.read().decode())
-            raise subprocess.CalledProcessError(proc.returncode, proc.args)
+    return env

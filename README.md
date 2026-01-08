@@ -4,7 +4,7 @@
 ![Coverage](https://raw.githubusercontent.com/rigdenlab/ABCFold/refs/heads/main/.blob/coverage.svg)
 
 
-Scripts to run AlphaFold3, Boltz and Chai-1 with MMseqs2 Multiple sequence alignments (MSAs) and custom templates.
+Scripts to run AlphaFold3, Boltz, Chai-1 and Protenix with MMseqs2 Multiple sequence alignments (MSAs) and custom templates.
 
 ## Table of Contents
 - [Installation](#installation)
@@ -14,20 +14,20 @@ Scripts to run AlphaFold3, Boltz and Chai-1 with MMseqs2 Multiple sequence align
 
 ## Installation
 
-We recommend installing this package in a virtual environment or conda / micromamba environment. Python 3.11 is recommended, but the package should work with Python 3.9 and above.
+We recommend installing this package in a micromamba environment. Python 3.11 is recommended, but the package should work with Python 3.9 and above.
+For instructions on installing micromamba, check their website [here](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html).
 
-To set up a conda/micromamba environment, run:
+To set up a micromamba environment, run:
 ```bash
-conda create -n abcfold python=3.11
-conda activate abcfold
-```
-
-or
-
-```bash
-micromamba env create -n abcfold python=3.11
+micromamba env create -n abcfold python=3.11 -y
 micromamba activate abcfold
 ```
+
+> **Environment note**
+>
+> - Your main Python environment can be Conda, micromamba, or virtualenv.
+> - `abcfold` will automatically create **internal micromamba environments** to run Boltz, Chai-1 and Protenix safely, therefore a micromamba installation is required.
+> - This prevents package conflicts with your main environment and ensures reproducible results.
 
 
 To install the package from PyPI, run:
@@ -57,7 +57,7 @@ python -m pre_commit install
 
 ### Running ABCfold
 
-ABCFold will run Alphafold3, Boltz and Chai-1 consecutively. The program takes an input of a JSON in the Alphafold3 format (For full instruction on how to format this, click [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/input.md)). An example JSON is shown below:
+ABCFold will run Alphafold3, Boltz, Chai-1 and Protenix consecutively. The program takes an input of a JSON in the Alphafold3 format (For full instruction on how to format this, click [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/input.md)). An example JSON is shown below:
 
 ```json
 {
@@ -80,7 +80,7 @@ Please make sure you have AlphaFold3 installed on your system (Instructions [her
 
 For the majority of jobs, ABCFold can be run as follows:
 ```bash
-abcfold <input_json>  <output_dir> -abc --mmseqs2 --model_params <path_to_af3_model_params>
+abcfold <input_json>  <output_dir> -abcp --mmseqs2 --model_params <path_to_af3_model_params>
 ```
 > [!NOTE]
 > `--model_params` is stored after the first run, therefore subsequent ABCFold jobs don't require this flag.
@@ -100,7 +100,7 @@ However, there you may wish to use the following flags to add run time options s
 #### Main arguments
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
 - `<output_dir>`: Path to the output directory.
-- `-a`, `-b`, `-c` (`--alphafold3`, `--boltz`,`--chai1`): Flags to run Alphafold3, Boltz and Chai-1 respectively. If none of these flags are provided, Alphafold3 will be run by default.
+- `-a`, `-b`, `-c`, `-p` (`--alphafold3`, `--boltz`,`--chai1`,`--protenix`): Flags to run Alphafold3, Boltz, Chai-1 and Protenix respectively. If none of these flags are provided, Alphafold3 will be run by default.
 - `--mmseqs2`: [optional] Flag to use MMseqs2 MSAs and templates (if specified).
 - `--mmseqs_database`: [optional] The path to the database used by a local copy of MMSeqs2, provided mmseqs is installed, the inclusion of this flag allows MMseqs2 to be run locally.
 - `--override`: [optional] Flag to override the existing output directory.
@@ -111,7 +111,7 @@ However, there you may wish to use the following flags to add run time options s
 - `--model_params`: Path to the directory containing the AlphaFold3 model parameters.
 - `--database`: [optional] Path to the directory containing the AlphaFold3 databases #Note: This is not used if using the
 `--mmseqs2` flag.
-- `--sif_path`: [optional] Path to sif file if using an AlphaFold3 singularity instead of Docker
+- `--af3_sif_path`: [optional] Path to sif file if using an AlphaFold3 singularity instead of Docker
 - `--use_af3_template_search`[optional] If providing your own custom MSA or you've ran `--mmseqs2`, allow Alphafold3 to search for templates
 
 #### Template arguments
@@ -132,14 +132,14 @@ However, there you may wish to use the following flags to add run time options s
 If you wanted to provide a custom template, `custom_a.pdb` for your protein sequence with the ID `A` and you have your template has two chains: chain `A` and chain `B` and chain `B` is what you want the template to be, you could run:
 
 ```bash
-abcfold <input_json>  <output_dir> -abc --mmseqs2 --custom_template custom_a.pdb  --custom_template_chain B --target_id A
+abcfold <input_json>  <output_dir> -abcp --mmseqs2 --custom_template custom_a.pdb  --custom_template_chain B --target_id A
 
 ```
 
 If you had multiple IDs in your input sequence, multiple template files and you wanted to provide 3 custom templates, chain `A` from `custom_a.pdb`, chain `B` from `custom_b.pdb`, and chain B from `custom_c.pdb`, where `custom_a.pdb` and `custom_b.pdb` correspond to the ID `A` and `custom_c.pdb` corresponds to the ID `B`, you could run:
 
 ```bash
-abcfold <input_json>  <output_dir> -abc --mmseqs2 --custom_template custom_a.pdb custom_b.pdb custom_c.pdb --custom_template_chain A B B --target_id A A B
+abcfold <input_json>  <output_dir> -abcp --mmseqs2 --custom_template custom_a.pdb custom_b.pdb custom_c.pdb --custom_template_chain A B B --target_id A A B
 
 ```
 ### Output
@@ -168,7 +168,7 @@ you will find `open_output.py` in your `<output_dir>`. This needs to be run from
 Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 input JSON files.
 
 > [!WARNING]
-> These scripts will only modify the input JSON files, I.E. they will NOT run AlphaFold3, Boltz and Chai-1.
+> These scripts will only modify the input JSON files, I.E. they will NOT run AlphaFold3, Boltz, Chai-1 and Protenix.
 
 ### Adding MMseqs2 MSAs and templates
 

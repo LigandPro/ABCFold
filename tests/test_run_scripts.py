@@ -43,3 +43,17 @@ def test_add_mmseqs_msa_script():
         assert (
             b"usage: add_mmseqs_msa" in stdout
         ), f"stdout: {stdout.decode()}\nstderr: {stderr.decode()}"
+
+
+def test_ipsae_script():
+    with subprocess.Popen(
+        "python -m abcfold.scripts.ipsae --help",
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as p:
+        stdout, stderr = p.communicate()
+        assert p.returncode == 0, f"Return code: {p.returncode}\n{stderr.decode()}"
+        assert (
+            b"usage: ipsae" in stdout
+        ), f"stdout: {stdout.decode()}\nstderr: {stderr.decode()}"

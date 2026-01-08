@@ -30,6 +30,7 @@ class FileTypes(Enum):
 
     NPZ = "npz"
     NPY = "npy"
+    PKL = "pkl"
     CIF = "cif"
     JSON = "json"
 
@@ -59,6 +60,7 @@ class ResidueCountType(Enum):
     AVERAGE = "average"
     CARBONALPHA = "carbonalpha"
     PHOSPHATE = "phosphate"
+    IPSAE = "ipsae"
 
     @classmethod
     def values(cls):
@@ -121,6 +123,27 @@ class NpyFile(FileBase):
         self.data = self.load_npy_file()
 
     def load_npy_file(self) -> np.ndarray:
+        return np.load(self.npy_file, allow_pickle=True)
+
+
+class PklFile(FileBase):
+    def __init__(self, pkl_file: Union[str, Path]):
+        """
+        Object to handle pkl files
+
+        Args:
+            pkl_file (Union[str, Path]): Path to the pkl file
+
+        Attributes:
+            pkl_file (Path): Path to the pkl file
+            data (np.ndarray): Numpy array containing the data from the np
+        """
+
+        super().__init__(pkl_file)
+        self.npy_file = Path(pkl_file)
+        self.data = self.load_pkl_file()
+
+    def load_pkl_file(self) -> np.ndarray:
         return np.load(self.npy_file, allow_pickle=True)
 
 
@@ -441,6 +464,15 @@ class CifFile(FileBase):
                             if atom.id == "P":
                                 score = atom.bfactor
                                 break
+                    elif method == ResidueCountType.IPSAE.value:
+                        for atom in residue:
+                            ca_atom = atom.id == "CA"
+                            cb_atom = atom.id == "CB"
+                            c3_atom = "C3" in atom.id
+                            gly_res = residue.resname == "GLY"
+                            if cb_atom or c3_atom or (gly_res and ca_atom):
+                                score = np.round(atom.bfactor, 2)
+                                break
 
                     if chain.id in plddts:
                         plddts[chain.id].append(score)
@@ -490,7 +522,7 @@ class CifFile(FileBase):
     def check_other(self, chain: Chain, check_list) -> bool:
         sequences = self.input_params.get("sequences")
         if sequences is None:
-            logger.warning("Unable to gain sequence infromation from input file")
+            logger.warning("Unable to gain sequence information from input file")
             return False
         for sequence in sequences:
             for sequence_type, sequence_data in sequence.items():

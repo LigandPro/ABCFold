@@ -60,17 +60,18 @@ def add_msa_to_json(
     templates,
     num_templates,
     chai_template_output,
-    custom_template,
-    custom_template_chain,
-    target_id,
+    custom_template=None,
+    custom_template_chain=None,
+    target_id=None,
     input_params=None,
     output_json=None,
     to_file=True,
 ):
+
     if input_params is None:
         with open(input_json, "r") as f:
             input_params = json.load(f)
-
+    updated_sequences = []
     for sequence in input_params["sequences"]:
         if "protein" in sequence:
             input_id = sequence["protein"]["id"]
@@ -79,7 +80,7 @@ def add_msa_to_json(
                 if mmseqs_db:
                     logger.info(f"Running Local MMseqs2 on sequence: {input_sequence}")
                     if templates:
-                        a3m_lines, templates = run_local_mmseqs(
+                        a3m_lines, template_files = run_local_mmseqs(
                             input_sequence,
                             Path(tmpdir),
                             use_templates=True,
@@ -97,7 +98,7 @@ def add_msa_to_json(
                     logger.info(f"Running MMseqs2 on sequence: {input_sequence}")
                     # Run MMseqs2 to get unpaired MSA
                     if templates:
-                        a3m_lines, templates = run_mmseqs(
+                        a3m_lines, template_files = run_mmseqs(
                             input_sequence,
                             tmpdir,
                             use_templates=True,
@@ -150,7 +151,9 @@ def add_msa_to_json(
                             input_sequence,
                             tmpdir,
                             use_templates=False)
-                        templates = []
+                        template_files = []
+
+                sequence["protein"]["templates"] = template_files
 
                 if custom_template:
                     for template in custom_template:
@@ -213,7 +216,12 @@ custom template chains"
                 # Add unpaired MSA to the json
                 sequence["protein"]["unpairedMsa"] = a3m_lines[0]
                 sequence["protein"]["pairedMsa"] = ""
-                sequence["protein"]["templates"] = templates
+                sequence["protein"]["templates"] = template_files
+            updated_sequences.append(sequence)
+        else:
+            # Capture non-protein sequences
+            updated_sequences.append(sequence)
+    input_params["sequences"] = updated_sequences
 
     if to_file:
         if output_json:

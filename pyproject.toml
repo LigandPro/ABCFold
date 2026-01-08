@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abcfold"
-version = "1.0.9"
-description = "Input processing tools for AlphaFold3, Boltz and Chai-1"
+version = "1.1.0"
+description = "Input processing tools for AlphaFold3, Boltz, Chai-1 and Protenix"
 readme = "README.md"
 license = { text = "BSD License" }
 authors = [
@@ -46,6 +46,7 @@ packages = [
     "abcfold.alphafold3",
     "abcfold.boltz",
     "abcfold.chai1",
+    "abcfold.protenix",
     "abcfold.html",
     "abcfold.output",
     "abcfold.plots",
@@ -70,6 +71,7 @@ abcfold = ["data/config.ini"]
 abcfold = "abcfold.abcfold:main"
 mmseqs2msa = "abcfold.scripts.add_mmseqs_msa:main"
 custom_templates = "abcfold.scripts.add_custom_template:main"
+ipsae = "abcfold.scripts.ipsae:main"
 
 [tool.flake8]
 max-line-length = 88

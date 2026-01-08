@@ -30,7 +30,7 @@ def plot_plddt(
         cif_models_dict: Dictionary of cif models to plot. The keys are the source of
             the models and the values are lists of CifFile objects.
             e.g. {"Alphafold3": [CifFile, CifFile, ...], "Boltz": [CifFile, ...],
-            "Chai-1": [CifFile, ...]}
+            "Chai-1": [CifFile, ...], "Protenix": [CifFile, ...]}
 
         output_name: Path to the output html file.
         line_width: Width of the lines in the plot.
@@ -54,6 +54,7 @@ def plot_plddt(
         "Alphafold3": px.colors.qualitative.Set1,
         "Boltz": px.colors.qualitative.Set2,
         "Chai-1": px.colors.qualitative.Prism,
+        "Protenix": px.colors.qualitative.Set3,
     }
 
     line_ranges: dict = {}

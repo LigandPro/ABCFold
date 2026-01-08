@@ -1,67 +1,43 @@
 import logging
-import subprocess
-import sys
+
+from abcfold.backend_envs import MicromambaEnv
 
 logger = logging.getLogger("logger")
 
-BOLTZ_VERSION = "2.2.0"
+BOLTZ_VERSION = "2.2.1"
+BOLTZ_ENV = "abcfold-boltz-py311"
 
 
-def check_boltz():
-    try:
-        import boltz as _  # noqa F401
+def ensure_boltz_env():
+    env = MicromambaEnv(BOLTZ_ENV)
 
-        cmd = [sys.executable, "-m", "pip", "show", "boltz"]
-        with subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        ) as proc:
-            stdout, stderr = proc.communicate()
-            if proc.returncode != 0:
-                if "Package(s) not found:" in stderr.decode():
+    # 1. Ensure env exists
+    env.create(python_version="3.11")
 
-                    raise ModuleNotFoundError(
-                        "Boltz package not found."
-                    )
-                raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
+    # 2. Check installed chai version
+    installed = env.get_installed_version("boltz")
 
-            version = None
-            for line in stdout.decode().split("\n"):
-                if line.startswith("Version:"):
-                    version = line.split(":", 1)[1].strip()
-                    break
-
-            if version != BOLTZ_VERSION:
-                raise ImportError(
-                    f"Expected boltz version {BOLTZ_VERSION}, found {version}"
-                )
-
-    except (ImportError, ModuleNotFoundError):
-
-        logger.info("Installing boltz package")
-        cmd = [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
+    if installed != BOLTZ_VERSION:
+        if installed is None:
+            logger.info("boltz not found. Installing version: %s", BOLTZ_ENV)
+        else:
+            logger.info(
+                "boltz version mismatch (found %s). Installing correct version: %s",
+                installed,
+                BOLTZ_ENV,
+            )
+        env.pip_install([
             f"boltz=={BOLTZ_VERSION}",
             "cuequivariance_torch",
             "cuequivariance_ops_torch-cu12",
             "--no-cache-dir",
+        ])
+    else:
+        logger.info("boltz is already up-to-date (%s)", BOLTZ_ENV)
 
-        ]
+    # 3. Ensure runtime deps you *actually* need
+    env.ensure_package("numpy")
+    env.ensure_package("typer")
+    env.ensure_package("matplotlib")
 
-        logger.info("Running %s", " ".join(cmd))
-        with subprocess.Popen(
-            cmd,
-            stdout=sys.stdout,
-            stderr=subprocess.PIPE,
-        ) as proc:
-            proc.wait()
-            if proc.returncode != 0:
-                if proc.stderr:
-                    logger.error(proc.stderr.read().decode())
-                raise subprocess.CalledProcessError(proc.returncode, proc.args)
-
-    logger.info(f"Running Boltz version: {BOLTZ_VERSION}")
+    return env

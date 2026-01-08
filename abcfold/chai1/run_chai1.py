@@ -1,15 +1,16 @@
 import logging
+import os
 import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Union
 
 from abcfold.chai1.af3_to_chai import ChaiFasta
-from abcfold.chai1.check_install import check_chai1
+from abcfold.chai1.check_install import ensure_chai_env
 
 logger = logging.getLogger("logger")
+os.environ["DISABLE_PANDERA_IMPORT_WARNING"] = "True"
 
 
 def run_chai(
@@ -44,7 +45,7 @@ def run_chai(
     output_dir = Path(output_dir)
 
     logger.debug("Checking if Chai-1 is installed")
-    check_chai1()
+    env = ensure_chai_env()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
@@ -80,26 +81,22 @@ def run_chai(
                 else generate_chai_test_command()
             )
 
-            with subprocess.Popen(
-                cmd,
-                stdout=sys.stdout,
-                stderr=subprocess.PIPE,
-            ) as proc:
-                _, stderr = proc.communicate()
-                if proc.returncode != 0:
-                    if proc.stderr:
-                        if chai_output_dir.exists():
-                            output_err_file = chai_output_dir / "chai_error.log"
-                        else:
-                            output_err_file = chai_output_dir.parent / "chai_error.log"
-                        with open(output_err_file, "w") as f:
-                            f.write(stderr.decode())
-                        logger.error(
-                            "Chai-1 run failed. Error log is in %s", output_err_file
-                        )
+            try:
+                env.run(cmd)
+            except subprocess.CalledProcessError as e:
+                stderr = e.stderr or ""
+                if stderr:
+                    if chai_output_dir.exists():
+                        output_err_file = chai_output_dir / "chai_error.log"
                     else:
-                        logger.error("Chai-1 run failed")
-                    return False
+                        output_err_file = chai_output_dir.parent / "chai_error.log"
+                    output_err_file.write_text(stderr)
+                    logger.error(
+                        "Chai-1 run failed. Error log is in %s", output_err_file
+                    )
+                else:
+                    logger.error("Chai-1 run failed")
+                return False
 
         logger.info("Chai-1 run complete")
         return True

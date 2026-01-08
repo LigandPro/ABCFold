@@ -15,6 +15,21 @@
 
                 <p>If you use ABCFold for your research, please cite the following papers:</p>
 
+                <h5>ABCFold:</h5>
+                <p>
+                    <cite style="font-style: normal">
+                        Elliott L and Simpkin A <i>et al</i>.
+                        <br>
+                        ABCFold: easier running and comparison of AlphaFold 3, Boltz-1, and Chai-1
+                        <br>
+                        Bioinformatic advances. 2025;5(1):vbaf153.
+                        <br>
+                        doi: <a href="https://doi.org/10.1093/bioadv/vbaf153" target="_blank">10.1038/s41586-024-07487-w</a>.
+                        PMID: 40708869;
+                        PMCID: <a href="https://pubmed.ncbi.nlm.nih.gov/40708869/" target="_blank">PMC11168924</a>.
+                    </cite>
+                </p>
+
                 <h5>Alphafold3:</h5>
                 <p>
                     <cite style="font-style: normal">
@@ -45,7 +60,6 @@
                     </cite>
                 </p>
 
-
                 <h5>Chai-1:</h5>
                 <p>
                     <cite style="font-style: normal">
@@ -59,6 +73,31 @@
                     </cite>
                 </p>
 
+                <h5>Protenix:</h5>
+                <p>
+                    <cite style="font-style: normal">
+                        ByteDance AML AI4Science Team and Chen X, <i>et al</i>.
+                        <br>
+                        Protenix - Advancing Structure Prediction Through a Comprehensive AlphaFold3 Reproduction.
+                        <br>
+                        BioRxiv [preprint]. 2025.
+                        <br>
+                        doi: <a href="https://doi.org/10.1101/2025.01.08.631967" target="_blank">10.1101/2025.01.08.631967</a>.
+                    </cite>
+                </p>
+
+                <h5>ipSAE:</h5>
+                <p>
+                    <cite style="font-style: normal">
+                        Dunbrack Jr. RL.
+                        <br>
+                        Rēs ipSAE loquunt: What’s wrong with AlphaFold’s ipTM score and how to fix it.
+                        <br>
+                        BioRxiv [preprint]. 2025.
+                        <br>
+                        doi: <a href="https://doi.org/10.1101/2025.02.10.637595" target="_blank">10.1101/2025.01.08.631967</a>.
+                    </cite>
+                </p>
 
                 <h5>PAE Viewer:</h5>
                 <p>

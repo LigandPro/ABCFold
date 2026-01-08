@@ -1,8 +1,9 @@
 import hashlib
 import json
 import logging
-import tempfile
+import textwrap
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Dict, List, Optional, Union
 
 import numpy as _  # noqa F401
@@ -123,41 +124,40 @@ check back for updates"
             df.to_csv(self.constraints, sep=",", index=False)
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
-        """
-        Takes an msa string, converts it to pqt format and writes it to a file
+        from abcfold.chai1.check_install import ensure_chai_env
+        chai_env = ensure_chai_env()
+        file_path = Path(file_path).absolute()
 
-        Args:
-            msa (str): msa string (a3m format)
-            file_path (Union[str, Path]): file path to write the msa to
+        code = textwrap.dedent(f"""
+    from pathlib import Path
+    from tempfile import NamedTemporaryFile
+    from chai_lab.data.parsing.msas.aligned_pqt import merge_multi_a3m_to_aligned_dataframe
+    from chai_lab.data.parsing.msas.data_source import MSADataSource
 
-        Returns:
-            None
-        """
+    msa_string = {msa!r}
+    output_file = Path({str(file_path)!r})
+
+    with NamedTemporaryFile(suffix='.a3m', mode='w') as f:
+        f.write(msa_string)
+        f.flush()
+        df = merge_multi_a3m_to_aligned_dataframe(
+            msa_a3m_files={{Path(f.name): MSADataSource.UNIPROT}},
+            insert_keys_for_sources='uniprot'
+        )
+
+    if not df.empty:
+        df.to_parquet(output_file)
+    """) # noqa E501
+
+        with NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+            script_path = Path(f.name)
+            f.write(code)
+
         try:
-            from chai_lab.data.parsing.msas.aligned_pqt import \
-                merge_multi_a3m_to_aligned_dataframe
-            from chai_lab.data.parsing.msas.data_source import MSADataSource
-        except ImportError:
-
-            logger.error(
-                "Chai_lab didn't install correctly and the module is not available, \
-please try running the job again or install chai_lab directly using 'pip \
-install chai_lab'"
-            )
-            raise ImportError()
-
-        # Convert msa to CHAI-1 format with additional MSA source information
-        with tempfile.NamedTemporaryFile(suffix=".a3m", mode="w") as f:
-            f.write(msa)
-            f.flush()
-            df = merge_multi_a3m_to_aligned_dataframe(
-                msa_a3m_files={Path(f.name): MSADataSource.UNIPROT},
-                insert_keys_for_sources="uniprot",
-            )
-
-        # Write the dataframe to a parquet file
-        if not df.empty and self.__create_files:
-            df.to_parquet(file_path)
+            chai_env.run(["python", str(script_path)], quiet=True)
+            logger.debug("Successfully wrote PQT file to %s", file_path)
+        finally:
+            script_path.unlink()
 
     def json_to_fasta(self, json_file_or_dict: Union[dict, str, Path]):
         """

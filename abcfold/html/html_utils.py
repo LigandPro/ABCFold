@@ -1,4 +1,5 @@
 import http.server
+import logging
 import textwrap
 from itertools import groupby
 from operator import itemgetter
@@ -13,10 +14,13 @@ from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import ConfidenceJsonFile, NpzFile
+from abcfold.output.protenix import ProtenixOutput
 from abcfold.plots.pae_plot import create_pae_plots
 from abcfold.plots.plddt_plot import plot_plddt
+from abcfold.scripts.ipsae import Ipsae
 
 PORT = 8000
+logger = logging.getLogger("logger")
 
 
 def get_plddt_regions(plddts: Union[np.ndarray, list]) -> dict:
@@ -99,7 +103,13 @@ def get_model_sequence_data(cif_objs) -> dict:
     return sequence_data
 
 
-def get_model_data(model, plot_dict, method, plddt_scores, score_file, output_dir):
+def get_model_data(model,
+                   plot_dict,
+                   method,
+                   plddt_scores,
+                   pae_obj,
+                   score_file,
+                   output_dir):
     """
     Get the model data for the output page
 
@@ -108,20 +118,47 @@ def get_model_data(model, plot_dict, method, plddt_scores, score_file, output_di
         plot_dict (dict): Dictionary of plots
         method (str): Method used to generate the model
         score_file (str): Path to the file containing model scores
+        pae_obj (ConfidenceJsonFile): Obj containing PAE data
         output_dir (Path): Path to the output directory
     """
     regions = get_plddt_regions(plddt_scores)
     ptm_score, iptm_score = parse_scores(score_file)
-    model_path = Path(model.pathway).relative_to(output_dir)
+    full_model_path = Path(model.pathway)
+    model_path = full_model_path.relative_to(output_dir).as_posix()
+
+    ipsae_score = []
+    try:
+        ipsae = Ipsae(model, pae_obj)
+        distances = ipsae.get_cb_distance()
+        ipsae_scores = ipsae.compute_iptm_ipsae(distances)
+
+        # Currently displaying all chain variations, might alter to max in future
+        for k, v in ipsae_scores["ipsae_d0res_asym"].items():
+            for k2, v2 in v.items():
+                ipsae_score.append(f"{k}{k2}:{np.round(v2, 4)}")
+
+        # Output full ipsae scores for each model as we are only outputting d0res_asym
+        ipsae_out = full_model_path.parent / f"{Path(model_path).stem}_ipsae.csv"
+        ipsae.output_results(pdockq_scores=None,
+                             pdockq2_scores=None,
+                             lis_scores=None,
+                             ipsae_scores=ipsae_scores,
+                             verbose=False,
+                             output_csv=ipsae_out)
+    except ValueError:
+        logger.error("ValueError when calculating ipSAE score, bypassing ipSAE")
+        pass
+
     model_data = {
         "model_id": model.name,
         "model_source": method,
-        "model_path": model_path.as_posix(),
+        "model_path": model_path,
         "plddt_regions": regions,
         "avg_plddt": model.average_plddt,
         "h_score": model.h_score,
         "ptm_score": ptm_score,
         "iptm_score": iptm_score,
+        "ipsae_score": ",".join(ipsae_score),
         "residue_clashes": model.clashes_residues,
         "atom_clashes": model.clashes,
         "pae_path": Path(plot_dict[model.pathway.as_posix()])
@@ -241,6 +278,11 @@ def get_all_cif_files(outputs) -> Dict[str, list]:
                 if "Chai-1" not in method_cif_objs:
                     method_cif_objs["Chai-1"] = []
                 method_cif_objs["Chai-1"].extend(output.cif_files[seed])
+        elif isinstance(output, ProtenixOutput):
+            for seed in output.seeds:
+                if "Protenix" not in method_cif_objs:
+                    method_cif_objs["Protenix"] = []
+                method_cif_objs["Protenix"].extend(output.cif_files[seed])
 
     return method_cif_objs
 
