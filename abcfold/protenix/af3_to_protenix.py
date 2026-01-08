@@ -154,7 +154,7 @@ class ProtenixJson:
         if unpaired_msa or paired_msa and self.__create_files:
             protein_chain["msa"] = {
                 "precomputed_msa_dir": msa_dir.as_posix(),
-                "pairing_db": "Uniref100"
+                "pairing_db": "uniref100"
             }
 
         return {

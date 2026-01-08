@@ -201,7 +201,7 @@ def test_protenix_output_msa(test_data):
                 {'proteinChain': {'sequence': 'GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG',
                                   'count': 1,
                                   'msa': {'precomputed_msa_dir': 'PRECOMPUTED_MSA_DIR',
-                                          'pairing_db': 'Uniref100'
+                                          'pairing_db': 'uniref100'
                                           }
                                 }
                 }
