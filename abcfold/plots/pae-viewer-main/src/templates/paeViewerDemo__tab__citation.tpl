@@ -15,7 +15,7 @@
 
                 <p>If you use ABCFold for your research, please cite the following papers:</p>
 
-                <h5>Alphafold3:</h5>
+                <h5>ABCFold:</h5>
                 <p>
                     <cite style="font-style: normal">
                         Elliott L and Simpkin A <i>et al</i>.
