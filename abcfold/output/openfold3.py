@@ -9,32 +9,32 @@ from abcfold.output.utils import Af3Pae
 logger = logging.getLogger("logger")
 
 
-class ProtenixOutput:
+class OpenfoldOutput:
     def __init__(
         self,
-        protenix_output_dirs: list[Union[str, Path]],
+        openfold_output_dirs: list[Union[str, Path]],
         input_params: dict,
         name: str,
         save_input: bool = False,
     ):
         """
-        Object to process the output of an Protenix run
+        Object to process the output of an OpenFold 3 run
 
         Args:
-            protenix_output_dirs (list[Union[str, Path]]): Path to the Protenix
+            openfold_output_dirs (list[Union[str, Path]]): Path to the OpenFold 3
             output directory
             input_params (dict): Dictionary containing the input parameters used for the
-            Protenix run
-            name (str): Name given to the Protenix run
-            save_input (bool): If True, Protenix was run with the save_input flag
+            OpenFold 3 run
+            name (str): Name given to the OpenFold 3 run
+            save_input (bool): If True, OpenFold 3 was run with the save_input flag
 
         Attributes:
-            output_dirs (list): List of paths to the Protenix output directory(s)
+            output_dirs (list): List of paths to the OpenFold 3 output directory(s)
             input_params (dict): Dictionary containing the input parameters used for the
-            Protenix run
-            name (str): Name given to the Protenix run
+            OpenFold 3 run
+            name (str): Name given to the OpenFold 3 run
             output (dict): Dictionary containing the processed output the contents
-            of the Protenix output directory(s). The dictionary is structured as
+            of the OpenFold 3 output directory(s). The dictionary is structured as
             follows:
 
             {
@@ -58,29 +58,20 @@ class ProtenixOutput:
             scores_files (list): Ordered list of ConfidenceJsonFile objects containing
             the model scores
         """
-        self.output_dirs = [Path(x) for x in protenix_output_dirs]
+        self.output_dirs = [Path(x) for x in openfold_output_dirs]
         self.input_params = input_params
         self.name = name
         self.save_input = save_input
 
         parent_dir = self.output_dirs[0].parent
-        new_parent = parent_dir / f"protenix_{self.name}"
+        new_parent = parent_dir / f"openfold_{self.name}"
         new_parent.mkdir(parents=True, exist_ok=True)
 
-        if self.save_input:
-            protenix_json = list(parent_dir.glob("*.json"))[0]
-            if protenix_json.exists():  # check this works
-                protenix_json.rename(new_parent / "protenix_input.json")
-
-            protenix_msas = list(parent_dir.glob("*/*.a3m"))
-            if protenix_msas:
-                for protenix_msa in protenix_msas:
-                    if protenix_msa.exists():
-                        protenix_msa.rename(new_parent / protenix_msa.name)
+        # add save input code
 
         new_output_dirs = []
         for output_dir in self.output_dirs:
-            if output_dir.name.startswith("protenix_results_"):
+            if output_dir.name.startswith("openfold3_results_"):
                 new_path = new_parent / output_dir.name
                 output_dir.rename(new_path)
                 new_output_dirs.append(new_path)
@@ -88,7 +79,7 @@ class ProtenixOutput:
                 new_output_dirs.append(output_dir)
         self.output_dirs = new_output_dirs
 
-        self.output = self.process_protenix_output()
+        self.output = self.process_openfold_output()
 
         self.seeds = list(self.output.keys())
         self.pae_files = {
@@ -109,10 +100,13 @@ class ProtenixOutput:
             for seed in self.seeds
         }
 
-    def process_protenix_output(self):
+    def process_openfold_output(self):
         """
-        Function to process the output of a Protenix run
+        Function to process the output of a OpenFold 3 run
         """
+
+        # TODO: Update this to match openfold output
+
         file_groups = {}
         for pathway in self.output_dirs:
             seed = pathway.name.split("_")[-1]
@@ -151,7 +145,7 @@ class ProtenixOutput:
                     elif "summary_confidence" in file_.pathway.stem:
                         intermediate_dict["score"] = file_
                     elif file_.pathway.suffix == ".cif":
-                        file_.name = f"protenix_{seed}_{model_number}"
+                        file_.name = f"openfold_{seed}_{model_number}"
                         intermediate_dict["cif"] = file_
                     else:
                         intermediate_dict[file_.suffix] = file_
@@ -168,7 +162,7 @@ class ProtenixOutput:
 
     def pae_to_af3(self):
         """
-        Convert the PAE data from Protenix to the format used by Alphafold3
+        Convert the PAE data from OpenFold 3 to the format used by Alphafold3
 
         Returns:
             None

@@ -14,6 +14,7 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util,
+                                    openfold_argparse_util,
                                     prediction_argparse_util,
                                     protenix_argparse_util,
                                     raise_argument_errors,
@@ -27,6 +28,7 @@ from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import superpose_models
+from abcfold.output.openfold3 import OpenfoldOutput
 from abcfold.output.protenix import ProtenixOutput
 from abcfold.output.utils import (get_gap_indicies, insert_none_by_minus_one,
                                   make_dummy_m8_file)
@@ -229,6 +231,25 @@ def run(args, config, defaults, config_file):
                 )
                 outputs.append(po)
             successful_runs.append(protenix_success)
+
+        if args.openfold:
+            from abcfold.openfold3.run_openfold3 import run_openfold
+
+            openfold_success = run_openfold(
+                input_json=run_json,
+                output_dir=args.output_dir,
+                save_input=args.save_input,
+                number_of_models=args.number_of_models,
+                num_recycles=args.num_recycles,
+            )
+
+            if openfold_success:
+                openfold_output_dirs = list(args.output_dir.glob("openfold_results*"))
+                oo = OpenfoldOutput(
+                    openfold_output_dirs, input_params, name, args.save_input
+                )
+                outputs.append(oo)
+            successful_runs.append(openfold_success)
 
         if args.no_visuals:
             logger.info("Visuals disabled")
@@ -493,6 +514,7 @@ def main():
     parser = boltz_argparse_util(parser)
     parser = chai_argparse_util(parser)
     parser = protenix_argparse_util(parser)
+    parser = openfold_argparse_util(parser)
     parser = mmseqs2_argparse_util(parser)
     parser = custom_template_argpase_util(parser)
     parser = prediction_argparse_util(parser)

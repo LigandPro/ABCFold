@@ -150,6 +150,16 @@ def protenix_argparse_util(parser):
     return parser
 
 
+def openfold_argparse_util(parser):
+    parser.add_argument(
+        "-o",
+        "--openfold3",
+        action="store_true",
+        help="Run OpenFold 3",
+    )
+    return parser
+
+
 def alphafold_argparse_util(parser):
     parser.add_argument(
         "--database",

@@ -14,7 +14,7 @@ def ensure_boltz_env():
     # 1. Ensure env exists
     env.create(python_version="3.11")
 
-    # 2. Check installed chai version
+    # 2. Check installed boltz version
     installed = env.get_installed_version("boltz")
 
     if installed != BOLTZ_VERSION:
