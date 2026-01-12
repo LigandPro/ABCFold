@@ -17,20 +17,23 @@ def ensure_openfold_env():
     # 2. Check installed openfold version
     installed = env.get_installed_version("openfold3")
 
-    # 3. Install Kalign2
-    env.conda_install(["kalign2"], channels=["conda-forge", "bioconda"])
-
-    if installed != OPENFOLD_ENV:
+    if installed != OPENFOLD_VERSION:
         if installed is None:
-            logger.info("openfold3 not found. Installing version: %s", OPENFOLD_ENV)
+            logger.info("openfold3 not found. Installing version: %s", OPENFOLD_VERSION)
         else:
             logger.info(
                 "openfold3 version mismatch (found %s). Installing correct version: %s",
                 installed,
-                OPENFOLD_ENV,
+                OPENFOLD_VERSION,
             )
+        # 3. Install Kalign2
+        env.conda_install(["kalign2"], channels=["conda-forge", "bioconda"])
+
         env.pip_install([
-            f"openfold3=={OPENFOLD_ENV}",
+            f"openfold3=={OPENFOLD_VERSION}",
+            "cuequivariance_torch",
+            "cuequivariance_ops_torch-cu12",
+            "--no-cache-dir",
         ])
         # Setup databases
         env.run(["setup_openfold"])

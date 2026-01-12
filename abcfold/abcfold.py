@@ -232,7 +232,7 @@ def run(args, config, defaults, config_file):
                 outputs.append(po)
             successful_runs.append(protenix_success)
 
-        if args.openfold:
+        if args.openfold3:
             from abcfold.openfold3.run_openfold3 import run_openfold
 
             openfold_success = run_openfold(

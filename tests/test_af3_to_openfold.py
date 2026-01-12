@@ -181,21 +181,21 @@ def test_openfold_output_msa(test_data):
         assert msa_path is not None
         assert Path(msa_path).exists()
         data["queries"]["2PV7"]["chains"][0]["main_msa_file_paths"] = (
-            "MSA_DIR"
+            ["MSA_DIR"]
         )
 
         reference = {
             "queries":{
                 "2PV7": {
+                    "use_msas": True,
+                    "use_main_msas": True,
+                    "use_paired_msas": True,
                     "chains": [
                         {
                             "molecule_type": "protein",
                             "chain_ids": "A",
                             "sequence": "GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG",
-                            "use_msas": "true",
-                            "use_main_msas": "true",
-                            "use_paired_msas": "true",
-                            "main_msa_file_paths": "MSA_DIR",
+                            "main_msa_file_paths": ["MSA_DIR"],
                         },
                     ]
                 }

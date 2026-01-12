@@ -181,7 +181,6 @@ def test_protenix_output_msa(test_data):
         data["sequences"][0]["proteinChain"]["msa"]["precomputed_msa_dir"] = (
             "PRECOMPUTED_MSA_DIR"
         )
-        print(data)
 
         reference = {
             'name': '2PV7',

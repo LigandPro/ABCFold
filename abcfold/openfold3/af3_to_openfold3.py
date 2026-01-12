@@ -63,6 +63,7 @@ class OpenfoldJson:
         else:
             json_dict = json_file_or_dict
 
+        query_flags_set = False
         openfold_sequences = []
         for key, value in json_dict.items():
             if key == "name":
@@ -77,17 +78,26 @@ class OpenfoldJson:
             if key == "sequences":
                 for entry in value:
                     if "protein" in entry:
-                        protein_entry = self.convert_protein(entry["protein"])
-                        openfold_sequences.append(protein_entry)
+                        chain_entry = self.convert_protein(entry["protein"])
                     elif "rna" in entry:
-                        rna_entry = self.convert_rna(entry["rna"])
-                        openfold_sequences.append(rna_entry)
+                        chain_entry = self.convert_rna(entry["rna"])
                     elif "dna" in entry:
-                        dna_entry = self.convert_dna(entry["dna"])
-                        openfold_sequences.append(dna_entry)
+                        chain_entry = self.convert_dna(entry["dna"])
                     elif "ligand" in entry:
-                        ligand_entry = self.convert_ligand(entry["ligand"])
-                        openfold_sequences.append(ligand_entry)
+                        chain_entry = self.convert_ligand(entry["ligand"])
+                    if chain_entry:
+                        openfold_sequences.append(chain_entry)
+
+                        if (
+                            "main_msa_file_paths" in chain_entry
+                            and chain_entry["main_msa_file_paths"]
+                        ):
+                            if not query_flags_set:
+                                q = self.openfold_dict["queries"][self.name]
+                                q["use_msas"] = True
+                                q["use_main_msas"] = True
+                                q["use_paired_msas"] = True
+                                query_flags_set = True
 
         self.openfold_dict["queries"][self.name]["chains"] = openfold_sequences
 
@@ -115,18 +125,16 @@ class OpenfoldJson:
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
         msa_dir = Path(self.working_dir) / random_string
         if unpaired_msa and self.__create_files:
+            msa_out = msa_dir / "colabfold_main.a3m"
             if not msa_dir.exists():
                 msa_dir.mkdir(parents=True, exist_ok=True)
             self.msa_to_file(
                 unpaired_msa,
-                msa_dir / "non_pairing.a3m"
+                msa_out
             )
-
-        if unpaired_msa and self.__create_files:
-            protein_chain["use_msas"] = "true"
-            protein_chain["use_main_msas"] = "true"
-            protein_chain["use_paired_msas"] = "true"
-            protein_chain["main_msa_file_paths"] = msa_dir.as_posix()
+            protein_chain["main_msa_file_paths"] = [
+                msa_dir.resolve().as_posix()
+            ]
 
         return protein_chain
 

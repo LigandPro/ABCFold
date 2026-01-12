@@ -114,10 +114,11 @@ def generate_openfold_command(
     return [
         "run_openfold",
         "predict",
-        input_json,
-        "--runner_yaml", runner_yaml,
-        "--num_diffusion_samples", number_of_models,
-        "--output_dir", output_dir,
+        "--query_json", str(input_json),
+        "--runner_yaml", str(runner_yaml),
+        "--num_diffusion_samples", str(number_of_models),
+        "--output_dir", str(output_dir),
+        "--use_msa_server", "false"
     ]
 
 

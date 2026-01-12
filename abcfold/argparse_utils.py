@@ -223,9 +223,15 @@ def visuals_argparse_util(parser):
 
 
 def raise_argument_errors(args):
-    if not args.alphafold3 and not args.boltz and not args.chai1 and not args.protenix:
+    if (
+        not args.alphafold3
+        and not args.boltz
+        and not args.chai1
+        and not args.protenix
+        and not args.openfold3
+    ):
         logger.info(
-            dedent("Neither AlphaFold3, Boltz, Chai-1, or Protenix selected. \
+            dedent("None of AlphaFold3, Boltz, Chai-1, Protenix or OpenFold3 selected. \
             Running AlphaFold3 by default")
         )
         args.alphafold3 = True

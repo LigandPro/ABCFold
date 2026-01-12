@@ -99,7 +99,9 @@ class MicromambaEnv:
         self._run([
             "run",
             "-n", self.env_name,
-            "pip", "install", *packages,
+            "python", "-m", "pip", "install",
+            "--break-system-packages",
+            *packages,
         ])
 
     def conda_install(
