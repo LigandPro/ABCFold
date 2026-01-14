@@ -216,6 +216,10 @@ def run(args, config, defaults, config_file):
         if args.protenix:
             from abcfold.protenix.run_protenix import run_protenix
 
+            template_hits_path = None
+            if args.templates and args.mmseqs2:
+                template_hits_path = temp_dir.joinpath("all_chain.m8")
+
             protenix_success = run_protenix(
                 input_json=run_json,
                 output_dir=args.output_dir,

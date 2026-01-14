@@ -15,14 +15,14 @@ class OpenfoldJson:
 
     def __init__(self, working_dir: Union[str, Path],
                  create_files: bool = True,
-                 use_templates=False):
+                 templates=None):
         self.working_dir = working_dir
         self.seeds: list = [42]
         self.__ids: Dict = {}
         self.__create_files = create_files
         self.name = ""
         self.openfold_dict: Dict = {"queries": {}}
-        self.use_templates = use_templates
+        self.templates = templates
 
     @property
     def chain_ids(self) -> Dict:
@@ -120,6 +120,9 @@ class OpenfoldJson:
                 loc = str(mod['ptmPosition'])
                 ptm_type = mod['ptmType']
                 protein_chain["non_canonical_residues"][loc] = ptm_type
+
+        if self.templates:
+            protein_chain["template_alignment_file_path"] = self.templates
 
         unpaired_msa = seq_dict.get("unpairedMsa")
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
@@ -222,6 +225,9 @@ class OpenfoldJson:
             None
         """
         seeds_str = f"[{', '.join(str(s) for s in self.seeds)}]"
+        use_templates = False
+        if self.templates is not None:
+            use_templates = True
 
         lines = [
             "model_update:",
@@ -238,7 +244,7 @@ class OpenfoldJson:
             "experiment_settings:",
             "  mode: predict",
             f"  seeds: {seeds_str}",
-            f"  use_templates: {str(self.use_templates).lower()}",
+            f"  use_templates: {str(use_templates).lower()}",
         ]
 
         yaml_string = "\n".join(lines)
