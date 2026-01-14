@@ -216,10 +216,6 @@ def run(args, config, defaults, config_file):
         if args.protenix:
             from abcfold.protenix.run_protenix import run_protenix
 
-            template_hits_path = None
-            if args.templates and args.mmseqs2:
-                template_hits_path = temp_dir.joinpath("all_chain.m8")
-
             protenix_success = run_protenix(
                 input_json=run_json,
                 output_dir=args.output_dir,
@@ -239,11 +235,16 @@ def run(args, config, defaults, config_file):
         if args.openfold3:
             from abcfold.openfold3.run_openfold3 import run_openfold
 
+            template_hits_path = None
+            if args.templates and args.mmseqs2:
+                template_hits_path = temp_dir.joinpath("all_chain.m8")
+
             openfold_success = run_openfold(
                 input_json=run_json,
                 output_dir=args.output_dir,
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
+                template_hits_path=template_hits_path,
                 input_ckpt=args.inference_ckpt_path
             )
 
