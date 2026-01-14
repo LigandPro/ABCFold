@@ -240,7 +240,7 @@ def run(args, config, defaults, config_file):
                 output_dir=args.output_dir,
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
-                num_recycles=args.num_recycles,
+                input_ckpt=args.inference_ckpt_path
             )
 
             if openfold_success:

@@ -2,10 +2,11 @@ import logging
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from abcfold.openfold3.af3_to_openfold3 import OpenfoldJson
-from abcfold.openfold3.check_install import ensure_openfold_env
+from abcfold.openfold3.check_install import (ensure_openfold_checkpoint,
+                                             ensure_openfold_env)
 
 logger = logging.getLogger("logger")
 
@@ -16,7 +17,8 @@ def run_openfold(
     save_input: bool = False,
     test: bool = False,
     number_of_models: int = 5,
-    num_recycles: int = 10,
+    use_templates_server: bool = False,
+    input_ckpt: Optional[Union[str, Path]] = None,
 ) -> bool:
     """
     Run OpenFold 3 using the input JSON file
@@ -28,6 +30,8 @@ def run_openfold(
         directory
         test (bool): If True, run the test command
         number_of_models (int): Number of models to generate
+        use_templates_server (bool): If True, use templates from the server
+        input_ckpt (Union[str, Path]): Path to user input checkpoint file
 
     Returns:
         Bool: True if the OpenFold 3 run was successful, False otherwise
@@ -43,15 +47,29 @@ def run_openfold(
     logger.debug("Checking if openfold is installed")
     env = ensure_openfold_env()
 
+    default_ckpt = Path.home() / ".openfold3" / "of3_ft3_v1.pt"
+    if input_ckpt is None:
+        if not default_ckpt.exists():
+            logger.info(
+                "No Checkpoint file found. "
+                f"Downloading OpenFold3 checkpoint to {default_ckpt}"
+            )
+            openfold_ckpt = ensure_openfold_checkpoint(default_ckpt)
+        else:
+            openfold_ckpt = default_ckpt
+    elif Path(input_ckpt).exists():
+        logger.info(f"Using user provided OpenFold3 checkpoint: {input_ckpt}")
+        openfold_ckpt = Path(input_ckpt)
+
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
         if save_input:
             logger.info("Saving input yaml file and msa to the output directory")
             working_dir = output_dir
 
-        openfold_json = OpenfoldJson(working_dir)
+        openfold_json = OpenfoldJson(working_dir, use_templates=use_templates_server)
         openfold_json.json_to_json(input_json)
-        runner_yaml = working_dir / "opennfold3_runner.yml"
+        runner_yaml = working_dir / "openfold3_runner.yml"
         openfold_json.write_yaml(runner_yaml)
 
         for seed in openfold_json.seeds:
@@ -65,6 +83,7 @@ def run_openfold(
                     out_file,
                     openfold_out_dir,
                     runner_yaml,
+                    openfold_ckpt,
                     number_of_models
                 )
                 if not test
@@ -97,7 +116,8 @@ def generate_openfold_command(
     input_json: Union[str, Path],
     output_dir: Union[str, Path],
     runner_yaml: Union[str, Path],
-    number_of_models: int = 5
+    ckpt_path: Union[str, Path],
+    number_of_models: int = 5,
 ) -> list:
     """
     Generate the OpenFold 3 command
@@ -106,6 +126,7 @@ def generate_openfold_command(
         input_json (Union[str, Path]): Path to the input JSON file
         output_dir (Union[str, Path]): Path to the output directory
         runner_yaml (Union[str, Path]): Path to the runner YAML file
+        ckpt_path (Union[str, Path]): Path to the inference CheckPoint
         number_of_models (int): Number of models to generate
 
     Returns:
@@ -118,6 +139,7 @@ def generate_openfold_command(
         "--runner_yaml", str(runner_yaml),
         "--num_diffusion_samples", str(number_of_models),
         "--output_dir", str(output_dir),
+        "--inference_ckpt_path", str(ckpt_path),
         "--use_msa_server", "false"
     ]
 

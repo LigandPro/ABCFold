@@ -157,6 +157,12 @@ def openfold_argparse_util(parser):
         action="store_true",
         help="Run OpenFold 3",
     )
+    parser.add_argument(
+        "--inference_ckpt_path",
+        help=dedent("Path for model checkpoint to be used for inference. \
+    If not specified, will attempt to find or download parameters to \
+     ~/.openfold3/")
+    )
     return parser
 
 
