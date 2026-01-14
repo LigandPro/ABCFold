@@ -179,7 +179,7 @@ def test_openfold_output_msa(test_data):
         # MSA directory has a random path, so just check that it exists then give
         # it a placeholder value for comparison
         assert msa_path is not None
-        assert Path(msa_path).exists()
+        assert Path(msa_path[0]).exists()
         data["queries"]["2PV7"]["chains"][0]["main_msa_file_paths"] = (
             ["MSA_DIR"]
         )

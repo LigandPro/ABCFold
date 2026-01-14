@@ -354,6 +354,34 @@ def run(args, config, defaults, config_file):
                             )
                             chai_models["models"].append(model_data)
 
+        openfold_models = {"models": []}
+        if args.openfold:
+            if openfold_success:
+                programs_run.append("OpenFold3")
+                for seed in oo.output.keys():
+                    for idx in oo.output[seed].keys():
+                        if idx >= 0:
+                            model = oo.output[seed][idx]["cif"]
+                            model.check_clashes()
+                            score_file = oo.output[seed][idx]["scores"]
+                            plddt = model.residue_plddts
+                            pae = oo.output[seed][idx]["af3_pae"]
+                            if len(indicies) > 0:
+                                plddt = insert_none_by_minus_one(
+                                    indicies[index_counter], plddt
+                                )
+                            index_counter += 1
+                            model_data = get_model_data(
+                                model,
+                                plot_dict,
+                                "OpenFold3",
+                                plddt,
+                                pae,
+                                score_file,
+                                args.output_dir,
+                            )
+                            openfold_models["models"].append(model_data)
+
         protenix_models = {"models": []}
         if args.protenix:
             if protenix_success:
@@ -386,6 +414,7 @@ def run(args, config, defaults, config_file):
             alphafold_models["models"] +
             boltz_models["models"] +
             chai_models["models"] +
+            openfold_models["models"] +
             protenix_models["models"]
         )
 
@@ -400,6 +429,8 @@ def run(args, config, defaults, config_file):
                 output_name = "boltz_model_" + model["model_id"][-1] + ".cif"
             elif model["model_source"] == "Chai-1":
                 output_name = "chai_model_" + model["model_id"][-1] + ".cif"
+            elif model["model_source"] == "OpenFold3":
+                output_name = "openfold_model_" + model["model_id"][-1] + ".cif"
             elif model["model_source"] == "Protenix":
                 output_name = "protenix_model_" + model["model_id"][-1] + ".cif"
             shutil.copy(
@@ -492,12 +523,12 @@ view the output pages"
 
 def main():
     """
-    Run AlphaFold3 / Boltz / Chai-1 / Protenix
+    Run AlphaFold3 / Boltz / Chai-1 / OpenFold3 / Protenix
     """
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Run AlphaFold3 / Boltz / Chai-1 / Protenix"
+        description="Run AlphaFold3 / Boltz / Chai-1 / OpenFold3 / Protenix"
     )
 
     defaults = {}
@@ -513,8 +544,8 @@ def main():
     parser = alphafold_argparse_util(parser)
     parser = boltz_argparse_util(parser)
     parser = chai_argparse_util(parser)
-    parser = protenix_argparse_util(parser)
     parser = openfold_argparse_util(parser)
+    parser = protenix_argparse_util(parser)
     parser = mmseqs2_argparse_util(parser)
     parser = custom_template_argpase_util(parser)
     parser = prediction_argparse_util(parser)

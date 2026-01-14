@@ -9,6 +9,61 @@ from abcfold.output.utils import Af3Pae
 logger = logging.getLogger("logger")
 
 
+def fix_mmcif(infile, outfile):
+    """
+    OpenFold 3 output not compatible with BioPython
+    This code converts it to a compatible format
+    """
+
+    with open(infile) as fin, open(outfile, "w") as fout:
+
+        fout.write("data_structure\n")
+        fout.write("loop_\n")
+        fout.write("_atom_site.group_PDB\n")
+        fout.write("_atom_site.type_symbol\n")
+        fout.write("_atom_site.label_atom_id\n")
+        fout.write("_atom_site.label_alt_id\n")
+        fout.write("_atom_site.label_comp_id\n")
+        fout.write("_atom_site.label_asym_id\n")
+        fout.write("_atom_site.label_entity_id\n")
+        fout.write("_atom_site.label_seq_id\n")
+        fout.write("_atom_site.pdbx_PDB_ins_code\n")
+        fout.write("_atom_site.auth_seq_id\n")
+        fout.write("_atom_site.auth_comp_id\n")
+        fout.write("_atom_site.auth_asym_id\n")
+        fout.write("_atom_site.auth_atom_id\n")
+        fout.write("_atom_site.B_iso_or_equiv\n")
+        fout.write("_atom_site.Cartn_x\n")
+        fout.write("_atom_site.Cartn_y\n")
+        fout.write("_atom_site.Cartn_z\n")
+        fout.write("_atom_site.pdbx_PDB_model_num\n")
+        fout.write("_atom_site.id\n")
+        fout.write("_atom_site.occupancy\n")
+
+        for line in fin:
+            if line.startswith("ATOM"):
+                fields = line.split()
+                fout.write(
+                    f"{fields[0]}   {fields[1]} {fields[2]}   {fields[3]} "
+                    f"{fields[4]} {fields[5]} {fields[6]} {fields[7]} "
+                    f"{fields[8]} {fields[9]} {fields[10]} {fields[11]} "
+                    f"{fields[12]}   {fields[13]} {fields[15]}      "
+                    f"{fields[16]}    {fields[17]}    {fields[18]} "
+                    f"{fields[19]} 1.0\n"
+                )
+            elif line.startswith("HETATM"):
+                fields = line.split()
+                fout.write(
+                    f"{fields[0]} {fields[1]} {fields[2]} {fields[3]} "
+                    f"{fields[4]} {fields[5]} 2 1   . 1   {fields[10]} {fields[11]} "
+                    f"{fields[12]} {fields[13]}  {fields[15]}     "
+                    f"{fields[16]}     {fields[17]}    {fields[18]} "
+                    f"{fields[19]} 1.0\n"
+                )
+            else:
+                continue
+
+
 class OpenfoldOutput:
     def __init__(
         self,
@@ -67,7 +122,16 @@ class OpenfoldOutput:
         new_parent = parent_dir / f"openfold_{self.name}"
         new_parent.mkdir(parents=True, exist_ok=True)
 
-        # add save input code
+        if self.save_input:
+            openfold_json = list(parent_dir.glob("*.json"))[0]
+            if openfold_json.exists():
+                openfold_json.rename(new_parent / "openfold_input.json")
+
+            openfold_msas = list(parent_dir.glob("*/*.a3m"))
+            if openfold_msas:
+                for openfold_msa in openfold_msas:
+                    if openfold_msa.exists():
+                        openfold_msa.rename(new_parent / openfold_msa.name)
 
         new_output_dirs = []
         for output_dir in self.output_dirs:
@@ -105,8 +169,6 @@ class OpenfoldOutput:
         Function to process the output of a OpenFold 3 run
         """
 
-        # TODO: Update this to match openfold output
-
         file_groups = {}
         for pathway in self.output_dirs:
             seed = pathway.name.split("_")[-1]
@@ -114,17 +176,20 @@ class OpenfoldOutput:
                 file_groups[seed] = {}
 
             for output in pathway.rglob("*"):
-                number = output.stem.split("_sample_")[-1]
+                number = output.stem.split("_sample_")[-1].split("_")[0]
                 if not number.isdigit():
                     continue
-                number = int(number)
+                # OpenFold numbering starts at 1, -1 for consistency.
+                number = int(number) - 1
 
                 file_type = output.suffix[1:]
 
                 if file_type == FileTypes.NPZ.value:
                     file_ = NpzFile(str(output))
                 elif file_type == FileTypes.CIF.value:
-                    file_ = CifFile(str(output), self.input_params)
+                    temp_out = output.parent / f'{output.stem}_fixed.cif'
+                    fix_mmcif(str(output), temp_out)
+                    file_ = CifFile(str(temp_out), self.input_params)
                 elif file_type == FileTypes.JSON.value:
                     file_ = ConfidenceJsonFile(str(output))
                 else:
@@ -140,9 +205,12 @@ class OpenfoldOutput:
             for model_number, files in models.items():
                 intermediate_dict = {}
                 for file_ in sorted(files, key=lambda x: x.suffix):
-                    if "full_data" in file_.pathway.stem:
+                    if (
+                        "confidences" in file_.pathway.stem
+                        and "aggregated" not in file_.pathway.stem
+                    ):
                         intermediate_dict["pae"] = file_
-                    elif "summary_confidence" in file_.pathway.stem:
+                    elif "confidences_aggregated" in file_.pathway.stem:
                         intermediate_dict["score"] = file_
                     elif file_.pathway.suffix == ".cif":
                         file_.name = f"openfold_{seed}_{model_number}"
@@ -170,7 +238,7 @@ class OpenfoldOutput:
         new_pae_files = {}
         for seed in self.seeds:
             for (pae_file, cif_file) in zip(self.pae_files[seed], self.cif_files[seed]):
-                pae = Af3Pae.from_protenix(
+                pae = Af3Pae.from_openfold3(
                     pae_file.data,
                     cif_file,
                 )

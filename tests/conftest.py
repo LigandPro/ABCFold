@@ -10,6 +10,7 @@ import pytest
 from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
+from abcfold.output.openfold3 import OpenfoldOutput
 from abcfold.output.protenix import ProtenixOutput
 
 logger = logging.getLogger("logger")
@@ -64,6 +65,7 @@ def output_objs():
     bdir = data_dir.joinpath("boltz_6BJ9_seed-1")
     cdir = data_dir.joinpath("chai1_6BJ9_seed-1")
     pdir = data_dir.joinpath("protenix_6BJ9_seed-1")
+    odir = data_dir.joinpath("openfold_6BJ9_seed-1")
     name = "6BJ9"
     input_params = adir.joinpath("6bj9_data.json")
 
@@ -73,11 +75,13 @@ def output_objs():
         temp_bdir = Path(temp_dir) / "boltz_6BJ9_seed-1"
         temp_cdir = Path(temp_dir) / "chai1_6BJ9_seed-1"
         temp_pdir = Path(temp_dir) / "protenix_6BJ9_seed-1"
+        temp_odir = Path(temp_dir) / "openfold_6BJ9_seed-1"
 
         shutil.copytree(adir, temp_adir)
         shutil.copytree(bdir, temp_bdir)
         shutil.copytree(cdir, temp_cdir)
         shutil.copytree(pdir, temp_pdir)
+        shutil.copytree(odir, temp_odir)
 
         with open(input_params, "r") as f:
             input_params = json.load(f)
@@ -105,10 +109,17 @@ def output_objs():
             name,
         )
 
+        openfold_output = OpenfoldOutput(
+            [temp_odir],
+            input_params.copy(),
+            name,
+        )
+
         d["af3_output"] = af3_output
         d["boltz_output"] = boltz_output
         d["chai_output"] = chai_output
         d["protenix_output"] = protenix_output
+        d["openfold_output"] = openfold_output
         nt = namedtuple("output_objs", d)
         n = nt(**d)
 
