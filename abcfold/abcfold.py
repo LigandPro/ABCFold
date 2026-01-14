@@ -355,7 +355,7 @@ def run(args, config, defaults, config_file):
                             chai_models["models"].append(model_data)
 
         openfold_models = {"models": []}
-        if args.openfold:
+        if args.openfold3:
             if openfold_success:
                 programs_run.append("OpenFold3")
                 for seed in oo.output.keys():
