@@ -122,7 +122,9 @@ class OpenfoldJson:
                 protein_chain["non_canonical_residues"][loc] = ptm_type
 
         if self.templates:
-            protein_chain["template_alignment_file_path"] = self.templates
+            protein_chain[
+                "template_alignment_file_path"
+            ] = self.templates.resolve().as_posix()
 
         unpaired_msa = seq_dict.get("unpairedMsa")
         random_string = ''.join(random.choices(string.ascii_letters, k=5))
