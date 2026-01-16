@@ -237,7 +237,7 @@ def run(args, config, defaults, config_file):
 
             template_hits_path = None
             if args.templates and args.mmseqs2:
-                template_hits_path = temp_dir.joinpath("all_chain.m8")
+                template_hits_path = temp_dir.joinpath("all_chains.m8")
 
             openfold_success = run_openfold(
                 input_json=run_json,
