@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-import tempfile
 import warnings
 from abc import ABC
 from enum import Enum
@@ -841,14 +840,7 @@ for reordering"
         directory as the original file.
         """
         openfold_path = Path(openfold_cif)
-        tmp = tempfile.NamedTemporaryFile(
-            dir=openfold_path.parent,
-            suffix=".cif",
-            prefix=openfold_path.stem,
-            delete=False
-        )
-        tmp_path = Path(tmp.name)
-        tmp.close()
+        tmp_path = openfold_path.parent / f"{openfold_path.stem}_fixed.cif"
         cls._fix_openfold_mmcif(str(openfold_path), str(tmp_path))
         return cls(str(tmp_path), input_params)
 
