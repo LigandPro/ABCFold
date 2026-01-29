@@ -104,7 +104,7 @@ def generate_af3_cmd(
     input_json = Path(input_json)
     output_dir = Path(output_dir)
 
-    if sif_path is not None:
+    if sif_path is not None and sif_path != "None":
         return f"""
         singularity exec \
         --nv \

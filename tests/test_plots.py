@@ -102,11 +102,11 @@ def test_pae_plots(output_objs):
                 in x for x in plot_pathways)
         )
         assert (
-            any("openfold_6BJ9_seed-1/6BJ9/seed_1/6BJ9_seed_1_sample_1_model_fixed.cif"
+            any("openfold_6BJ9_seed-1/6BJ9/seed_1/6BJ9_seed_1_sample_1_model"
                 in x for x in plot_pathways)
         )
         assert (
-            any("openfold_6BJ9_seed-1/6BJ9/seed_1/6BJ9_seed_1_sample_2_model_fixed.cif"
+            any("openfold_6BJ9_seed-1/6BJ9/seed_1/6BJ9_seed_1_sample_2_model"
                 in x for x in plot_pathways)
         )
 

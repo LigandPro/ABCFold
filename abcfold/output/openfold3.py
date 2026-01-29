@@ -9,61 +9,6 @@ from abcfold.output.utils import Af3Pae
 logger = logging.getLogger("logger")
 
 
-def fix_mmcif(infile, outfile):
-    """
-    OpenFold 3 output not compatible with BioPython
-    This code converts it to a compatible format
-    """
-
-    with open(infile) as fin, open(outfile, "w") as fout:
-
-        fout.write("data_structure\n")
-        fout.write("loop_\n")
-        fout.write("_atom_site.group_PDB\n")
-        fout.write("_atom_site.type_symbol\n")
-        fout.write("_atom_site.label_atom_id\n")
-        fout.write("_atom_site.label_alt_id\n")
-        fout.write("_atom_site.label_comp_id\n")
-        fout.write("_atom_site.label_asym_id\n")
-        fout.write("_atom_site.label_entity_id\n")
-        fout.write("_atom_site.label_seq_id\n")
-        fout.write("_atom_site.pdbx_PDB_ins_code\n")
-        fout.write("_atom_site.auth_seq_id\n")
-        fout.write("_atom_site.auth_comp_id\n")
-        fout.write("_atom_site.auth_asym_id\n")
-        fout.write("_atom_site.auth_atom_id\n")
-        fout.write("_atom_site.B_iso_or_equiv\n")
-        fout.write("_atom_site.Cartn_x\n")
-        fout.write("_atom_site.Cartn_y\n")
-        fout.write("_atom_site.Cartn_z\n")
-        fout.write("_atom_site.pdbx_PDB_model_num\n")
-        fout.write("_atom_site.id\n")
-        fout.write("_atom_site.occupancy\n")
-
-        for line in fin:
-            if line.startswith("ATOM"):
-                fields = line.split()
-                fout.write(
-                    f"{fields[0]}   {fields[1]} {fields[2]}   {fields[3]} "
-                    f"{fields[4]} {fields[5]} {fields[6]} {fields[7]} "
-                    f"{fields[8]} {fields[9]} {fields[10]} {fields[11]} "
-                    f"{fields[12]}   {fields[13]} {fields[15]}      "
-                    f"{fields[16]}    {fields[17]}    {fields[18]} "
-                    f"{fields[19]} 1.0\n"
-                )
-            elif line.startswith("HETATM"):
-                fields = line.split()
-                fout.write(
-                    f"{fields[0]} {fields[1]} {fields[2]} {fields[3]} "
-                    f"{fields[4]} {fields[5]} 2 1   . 1   {fields[10]} {fields[11]} "
-                    f"{fields[12]} {fields[13]}  {fields[15]}     "
-                    f"{fields[16]}     {fields[17]}    {fields[18]} "
-                    f"{fields[19]} 1.0\n"
-                )
-            else:
-                continue
-
-
 class OpenfoldOutput:
     def __init__(
         self,
@@ -135,7 +80,7 @@ class OpenfoldOutput:
 
         new_output_dirs = []
         for output_dir in self.output_dirs:
-            if output_dir.name.startswith("openfold3_results_"):
+            if output_dir.name.startswith("openfold_results_"):
                 new_path = new_parent / output_dir.name
                 output_dir.rename(new_path)
                 new_output_dirs.append(new_path)
@@ -187,9 +132,7 @@ class OpenfoldOutput:
                 if file_type == FileTypes.NPZ.value:
                     file_ = NpzFile(str(output))
                 elif file_type == FileTypes.CIF.value:
-                    temp_out = output.parent / f'{output.stem}_fixed.cif'
-                    fix_mmcif(str(output), temp_out)
-                    file_ = CifFile(str(temp_out), self.input_params)
+                    file_ = CifFile.from_openfold(output, self.input_params)
                 elif file_type == FileTypes.JSON.value:
                     file_ = ConfidenceJsonFile(str(output))
                 else:
