@@ -13,6 +13,7 @@ from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import CifFile
+from abcfold.output.openfold3 import OpenfoldOutput
 from abcfold.output.protenix import ProtenixOutput
 
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ CSSPATHS = {
     "A": "paeViewerStandaloneLayoutAF3.css",
     "B": "paeViewerStandaloneLayoutBoltz.css",
     "C": "paeViewerStandaloneLayoutChai.css",
+    "O": "paeViewerStandaloneLayoutOpenfold.css",
     "P": "paeViewerStandaloneLayoutProtenix.css",
 }
 
@@ -145,6 +147,32 @@ def create_pae_plots(
             template_files.append(template_file)
             cmd = get_template_run_script(
                 "ABCFold - Protenix Output",
+                css_path,
+                template_file,
+                output_dir.joinpath(".pae_viewer"),
+            )
+            run_script(cmd)
+
+            for seed in output.seeds:
+                run_scripts.extend(
+                    prepare_scripts(
+                        output.cif_files[seed],
+                        output.af3_pae_files[seed],
+                        plots_dir,
+                        pathway_plot,
+                        template_file,
+                        True,
+                    )
+                )
+
+            continue
+
+        elif isinstance(output, OpenfoldOutput):
+            css_path = CSSPATHS["O"]
+            template_file = plots_dir.joinpath("openfold_template.html")
+            template_files.append(template_file)
+            cmd = get_template_run_script(
+                "ABCFold - OpenFold 3 Output",
                 css_path,
                 template_file,
                 output_dir.joinpath(".pae_viewer"),

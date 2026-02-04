@@ -60,6 +60,8 @@ Vue.component('abc-table', {
                     return 'btn-source3';
                 case 'Protenix':
                     return 'btn-source4';
+                case 'OpenFold3':
+                    return 'btn-source5';
                 default:
                     return 'btn-default';
             }

@@ -99,8 +99,30 @@ class MicromambaEnv:
         self._run([
             "run",
             "-n", self.env_name,
-            "pip", "install", *packages,
+            "python", "-m", "pip", "install",
+            "--break-system-packages",
+            *packages,
         ])
+
+    def conda_install(
+        self,
+        packages: list[str],
+        *,
+        channels: Optional[list[str]] = None,
+    ):
+        cmd = [
+            "install",
+            "-y",
+            "-n", self.env_name,
+        ]
+
+        if channels:
+            for ch in channels:
+                cmd.extend(["-c", ch])
+
+        cmd.extend(packages)
+
+        self._run(cmd)
 
     def run(self,
             command: list[str],

@@ -829,9 +829,9 @@ def fetch_mmcif(
     and chain ID and prepare it for use in AlphaFold3
     """
     pdb_id = pdb_id.lower()
-    url_base = "http://www.ebi.ac.uk/pdbe-srv/view/files/"
-    url = url_base + pdb_id + ".cif"
+    url = f"https://files.rcsb.org/download/{pdb_id}.cif"
     response = requests.get(url)
+    response.raise_for_status()
     text = response.text
 
     output = os.path.join(tmpdir, pdb_id + ".cif")

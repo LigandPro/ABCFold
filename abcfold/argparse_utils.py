@@ -150,6 +150,22 @@ def protenix_argparse_util(parser):
     return parser
 
 
+def openfold_argparse_util(parser):
+    parser.add_argument(
+        "-o",
+        "--openfold3",
+        action="store_true",
+        help="Run OpenFold 3",
+    )
+    parser.add_argument(
+        "--inference_ckpt_path",
+        help=dedent("Path for model checkpoint to be used for inference. \
+    If not specified, will attempt to find or download parameters to \
+     ~/.openfold3/")
+    )
+    return parser
+
+
 def alphafold_argparse_util(parser):
     parser.add_argument(
         "--database",
@@ -213,9 +229,15 @@ def visuals_argparse_util(parser):
 
 
 def raise_argument_errors(args):
-    if not args.alphafold3 and not args.boltz and not args.chai1 and not args.protenix:
+    if (
+        not args.alphafold3
+        and not args.boltz
+        and not args.chai1
+        and not args.protenix
+        and not args.openfold3
+    ):
         logger.info(
-            dedent("Neither AlphaFold3, Boltz, Chai-1, or Protenix selected. \
+            dedent("None of AlphaFold3, Boltz, Chai-1, Protenix or OpenFold3 selected. \
             Running AlphaFold3 by default")
         )
         args.alphafold3 = True

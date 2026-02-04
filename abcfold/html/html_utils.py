@@ -14,6 +14,7 @@ from abcfold.output.alphafold3 import AlphafoldOutput
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import ConfidenceJsonFile, NpzFile
+from abcfold.output.openfold3 import OpenfoldOutput
 from abcfold.output.protenix import ProtenixOutput
 from abcfold.plots.pae_plot import create_pae_plots
 from abcfold.plots.plddt_plot import plot_plddt
@@ -278,6 +279,11 @@ def get_all_cif_files(outputs) -> Dict[str, list]:
                 if "Chai-1" not in method_cif_objs:
                     method_cif_objs["Chai-1"] = []
                 method_cif_objs["Chai-1"].extend(output.cif_files[seed])
+        elif isinstance(output, OpenfoldOutput):
+            for seed in output.seeds:
+                if "Openfold3" not in method_cif_objs:
+                    method_cif_objs["Openfold3"] = []
+                method_cif_objs["Openfold3"].extend(output.cif_files[seed])
         elif isinstance(output, ProtenixOutput):
             for seed in output.seeds:
                 if "Protenix" not in method_cif_objs:

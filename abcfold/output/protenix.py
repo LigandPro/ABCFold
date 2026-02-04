@@ -120,7 +120,6 @@ class ProtenixOutput:
                 file_groups[seed] = {}
 
             for output in pathway.rglob("*"):
-                print(output)
                 number = output.stem.split("_sample_")[-1]
                 if not number.isdigit():
                     continue
@@ -169,7 +168,7 @@ class ProtenixOutput:
 
     def pae_to_af3(self):
         """
-        Convert the PAE data from Boltz to the format used by Alphafold3
+        Convert the PAE data from Protenix to the format used by Alphafold3
 
         Returns:
             None

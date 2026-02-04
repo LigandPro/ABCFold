@@ -73,6 +73,19 @@
                     </cite>
                 </p>
 
+                <h5>OpenFold3:</h5>
+                <p>
+                    <cite style="font-style: normal">
+                        The OpenFold3 Team.
+                        <br>
+                        OpenFold3-preview.
+                        <br>
+                        zenodo. 2025.
+                        <br>
+                        doi: <a href="https://doi.org/10.5281/zenodo.17485510" target="_blank">10.5281/zenodo.17485510</a>.
+                    </cite>
+                </p>
+
                 <h5>Protenix:</h5>
                 <p>
                     <cite style="font-style: normal">

@@ -771,6 +771,79 @@ for reordering"
 
         return out_dict
 
+    @staticmethod
+    def _fix_openfold_mmcif(infile: Union[str, Path],
+                            outfile: Union[str, Path]) -> None:
+        """
+        Convert OpenFold3-style mmCIF into a BioPython-compatible mmCIF.
+        """
+        with open(infile) as fin, open(outfile, "w") as fout:
+            # OpenFold3 mmCIF are missing some required headers, and their ATOM/HETATM
+            # files contain a question mark in the middle that BioPython doesn't like
+            # Therefore we need to reformat the lines
+
+            fout.write(
+                "data_structure\n"
+                "loop_\n"
+                "_atom_site.group_PDB\n"
+                "_atom_site.type_symbol\n"
+                "_atom_site.label_atom_id\n"
+                "_atom_site.label_alt_id\n"
+                "_atom_site.label_comp_id\n"
+                "_atom_site.label_asym_id\n"
+                "_atom_site.label_entity_id\n"
+                "_atom_site.label_seq_id\n"
+                "_atom_site.pdbx_PDB_ins_code\n"
+                "_atom_site.auth_seq_id\n"
+                "_atom_site.auth_comp_id\n"
+                "_atom_site.auth_asym_id\n"
+                "_atom_site.auth_atom_id\n"
+                "_atom_site.B_iso_or_equiv\n"
+                "_atom_site.Cartn_x\n"
+                "_atom_site.Cartn_y\n"
+                "_atom_site.Cartn_z\n"
+                "_atom_site.pdbx_PDB_model_num\n"
+                "_atom_site.id\n"
+                "_atom_site.occupancy\n"
+            )
+
+            for line in fin:
+                if line.startswith("ATOM"):
+                    fields = line.split()
+                    fout.write(
+                        f"{fields[0]}   {fields[1]} {fields[2]}   {fields[3]} "
+                        f"{fields[4]} {fields[5]} {fields[6]} {fields[7]} "
+                        f"{fields[8]} {fields[9]} {fields[10]} {fields[11]} "
+                        f"{fields[12]}   {fields[13]} {fields[15]}      "
+                        f"{fields[16]}    {fields[17]}    {fields[18]} "
+                        f"{fields[19]} 1.0\n"
+                    )
+                elif line.startswith("HETATM"):
+                    fields = line.split()
+                    fout.write(
+                        f"{fields[0]} {fields[1]} {fields[2]} {fields[3]} "
+                        f"{fields[4]} {fields[5]} 2 1   . 1   {fields[10]} {fields[11]}"
+                        f" {fields[12]} {fields[13]}  {fields[15]}     "
+                        f"{fields[16]}     {fields[17]}    {fields[18]} "
+                        f"{fields[19]} 1.0\n"
+                    )
+                else:
+                    continue
+
+    @classmethod
+    def from_openfold(cls,
+                      openfold_cif: Union[str, Path],
+                      input_params: Optional[dict] = None) -> "CifFile":
+        """
+        Create a CifFile from an OpenFold3 mmCIF by fixing format differences
+        and returning a CifFile pointing at a temporary fixed file in the same
+        directory as the original file.
+        """
+        openfold_path = Path(openfold_cif)
+        tmp_path = openfold_path.parent / f"{openfold_path.stem}_fixed.cif"
+        cls._fix_openfold_mmcif(str(openfold_path), str(tmp_path))
+        return cls(str(tmp_path), input_params)
+
 
 class ConfidenceJsonFile(FileBase):
     def __init__(self, json_file: Union[str, Path]):

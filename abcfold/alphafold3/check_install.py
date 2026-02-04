@@ -63,7 +63,7 @@ def generate_test_command(interactive: bool = True,
     Returns:
         str: The Alphafold3 help command
     """
-    if sif_path:
+    if sif_path is not None and sif_path != "None":
         return f"""
     singularity exec \
     {sif_path} \
@@ -83,7 +83,7 @@ def generate_version_command(sif_path: Union[str, Path, None] = None) -> str:
     """
     Generate the Alphafold3 version command
     """
-    if sif_path:
+    if sif_path is not None and sif_path != "None":
         return f"""
     singularity exec \
     {sif_path} \
