@@ -1,6 +1,6 @@
 import logging
 
-from abcfold.backend_envs import MicromambaEnv
+from abcfold.backend_envs import MicromambaEnv, supports_cuda_wheels
 
 logger = logging.getLogger("logger")
 
@@ -26,12 +26,16 @@ def ensure_boltz_env(config: dict) -> MicromambaEnv:
                 installed,
                 BOLTZ_ENV,
             )
-        env.pip_install([
-            f"boltz=={BOLTZ_VERSION}",
-            "cuequivariance_torch",
-            "cuequivariance_ops_torch-cu12",
-            "--no-cache-dir",
-        ])
+        packages = [f"boltz=={BOLTZ_VERSION}"]
+        if supports_cuda_wheels():
+            packages.extend([
+                "cuequivariance_torch",
+                "cuequivariance_ops_torch-cu12",
+            ])
+        else:
+            logger.info("Skipping CUDA-only Boltz dependencies on non-Linux platform")
+
+        env.pip_install([*packages, "--no-cache-dir"])
     else:
         logger.info("boltz is already up-to-date (%s)", BOLTZ_ENV)
 

@@ -2,7 +2,7 @@ import logging
 import urllib.request
 from pathlib import Path
 
-from abcfold.backend_envs import MicromambaEnv
+from abcfold.backend_envs import MicromambaEnv, supports_cuda_wheels
 
 logger = logging.getLogger("logger")
 
@@ -67,12 +67,18 @@ def ensure_openfold_env(config: dict) -> MicromambaEnv:
         # 3. Install Kalign2
         env.conda_install(["kalign2"], channels=["conda-forge", "bioconda"])
 
-        env.pip_install([
-            f"openfold3=={OPENFOLD_VERSION}",
-            "cuequivariance_torch",
-            "cuequivariance_ops_torch-cu12",
-            "--no-cache-dir",
-        ])
+        packages = [f"openfold3=={OPENFOLD_VERSION}"]
+        if supports_cuda_wheels():
+            packages.extend([
+                "cuequivariance_torch",
+                "cuequivariance_ops_torch-cu12",
+            ])
+        else:
+            logger.info(
+                "Skipping CUDA-only OpenFold3 dependencies on non-Linux platform"
+            )
+
+        env.pip_install([*packages, "--no-cache-dir"])
     else:
         logger.info("openfold3 is already up-to-date (%s)", OPENFOLD_ENV)
 

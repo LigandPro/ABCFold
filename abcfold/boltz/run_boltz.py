@@ -59,8 +59,10 @@ def run_boltz(
     input_json = Path(input_json)
     output_dir = Path(output_dir)
 
-    logger.debug("Checking if boltz is installed")
-    env = ensure_boltz_env(config=config)
+    env = None
+    if not test:
+        logger.debug("Checking if boltz is installed")
+        env = ensure_boltz_env(config=config)
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
@@ -90,6 +92,9 @@ def run_boltz(
             )
 
             try:
+                if test:
+                    logger.info("Skipping Boltz backend execution in test mode")
+                    continue
                 cuda_devices = normalize_gpus(gpus)
                 if not test and cuda_devices is not None:
                     cmd = ["env", f"CUDA_VISIBLE_DEVICES={cuda_devices}", *cmd]

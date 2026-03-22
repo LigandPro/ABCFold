@@ -5,6 +5,10 @@ import sys
 from typing import Optional
 
 
+def supports_cuda_wheels() -> bool:
+    return sys.platform.startswith("linux")
+
+
 class MicromambaEnv:
     def __init__(self, env_name: str):
         self.env_name = env_name

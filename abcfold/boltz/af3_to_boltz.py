@@ -252,7 +252,7 @@ class BoltzYaml:
                 f"'{item}'" if isinstance(item, str) else str(item) for item in value
             ]
             value = "[" + ", ".join(parts) + "]"
-        if key == "smiles":
+        if key in {"ccd", "smiles"} and isinstance(value, str):
             val = value.replace('"', '\\"')
             value = f'"{val}"'
         return f"{DELIM}{DELIM}{key}: {value}\n"

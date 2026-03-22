@@ -44,8 +44,10 @@ def run_protenix(
     input_json = Path(input_json)
     output_dir = Path(output_dir)
 
-    logger.debug("Checking if protenix is installed")
-    env = ensure_protenix_env(config=config)
+    env = None
+    if not test:
+        logger.debug("Checking if protenix is installed")
+        env = ensure_protenix_env(config=config)
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
@@ -76,6 +78,9 @@ def run_protenix(
             )
 
             try:
+                if test:
+                    logger.info("Skipping Protenix backend execution in test mode")
+                    continue
                 env.run(cmd)
             except subprocess.CalledProcessError as e:
                 stderr = e.stderr or ""
