@@ -1,5 +1,6 @@
 import json
 import logging
+import string
 import subprocess
 import sys
 from pathlib import Path
@@ -9,6 +10,13 @@ from abcfold.alphafold3.ccd_one_letter import CCD_NAME_TO_ONE_LETTER
 from abcfold.alphafold3.check_install import check_af3_install
 
 logger = logging.getLogger("logger")
+
+
+def sanitize_job_name(name: str) -> str:
+    """Match AlphaFold-style output directory sanitisation rules."""
+    spaceless_name = name.replace(" ", "_")
+    allowed_chars = set(string.ascii_letters + string.digits + "_-.")
+    return "".join(char for char in spaceless_name if char in allowed_chars)
 
 
 def run_alphafold3(

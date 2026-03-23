@@ -10,7 +10,7 @@ import webbrowser
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
-from abcfold.alphafold3.run_alphafold3 import run_alphafold3
+from abcfold.alphafold3.run_alphafold3 import run_alphafold3, sanitize_job_name
 from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
@@ -170,7 +170,9 @@ def run(args, config, defaults, config_file):
             )
 
             if af3_success:
-                pattern = re.compile(f"^{name}.*", re.IGNORECASE)
+                pattern = re.compile(
+                    f"^{re.escape(sanitize_job_name(name))}.*", re.IGNORECASE
+                )
                 af3_out_dir = list(
                     [
                         dir_

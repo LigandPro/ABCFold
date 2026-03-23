@@ -4,8 +4,16 @@ from pathlib import Path
 
 import pytest
 
-from abcfold.alphafold3.run_alphafold3 import generate_af3_cmd, run_alphafold3
+from abcfold.alphafold3.run_alphafold3 import (
+    generate_af3_cmd,
+    run_alphafold3,
+    sanitize_job_name,
+)
 from abcfold.scripts.abc_script_utils import make_dummy_af3_db
+
+
+def test_sanitize_job_name():
+    assert sanitize_job_name("Test Name (A/B)") == "Test_Name_AB"
 
 
 def test_generate_af3_command(test_data):
