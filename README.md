@@ -14,7 +14,7 @@ Scripts to run AlphaFold3, Boltz, Chai-1, OpenFold3 and Protenix with MMseqs2 Mu
 
 ## Installation
 
-We recommend installing this package in a micromamba environment. Python 3.11 is recommended, but the package should work with Python 3.9 and above.
+We recommend working with this repository through `uv run` in a micromamba-backed setup. Python 3.11 is recommended, but the package should work with Python 3.10 and above.
 For instructions on installing micromamba, check their website [here](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html).
 
 To set up a micromamba environment, run:
@@ -29,29 +29,48 @@ micromamba activate abcfold
 > - `abcfold` will automatically create **internal micromamba environments** to run Boltz, Chai-1, OpenFold3 and Protenix safely, therefore a micromamba installation is required.
 > - This prevents package conflicts with your main environment and ensures reproducible results.
 
-
-To install the package from PyPI, run:
+We recommend installing and running ABCFold via `uv`:
 
 ```bash
-python -m pip install abcfold
+uv sync
 ```
 
-
-Or, to install the package from source, first clone the repository and then run:
+If you prefer installing the package from PyPI, run:
 
 ```bash
-python -m pip install .
+uv tool install abcfold
+```
+
+Or, to install the package from source into the local project environment, first clone the repository and then run:
+
+```bash
+uv sync
 ```
 
 ## Development
 
-If you wish to help develop this package, you can install the development dependencies by running:
+If you wish to help develop this package, install the development dependencies with `uv`:
 
 ```bash
-python -m pip install -e .
-python -m pip install -r requirements-dev.txt
-python -m pre_commit install
+uv sync --extra dev
 ```
+
+We recommend enabling local Git hooks with Lefthook:
+
+```bash
+brew install lefthook
+lefthook install
+```
+
+Typical development commands should be run through `uv run`:
+
+```bash
+uv run --extra test pytest
+uv run --extra lint ruff check abcfold tests
+uv run --extra lint ruff format abcfold tests
+```
+
+The provided `lefthook.yml` follows the same `uv run` workflow: staged Python files are checked on `pre-commit`, and a targeted lint plus test suite is run on `pre-push`.
 
 ## Usage
 
@@ -76,11 +95,11 @@ ABCFold will run Alphafold3, Boltz, Chai-1, OpenFold3 and Protenix consecutively
 }
 ```
 
-Please make sure you have AlphaFold3 installed on your system (Instructions [here](https://github.com/google-deepmind/alphafold3/blob/main/docs/installation.md)) and have procured the model parameters. Boltz, Chai-1, OpenFold3 and Protenix are installed upon runtime.
+By default, the AF3 backend is run through the `AlphaFast` container image. You still need access to the AlphaFold3 model parameters, and Boltz, Chai-1, OpenFold3 and Protenix are installed upon runtime in their dedicated micromamba environments.
 
 For the majority of jobs, ABCFold can be run as follows:
 ```bash
-abcfold <input_json>  <output_dir> -abcop --mmseqs2 --model_params <path_to_af3_model_params>
+uv run abcfold <input_json> <output_dir> -abcop --mmseqs2 --model_params <path_to_af3_model_params>
 ```
 > [!NOTE]
 > `--model_params` is stored after the first run, therefore subsequent ABCFold jobs don't require this flag.
@@ -135,14 +154,14 @@ However, there you may wish to use the following flags to add run time options s
 If you wanted to provide a custom template, `custom_a.pdb` for your protein sequence with the ID `A` and you have your template has two chains: chain `A` and chain `B` and chain `B` is what you want the template to be, you could run:
 
 ```bash
-abcfold <input_json>  <output_dir> -abcop --mmseqs2 --custom_template custom_a.pdb  --custom_template_chain B --target_id A
+uv run abcfold <input_json> <output_dir> -abcop --mmseqs2 --custom_template custom_a.pdb --custom_template_chain B --target_id A
 
 ```
 
 If you had multiple IDs in your input sequence, multiple template files and you wanted to provide 3 custom templates, chain `A` from `custom_a.pdb`, chain `B` from `custom_b.pdb`, and chain B from `custom_c.pdb`, where `custom_a.pdb` and `custom_b.pdb` correspond to the ID `A` and `custom_c.pdb` corresponds to the ID `B`, you could run:
 
 ```bash
-abcfold <input_json>  <output_dir> -abcop --mmseqs2 --custom_template custom_a.pdb custom_b.pdb custom_c.pdb --custom_template_chain A B B --target_id A A B
+uv run abcfold <input_json> <output_dir> -abcop --mmseqs2 --custom_template custom_a.pdb custom_b.pdb custom_c.pdb --custom_template_chain A B B --target_id A A B
 
 ```
 ### Output
@@ -153,7 +172,7 @@ Unless the `--no_visuals` flag is used, you can then open the output pages by ru
 
 ```bash
 cd <output_dir>
-python open_output.py
+uv run python open_output.py
 ```
 
 ## Main Page Example
@@ -182,7 +201,7 @@ To add MMseqs2 MSAs and templates to the AlphaFold3 input JSON, you can use the 
 To run the script with templates, use the following command:
 
 ```bash
-mmseqs2msa --input_json <input_json> --output_json <output_json> --templates --num_templates <num_templates>
+uv run mmseqs2msa --input_json <input_json> --output_json <output_json> --templates --num_templates <num_templates>
 ```
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
@@ -205,7 +224,7 @@ MMSEQS_NO_INDEX=1 ./setup_mmseqs_databases.sh /path/to/db_folder
 To run the script without templates, use the following command:
 
 ```bash
-mmseqs2msa --input_json <input_json> --output_json <output_json>
+uv run mmseqs2msa --input_json <input_json> --output_json <output_json>
 ```
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
@@ -221,7 +240,7 @@ You may wish to add custom templates to your AlphaFold3 job, e.g. homologues whi
 If you just wish to add a custom template, you can use `custom_templates`:
 
 ```bash
-custom_templates --input_json <input_json> --output_json <output_json> --custom_template <custom_template> --custom_template_chain <custom_template_chain> --target_id <target_id>
+uv run custom_templates --input_json <input_json> --output_json <output_json> --custom_template <custom_template> --custom_template_chain <custom_template_chain> --target_id <target_id>
 ```
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.
@@ -236,7 +255,7 @@ custom_templates --input_json <input_json> --output_json <output_json> --custom_
 If you wish to add a custom template and generate an MMseqs2 MSA/templates, you can use `mmseqs2msa`:
 
 ```bash
-mmseqs2msa --input_json <input_json> --output_json <output_json> --templates --num_templates <num_templates> --custom_template <custom_template> --custom_template_chain <custom_template_chain> --target_id <target_id>
+uv run mmseqs2msa --input_json <input_json> --output_json <output_json> --templates --num_templates <num_templates> --custom_template <custom_template> --custom_template_chain <custom_template_chain> --target_id <target_id>
 ```
 
 - `<input_json>`: Path to the input AlphaFold3 JSON file.

@@ -11,6 +11,7 @@ jinja2
 pre-commit
 pytest
 pytest-cov
+ruff
 flake8
 black
 mypy

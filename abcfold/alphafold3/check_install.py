@@ -49,7 +49,8 @@ def check_af3_install(
             version = stdout.strip().decode("utf-8")
             if Version(version) < Version(af3_version):
                 raise ImportError(
-                    f"Expected AlphaFold3 version {af3_version} or later, found {version}"
+                    "Expected AlphaFold3 version "
+                    f"{af3_version} or later, found {version}"
                 )
 
         logger.info("Alphafold3 is installed")
