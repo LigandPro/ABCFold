@@ -178,6 +178,11 @@ def generate_af3_cmd(
 
     if sif_path is not None and sif_path != "None":
         singularity_gpu_flag = "--nv" if gpus != "cpu" else ""
+        distogram_flag = (
+            f"        --save_distogram {str(save_distogram).lower()}\n"
+            if save_distogram
+            else ""
+        )
         return f"""
         singularity exec \
         {singularity_gpu_flag} \
@@ -193,10 +198,15 @@ def generate_af3_cmd(
         --db_dir=/root/public_databases \
         --num_diffusion_samples {number_of_models}\
         --num_recycles {num_recycles}\
-        --save_distogram {str(save_distogram).lower()}
+{distogram_flag}
     """
 
     else:
+        distogram_flag = (
+            f"        --save_distogram {str(save_distogram).lower()}\n"
+            if save_distogram
+            else ""
+        )
         return f"""
         docker run {'-it' if interactive else ''} \
         --volume {input_json.parent.resolve()}:/root/af_input \
@@ -211,5 +221,5 @@ def generate_af3_cmd(
         --output_dir=/root/af_output \
         --num_diffusion_samples {number_of_models}\
         --num_recycles {num_recycles}\
-        --save_distogram {str(save_distogram).lower()}
+{distogram_flag}
         """
