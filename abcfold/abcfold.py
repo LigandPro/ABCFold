@@ -1,7 +1,6 @@
 import configparser
 import json
 import os
-import re
 import shutil
 import socketserver
 import sys
@@ -10,7 +9,7 @@ import webbrowser
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
-from abcfold.alphafold3.run_alphafold3 import run_alphafold3, sanitize_job_name
+from abcfold.alphafold3.run_alphafold3 import run_alphafold3
 from abcfold.argparse_utils import (alphafold_argparse_util,
                                     boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
@@ -147,16 +146,15 @@ def run(args, config, defaults, config_file):
         successful_runs = []
         if args.alphafold3:
             af3_database = args.database_dir
-            if args.mmseqs2 or (
-                any(
-                    seq.get("protein", {}).get("unpairedMsa")
-                    or seq.get("protein", {}).get("unpairedMsaPath")
-                    for seq in input_params["sequences"]
-                )
-            ):
+            use_precomputed_msas = args.mmseqs2 or any(
+                seq.get("protein", {}).get("unpairedMsa")
+                or seq.get("protein", {}).get("unpairedMsaPath")
+                for seq in input_params["sequences"]
+            )
+            if use_precomputed_msas:
                 af3_database = make_dummy_af3_db(temp_dir)
 
-            af3_success = run_alphafold3(
+            af3_output_dir = run_alphafold3(
                 input_json=run_json,
                 output_dir=args.output_dir,
                 model_params=args.model_params,
@@ -167,20 +165,12 @@ def run(args, config, defaults, config_file):
                 save_distogram=args.save_distogram,
                 gpus=args.gpus,
                 config=rt_config,
+                use_precomputed_msas=use_precomputed_msas,
             )
+            af3_success = af3_output_dir is not None
 
             if af3_success:
-                pattern = re.compile(
-                    f"^{re.escape(sanitize_job_name(name))}.*", re.IGNORECASE
-                )
-                af3_out_dir = list(
-                    [
-                        dir_
-                        for dir_ in args.output_dir.glob("*")
-                        if dir_.is_dir() and pattern.match(dir_.name)
-                    ]
-                )[0]
-                ao = AlphafoldOutput(af3_out_dir, input_params, name)
+                ao = AlphafoldOutput(af3_output_dir, input_params, name)
                 outputs.append(ao)
                 run_json = ao.input_json
             successful_runs.append(af3_success)

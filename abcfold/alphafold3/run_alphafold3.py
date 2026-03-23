@@ -1,8 +1,8 @@
 import json
 import logging
+import shlex
 import string
 import subprocess
-import sys
 from pathlib import Path
 from typing import Union
 
@@ -11,12 +11,135 @@ from abcfold.alphafold3.check_install import check_af3_install
 
 logger = logging.getLogger("logger")
 
+ALPHAFAST_IMAGE = "romerolabduke/alphafast:latest"
+CONTAINER_INPUT_DIR = Path("/root/af_input")
+CONTAINER_OUTPUT_DIR = Path("/root/af_output")
+CONTAINER_MODEL_DIR = Path("/root/models")
+CONTAINER_DB_DIR = Path("/root/public_databases")
+CONTAINER_MMSEQS_DB_DIR = CONTAINER_DB_DIR / "mmseqs"
+CONTAINER_APP_DIR = Path("/app/alphafold")
+
 
 def sanitize_job_name(name: str) -> str:
     """Match AlphaFold-style output directory sanitisation rules."""
     spaceless_name = name.replace(" ", "_")
     allowed_chars = set(string.ascii_letters + string.digits + "_-.")
     return "".join(char for char in spaceless_name if char in allowed_chars)
+
+
+def _resolve_job_output_dir(input_json: Path) -> Path:
+    with input_json.open("r") as handle:
+        input_params = json.load(handle)
+
+    name = input_params.get("name")
+    if not name:
+        raise ValueError("Input JSON must contain a non-empty 'name' field")
+    return Path(sanitize_job_name(name))
+
+
+def _gpu_flags(gpus: str) -> list[str]:
+    if gpus.lower() == "cpu":
+        return []
+    if gpus.lower() == "all":
+        return ["--gpus", "all"]
+    return ["--gpus", f"device={gpus}"]
+
+
+def _build_alphafast_docker_cmd(
+    input_json: Path,
+    output_dir: Path,
+    model_params: Path,
+    database_dir: Path,
+    n_models: int,
+    n_recycles: int,
+    gpus: str,
+    interactive: bool,
+    use_precomputed_msas: bool,
+    save_distogram: bool,
+    image: str,
+) -> tuple[list[str], Path]:
+    job_output_dir = _resolve_job_output_dir(input_json)
+    container_output_dir = (
+        CONTAINER_OUTPUT_DIR / job_output_dir
+        if use_precomputed_msas
+        else CONTAINER_OUTPUT_DIR
+    )
+
+    cmd = ["docker", "run", "-i"] if interactive else ["docker", "run", "--rm"]
+    cmd += _gpu_flags(gpus)
+    cmd += [
+        "--volume",
+        f"{input_json.parent.resolve()}:{CONTAINER_INPUT_DIR}:ro",
+        "--volume",
+        f"{output_dir.resolve()}:{CONTAINER_OUTPUT_DIR}",
+        "--volume",
+        f"{model_params.resolve()}:{CONTAINER_MODEL_DIR}:ro",
+        "--volume",
+        f"{database_dir.resolve()}:{CONTAINER_DB_DIR}:ro",
+        image,
+        "python",
+        str(CONTAINER_APP_DIR / "run_alphafold.py"),
+        "--json_path",
+        str(CONTAINER_INPUT_DIR / input_json.name),
+        "--model_dir",
+        str(CONTAINER_MODEL_DIR),
+        "--output_dir",
+        str(container_output_dir),
+        "--db_dir",
+        str(CONTAINER_DB_DIR),
+        "--mmseqs_db_dir",
+        str(CONTAINER_MMSEQS_DB_DIR),
+        "--num_diffusion_samples",
+        str(n_models),
+        "--num_recycles",
+        str(n_recycles),
+    ]
+
+    if save_distogram:
+        cmd.append("--save_distogram")
+
+    if use_precomputed_msas:
+        cmd += ["--norun_data_pipeline", "--force_output_dir"]
+    else:
+        cmd.append("--use_mmseqs_gpu")
+
+    return cmd, output_dir / job_output_dir
+
+
+def _build_singularity_cmd(
+    input_json: Path,
+    output_dir: Path,
+    model_params: Path,
+    database_dir: Path,
+    sif_path: Union[str, Path],
+    number_of_models: int,
+    num_recycles: int,
+    save_distogram: bool,
+    gpus: str,
+) -> str:
+    singularity_gpu_flag = "--nv" if gpus != "cpu" else ""
+    distogram_flag = (
+        f"        --save_distogram {str(save_distogram).lower()}\n"
+        if save_distogram
+        else ""
+    )
+    return f"""
+        singularity exec \
+        {singularity_gpu_flag} \
+        --bind {input_json.parent.resolve()}:/root/af_input \
+        --bind {output_dir.resolve()}:/root/af_output \
+        --bind {model_params.resolve()}:/root/models \
+        --bind {database_dir.resolve()}:/root/public_databases \
+        {sif_path} \
+        python /app/alphafold/run_alphafold.py \
+        --json_path=/root/af_input/{input_json.name} \
+        --model_dir=/root/models \
+        --output_dir=/root/af_output \
+        --db_dir=/root/public_databases \
+        --num_diffusion_samples {number_of_models}\
+        --num_recycles {num_recycles}\
+{distogram_flag}
+    """
 
 
 def run_alphafold3(
@@ -31,96 +154,104 @@ def run_alphafold3(
     num_recycles: int = 10,
     save_distogram: bool = False,
     gpus: str = "all",
-) -> bool:
+    use_precomputed_msas: bool = False,
+) -> Path | None:
     """
-    Run Alphafold3 using the input JSON file
+    Run Alphafold3 using AlphaFast as the default container backend.
 
-    Args:
-        input_json (Union[str, Path]): Path to the input JSON file
-        output_dir (Union[str, Path]): Path to the output directory
-        model_params (Union[str, Path]): Path to the model parameters
-        database_dir (Union[str, Path]): Path to the database directory
-        sif_path (Union[str, Path, None]): Path to a Singularity image file
-        config (dict): Configuration dictionary
-        interactive (bool): If True, run the docker container in interactive mode
-        number_of_models (int): Number of models to generate
-        num_recycles (int): Number of recycles to use
-        save_distogram (bool): If True, save the distogram output
-
-    Returns:
-        Bool: True if the Alphafold3 run was successful, False otherwise
-
-    Raises:
-        subprocess.CalledProcessError: If the Alphafold3 command returns an error
-
+    When `sif_path` is provided, fall back to the legacy Singularity flow.
     """
-
     input_json = process_input_json(Path(input_json))
     output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     check_af3_install(config=config, interactive=False, sif_path=sif_path)
 
-    cmd = generate_af3_cmd(
-        input_json=input_json,
-        output_dir=output_dir,
-        model_params=model_params,
-        database_dir=database_dir,
-        sif_path=sif_path,
-        config=config,
-        interactive=interactive,
-        number_of_models=number_of_models,
-        num_recycles=num_recycles,
-        save_distogram=save_distogram,
-        gpus=gpus,
-    )
+    if sif_path is not None and sif_path != "None":
+        cmd = generate_af3_cmd(
+            input_json=input_json,
+            output_dir=output_dir,
+            model_params=model_params,
+            database_dir=database_dir,
+            sif_path=sif_path,
+            config=config,
+            interactive=interactive,
+            number_of_models=number_of_models,
+            num_recycles=num_recycles,
+            save_distogram=save_distogram,
+            gpus=gpus,
+        )
+        job_output_dir = output_dir
+        run_kwargs = {
+            "args": cmd,
+            "shell": True,
+            "check": True,
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.PIPE,
+            "text": True,
+        }
+    else:
+        image = config.get("af3_docker_env", ALPHAFAST_IMAGE)
+        cmd_list, job_output_dir = _build_alphafast_docker_cmd(
+            input_json=input_json,
+            output_dir=output_dir,
+            model_params=Path(model_params),
+            database_dir=Path(database_dir),
+            n_models=number_of_models,
+            n_recycles=num_recycles,
+            gpus=gpus,
+            interactive=interactive,
+            use_precomputed_msas=use_precomputed_msas,
+            save_distogram=save_distogram,
+            image=image,
+        )
+        run_kwargs = {
+            "args": cmd_list,
+            "check": True,
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.PIPE,
+            "text": True,
+        }
 
     logger.info("Running Alphafold3")
-    with subprocess.Popen(
-        cmd, shell=True, stdout=sys.stdout, stderr=subprocess.PIPE
-    ) as p:
-        _, stderr = p.communicate()
-        if p.returncode != 0:
-            logger.error(stderr.decode())
-            output_err_file = output_dir / "af3_error.log"
-            with open(output_err_file, "w") as f:
-                f.write(stderr.decode())
-            logger.error("Alphafold3 run failed. Error log is in %s", output_err_file)
-            return False
+    try:
+        subprocess.run(**run_kwargs)
+    except subprocess.CalledProcessError as exc:
+        error_log = exc.stderr or ""
+        logger.error(error_log)
+        output_err_file = output_dir / "af3_error.log"
+        output_err_file.write_text(error_log)
+        logger.error("Alphafold3 run failed. Error log is in %s", output_err_file)
+        return None
 
     logger.info("Alphafold3 run complete")
-    logger.info("Output files are in %s", output_dir)
-    return True
+    logger.info("Output files are in %s", job_output_dir)
+    return job_output_dir
 
 
 def process_input_json(input_json: Union[str, Path]) -> Union[str, Path]:
     """
-    Process the input JSON file to post translational modifications (PTMs) are included
-    in the MSA sequence
-
-    Args:
-        input_json (Union[str, Path]): Path to the input JSON file
-
-    Returns:
-        Union[str, Path]: Path to the processed input JSON file
+    Process the input JSON file so post-translational modifications are included
+    in the MSA sequence when AlphaFold-compatible one-letter codes are known.
     """
-
     with open(input_json, "r") as f:
         json_dict = json.load(f)
 
-    one_letter_code = None
-    position = None
-    msa = None
-    for sequence in json_dict['sequences']:
+    updated = False
+    for sequence in json_dict["sequences"]:
         protein = sequence.get("protein")
         if protein is None:
             continue
         modifications = protein.get("modifications", [])
         for modification in modifications:
-            if 'ptmType' in modification.keys():
-                ptm_type = modification['ptmType']
+            one_letter_code = None
+            position = None
+            msa = None
+            if "ptmType" in modification:
+                ptm_type = modification["ptmType"]
                 if ptm_type in CCD_NAME_TO_ONE_LETTER:
                     one_letter_code = CCD_NAME_TO_ONE_LETTER[ptm_type]
-                    position = modification['ptmPosition']
+                    position = modification["ptmPosition"]
                     msa = protein.get("unpairedMsa")
             if (
                 one_letter_code is not None
@@ -130,13 +261,14 @@ def process_input_json(input_json: Union[str, Path]) -> Union[str, Path]:
                 msa_lines = msa.splitlines()
                 input_seq = msa_lines[1]
                 idx = int(position) - 1
-                input_seq = input_seq[:idx] + one_letter_code + input_seq[idx+1:]
+                input_seq = input_seq[:idx] + one_letter_code + input_seq[idx + 1 :]
                 msa_lines[1] = input_seq
-                protein['unpairedMsa'] = "\n".join(msa_lines)
+                protein["unpairedMsa"] = "\n".join(msa_lines)
+                updated = True
 
-    # Write the updated JSON dict back to the file
-    with open(input_json, "w") as f:
-        json.dump(json_dict, f, indent=4)
+    if updated:
+        with open(input_json, "w") as f:
+            json.dump(json_dict, f, indent=4)
 
     return input_json
 
@@ -153,81 +285,41 @@ def generate_af3_cmd(
     interactive: bool = False,
     save_distogram: bool = False,
     gpus: str = "all",
+    use_precomputed_msas: bool = False,
 ) -> str:
     """
-    Generate the Alphafold3 command
+    Generate the Alphafold3 command.
 
-    Args:
-        input_json (Union[str, Path]): Path to the input JSON file
-        output_dir (Union[str, Path]): Path to the output directory
-        model_params (Union[str, Path]): Path to the model parameters
-        database_dir (Union[str, Path]): Path to the database directory
-        sif_path (Union[str, Path, None]): Path to a Singularity image file
-        config (dict): Configuration dictionary
-        number_of_models (int): Number of models to generate
-        interactive (bool): If True, run the docker container in interactive mode
-        num_recycles (int): Number of recycles to use
-        save_distogram (bool): If True, save the distogram output
-
-    Returns:
-        str: The Alphafold3 command
+    Docker mode uses AlphaFast by default. Singularity mode keeps the legacy AF3 flow.
     """
     input_json = Path(input_json)
     output_dir = Path(output_dir)
 
-    gpu_flag = ""
-    if gpus == "cpu":
-        gpu_flag = ""
-    elif gpus == "all":
-        gpu_flag = "--gpus all"
-    else:
-        gpu_ids = [g.strip() for g in gpus.split(",")]
-        gpu_flag = f'--gpus "device={",".join(gpu_ids)}"'
-
     if sif_path is not None and sif_path != "None":
-        singularity_gpu_flag = "--nv" if gpus != "cpu" else ""
-        distogram_flag = (
-            f"        --save_distogram {str(save_distogram).lower()}\n"
-            if save_distogram
-            else ""
+        return _build_singularity_cmd(
+            input_json=input_json,
+            output_dir=output_dir,
+            model_params=Path(model_params),
+            database_dir=Path(database_dir),
+            sif_path=sif_path,
+            number_of_models=number_of_models,
+            num_recycles=num_recycles,
+            save_distogram=save_distogram,
+            gpus=gpus,
         )
-        return f"""
-        singularity exec \
-        {singularity_gpu_flag} \
-        --bind {input_json.parent.resolve()}:/root/af_input \
-        --bind {output_dir.resolve()}:/root/af_output \
-        --bind {model_params}:/root/models \
-        --bind {database_dir}:/root/public_databases \
-        {sif_path} \
-        python /app/alphafold/run_alphafold.py \
-        --json_path=/root/af_input/{input_json.name} \
-        --model_dir=/root/models \
-        --output_dir=/root/af_output \
-        --db_dir=/root/public_databases \
-        --num_diffusion_samples {number_of_models}\
-        --num_recycles {num_recycles}\
-{distogram_flag}
-    """
 
-    else:
-        distogram_flag = (
-            f"        --save_distogram {str(save_distogram).lower()}\n"
-            if save_distogram
-            else ""
-        )
-        return f"""
-        docker run {'-it' if interactive else ''} \
-        --volume {input_json.parent.resolve()}:/root/af_input \
-        --volume {output_dir.resolve()}:/root/af_output \
-        --volume {model_params}:/root/models \
-        --volume {database_dir}:/root/public_databases \
-        {gpu_flag} \
-        {config["af3_docker_env"]} \
-        python run_alphafold.py \
-        --json_path=/root/af_input/{input_json.name} \
-        --model_dir=/root/models \
-        --output_dir=/root/af_output \
-        --num_diffusion_samples {number_of_models}\
-        --num_recycles {num_recycles}\
-{distogram_flag}
-        """
+    image = config.get("af3_docker_env", ALPHAFAST_IMAGE)
+    cmd, _ = _build_alphafast_docker_cmd(
+        input_json=input_json,
+        output_dir=output_dir,
+        model_params=Path(model_params),
+        database_dir=Path(database_dir),
+        n_models=number_of_models,
+        n_recycles=num_recycles,
+        gpus=gpus,
+        interactive=interactive,
+        use_precomputed_msas=use_precomputed_msas,
+        save_distogram=save_distogram,
+        image=image,
+    )
+    return shlex.join(cmd)
