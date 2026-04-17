@@ -167,6 +167,9 @@ def generate_boltz_command(
         str(number_of_models),
         "--recycling_steps",
         str(num_recycles),
+        # Do not lower this without full validation: 5 sampling steps produced physically invalid structures.
+        "--sampling_steps",
+        "200",
         "--seed",
         str(seed),
         "--cache",

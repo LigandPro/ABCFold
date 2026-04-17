@@ -174,6 +174,8 @@ def generate_chai_command(
         cmd += ["--constraint-path", str(input_constraints)]
 
     cmd += ["--num-diffn-samples", str(number_of_models)]
+    # Do not lower this without full validation: 5 diffusion steps produced physically invalid structures.
+    cmd += ["--num-diffn-timesteps", "200"]
     cmd += ["--num-trunk-recycles", str(num_recycles)]
     cmd += ["--seed", str(seed)]
 
