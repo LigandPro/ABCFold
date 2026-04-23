@@ -542,7 +542,10 @@ class CifFile(FileBase):
         return False
 
     def relabel_chains(
-        self, chain_ids: List[str], link_ids: Optional[dict] = None
+        self,
+        chain_ids: List[str],
+        link_ids: Optional[dict] = None,
+        persist: bool = True,
     ) -> None:
         """
         Relabel the chains in the model
@@ -593,7 +596,8 @@ class CifFile(FileBase):
         assert old_chain_label_counter == len(
             self.get_chains()
         ), "Number of chain ids must match the number of chains"
-        self.update()
+        if persist:
+            self.update()
 
     def update(self):
         self.to_file(self.pathway)

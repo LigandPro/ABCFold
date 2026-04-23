@@ -19,10 +19,10 @@ GMRES
 GMRES
 >protein|C
 YANEN
->protein|D
-(ATP)
->protein|E
-(ATP)
+>ligand|D
+c1nc(c2c(n1)n(cn2)C3C(C(C(O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N
+>ligand|E
+c1nc(c2c(n1)n(cn2)C3C(C(C(O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N
 >ligand|F
 CC(=O)OC1C[NH+]2CCC1CC2
 """
@@ -88,18 +88,18 @@ def test_af3_to_chai_ligand(test_data):
             "CDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSP"
             "IYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGD"
             "YSEQFLKESRQLLQQANDLKQG\n"
-            ">protein|C\n"
-            "(ATP)\n"
-            ">protein|D\n"
-            "(ATP)\n"
+            ">ligand|C\n"
+            "c1nc(c2c(n1)n(cn2)C3C(C(C(O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N\n"
+            ">ligand|D\n"
+            "c1nc(c2c(n1)n(cn2)C3C(C(C(O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N\n"
             ">ligand|E\n"
             "CC(=O)OC1C[NH+]2CCC1CC2\n"
             ">ligand|G\n"
             "CCCCCCCCCCCC(O)=O\n"
             ">ligand|H\n"
             "CCCCCCCCCCCC(O)=O\n"
-            ">protein|F\n"
-            "(MG)\n"
+            ">ligand|F\n"
+            "[Mg+2]\n"
         )
 
         filename = Path(temp_dir) / "chai1.fasta"
@@ -213,7 +213,7 @@ def test_ccd_to_smiles(test_data):
     chai_fasta = ChaiFasta(".", config=test_data.config_dict)
 
     smiles = chai_fasta.ccd_to_smiles("DAO")
-    assert smiles == "CCCCCCCCCCCC(O)=O"
+    assert smiles in {"CCCCCCCCCCCC(O)=O", "CCCCCCCCCCCC(=O)O"}
 
     smiles = chai_fasta.ccd_to_smiles("NOT_A_CCD")
     assert smiles is None

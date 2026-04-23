@@ -9,6 +9,7 @@
 
 """Command line interface."""
 
+import inspect
 import logging
 from pathlib import Path
 
@@ -53,6 +54,49 @@ def normalize_device(device):
     return device
 
 
+def build_run_inference_kwargs(
+    fasta_file: Path,
+    *,
+    output_dir: Path,
+    use_esm_embeddings: bool = True,
+    use_msa_server: bool = False,
+    msa_server_url: str = "https://api.colabfold.com",
+    msa_directory: Path | None = None,
+    constraint_path: Path | None = None,
+    use_templates_server: bool = False,
+    template_hits_path: Path | None = None,
+    recycle_msa_subsample: int = 0,
+    num_trunk_recycles: int = 3,
+    num_diffn_timesteps: int = 200,
+    num_diffn_samples: int = 5,
+    num_trunk_samples: int = 1,
+    seed: int | None = None,
+    device: str | None = None,
+    low_memory: bool = True,
+):
+    kwargs = {
+        "fasta_file": fasta_file,
+        "output_dir": output_dir,
+        "use_esm_embeddings": use_esm_embeddings,
+        "use_msa_server": use_msa_server,
+        "msa_server_url": msa_server_url,
+        "msa_directory": msa_directory,
+        "constraint_path": constraint_path,
+        "use_templates_server": use_templates_server,
+        "template_hits_path": template_hits_path,
+        "recycle_msa_subsample": recycle_msa_subsample,
+        "num_trunk_recycles": num_trunk_recycles,
+        "num_diffn_timesteps": num_diffn_timesteps,
+        "num_diffn_samples": num_diffn_samples,
+        "num_trunk_samples": num_trunk_samples,
+        "seed": seed,
+        "device": normalize_device(device),
+        "low_memory": low_memory,
+    }
+    supported = inspect.signature(run_inference).parameters
+    return {key: value for key, value in kwargs.items() if key in supported}
+
+
 def run_inference_wrapper(
     fasta_file: Path,
     *,
@@ -76,23 +120,25 @@ def run_inference_wrapper(
 ):
 
     result = run_inference(
-        fasta_file=fasta_file,
-        output_dir=output_dir,
-        use_esm_embeddings=use_esm_embeddings,
-        use_msa_server=use_msa_server,
-        msa_server_url=msa_server_url,
-        msa_directory=msa_directory,
-        constraint_path=constraint_path,
-        use_templates_server=use_templates_server,
-        template_hits_path=template_hits_path,
-        recycle_msa_subsample=recycle_msa_subsample,
-        num_trunk_recycles=num_trunk_recycles,
-        num_diffn_timesteps=num_diffn_timesteps,
-        num_diffn_samples=num_diffn_samples,
-        num_trunk_samples=num_trunk_samples,
-        seed=seed,
-        device=normalize_device(device),
-        low_memory=low_memory,
+        **build_run_inference_kwargs(
+            fasta_file,
+            output_dir=output_dir,
+            use_esm_embeddings=use_esm_embeddings,
+            use_msa_server=use_msa_server,
+            msa_server_url=msa_server_url,
+            msa_directory=msa_directory,
+            constraint_path=constraint_path,
+            use_templates_server=use_templates_server,
+            template_hits_path=template_hits_path,
+            recycle_msa_subsample=recycle_msa_subsample,
+            num_trunk_recycles=num_trunk_recycles,
+            num_diffn_timesteps=num_diffn_timesteps,
+            num_diffn_samples=num_diffn_samples,
+            num_trunk_samples=num_trunk_samples,
+            seed=seed,
+            device=device,
+            low_memory=low_memory,
+        )
     )
 
     np.save(f"{output_dir}/pae_scores.npy", result.pae)

@@ -150,6 +150,8 @@ def generate_protenix_command(
         str(output_dir),
         "--sample_diffusion.N_sample",
         str(number_of_models),
+        "--sample_diffusion.N_step",
+        "5",
         "--model.N_cycle",
         str(num_recycles),
         "--seeds",

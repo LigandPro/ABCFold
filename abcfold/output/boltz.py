@@ -275,7 +275,9 @@ class BoltzOutput:
 
         """
         cif_file.relabel_chains(
-            self.yaml_input_obj.chain_ids, self.yaml_input_obj.id_links
+            self.yaml_input_obj.chain_ids,
+            self.yaml_input_obj.id_links,
+            persist=False,
         )
         return cif_file
 

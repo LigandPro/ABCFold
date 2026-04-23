@@ -133,8 +133,7 @@ class ChaiOutput:
                 if file_type == FileTypes.NPZ.value:
                     file_ = NpzFile(str(output))
                 elif file_type == FileTypes.CIF.value:
-                    cif_obj = CifFile(str(output), self.input_params)
-                    file_ = self.update_chain_labels(cif_obj)
+                    file_ = CifFile(str(output), self.input_params)
                 elif file_type == FileTypes.NPY.value:
                     file_ = NpyFile(str(output))
                 else:
@@ -173,9 +172,7 @@ class ChaiOutput:
                     elif isinstance(file_, CifFile):
                         if file_.pathway.stem.startswith("pred.model"):
                             file_.name = f"Chai-1_{seed}_{model_number}"
-                            # Chai cif not recognised by pae-viewer, so we load and save
-                            file_.to_file(file_.pathway)
-                            intermediate_dict["cif"] = file_
+                            intermediate_dict["cif"] = self.update_chain_labels(file_)
                             new_pae_name = f"pae_scores_model_{model_number}.npy"
                             new_pae_path = (
                                 file_.pathway.parent / new_pae_name
@@ -253,6 +250,5 @@ class ChaiOutput:
 
         """
 
-        cif_file.relabel_chains(self.input_fasta.chain_ids)
-        cif_file.to_file(cif_file.pathway)
-        return CifFile(cif_file.pathway, self.input_params)
+        cif_file.relabel_chains(self.input_fasta.chain_ids, persist=False)
+        return cif_file

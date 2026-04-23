@@ -64,7 +64,8 @@ def check_af3_install(
         stderr=subprocess.PIPE,
         text=True,
     )
-    if result.returncode != 0:
+    help_banner = "AlphaFold 3 structure prediction script."
+    if result.returncode != 0 and help_banner not in result.stdout:
         image = config.get("af3_docker_env", ALPHAFAST_IMAGE)
         logger.error(
             "AlphaFast backend is not available, please install or pull %s",

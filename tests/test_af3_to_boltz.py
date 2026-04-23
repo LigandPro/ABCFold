@@ -23,7 +23,10 @@ def test_af3_to_boltz(test_data):
         assert yaml_string_multi[7] == f"{DELIM}{DELIM}sequence: YANEN"
         assert yaml_string_multi[8] == f"{DELIM}- ligand:"
         assert yaml_string_multi[9] == f"{DELIM}{DELIM}id: [D, E]"
-        assert yaml_string_multi[10] == f'{DELIM}{DELIM}ccd: "ATP"'
+        assert (
+            yaml_string_multi[10]
+            == f'{DELIM}{DELIM}smiles: "c1nc(c2c(n1)n(cn2)C3C(C(C(O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N"'
+        )
         assert yaml_string_multi[11] == f"{DELIM}- ligand:"
         assert yaml_string_multi[12] == f"{DELIM}{DELIM}id: F"
         assert (
@@ -63,7 +66,10 @@ ELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQ
         assert yaml_string_multi[7] == f"{DELIM}{DELIM}sequence: YANEN"
         assert yaml_string_multi[8] == f"{DELIM}- ligand:"
         assert yaml_string_multi[9] == f"{DELIM}{DELIM}id: [D, E]"
-        assert yaml_string_multi[10] == f'{DELIM}{DELIM}ccd: "ATP"'
+        assert (
+            yaml_string_multi[10]
+            == f'{DELIM}{DELIM}smiles: "c1nc(c2c(n1)n(cn2)C3C(C(C(O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N"'
+        )
         assert yaml_string_multi[11] == f"{DELIM}- ligand:"
         assert yaml_string_multi[12] == f"{DELIM}{DELIM}id: F"
         assert (
@@ -169,7 +175,10 @@ def test_extra_ligand_ids():
         assert yaml_string[15] == f"{DELIM}{DELIM}sequence: DVLMIQTPLSLPVS"
         assert yaml_string[16] == f"{DELIM}- ligand:"
         assert yaml_string[17] == f"{DELIM}{DELIM}id: [F]"
-        assert yaml_string[18] == f'{DELIM}{DELIM}ccd: "ATP"'
+        assert (
+            yaml_string[18]
+            == f'{DELIM}{DELIM}smiles: "c1nc(c2c(n1)n(cn2)C3C(C(C(O3)COP(=O)(O)OP(=O)(O)OP(=O)(O)O)O)O)N"'
+        )
         assert yaml_string[19] == f"{DELIM}- ligand:"
         assert yaml_string[20] == f"{DELIM}{DELIM}id: I"
         assert yaml_string[21] == f'{DELIM}{DELIM}ccd: "NAG"'

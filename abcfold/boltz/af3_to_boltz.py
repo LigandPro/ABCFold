@@ -5,6 +5,8 @@ import string
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+import requests
+
 DELIM = "      "
 
 logger = logging.getLogger("logger")
@@ -34,6 +36,24 @@ class BoltzYaml:
     @property
     def id_links(self) -> Dict[Union[str, int], list]:
         return self.__id_links
+
+    def ccd_to_smiles(self, ccd_id: str):
+        assert isinstance(ccd_id, str), "CCD ID must be a string"
+        logger.info("Attempting to retrieve SMILES for CCD %s", ccd_id)
+        try:
+            response = requests.get(
+                f"https://data.rcsb.org/rest/v1/core/chemcomp/{ccd_id}",
+                timeout=30,
+            )
+            if response.status_code == 200:
+                descriptor = response.json().get("rcsb_chem_comp_descriptor", {})
+                ccd_data = descriptor.get("SMILES") or descriptor.get("SMILES_stereo")
+                if ccd_data:
+                    logger.info("SMILES retrieved from RCSB: %s", ccd_data)
+                    return ccd_data
+        except requests.RequestException as exc:
+            logger.warning("RCSB lookup failed for %s: %s", ccd_id, exc)
+        return None
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
         """
@@ -72,7 +92,7 @@ class BoltzYaml:
         self.get_ids(json_dict["sequences"])
 
         self.yaml_string = ""
-        bonded_atom_string = ""
+        constraints_string = ""
 
         self.yaml_string += self.add_version_number("1")
         for key, value in json_dict.items():
@@ -92,13 +112,79 @@ class BoltzYaml:
                             sequence_dict["ligand"]
                         )
             if key == "bondedAtomPairs" and isinstance(value, list):
+                constraints_string += self.bonded_atom_pairs_to_yaml(value)
+            if key == "constraints" and isinstance(value, list):
+                constraints_string += self.constraints_to_yaml(value)
 
-                bonded_atom_string += self.bonded_atom_pairs_to_yaml(value)
-                if "constraints" not in self.yaml_string and bonded_atom_string:
-                    self.yaml_string += self.add_non_indented_string("constraints")
-                self.yaml_string += bonded_atom_string
+        if constraints_string:
+            self.yaml_string += self.add_non_indented_string("constraints")
+            self.yaml_string += constraints_string
 
         return self.yaml_string
+
+    def constraints_to_yaml(self, constraints: list) -> str:
+        yaml_string = ""
+        for constraint in constraints:
+            if "bond" in constraint:
+                yaml_string += self.bond_constraint_to_yaml(constraint["bond"])
+            elif "pocket" in constraint:
+                yaml_string += self.pocket_constraint_to_yaml(constraint["pocket"])
+            elif "contact" in constraint:
+                yaml_string += self.contact_constraint_to_yaml(constraint["contact"])
+        return yaml_string
+
+    def _yaml_scalar(self, value: Any) -> str:
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, str):
+            return value
+        return str(value)
+
+    def _yaml_flow_list(self, values: list) -> str:
+        parts = []
+        for value in values:
+            if isinstance(value, (list, tuple)):
+                parts.append(self._yaml_flow_list(list(value)))
+            else:
+                parts.append(self._yaml_scalar(value))
+        return "[" + ", ".join(parts) + "]"
+
+    def _constraint_key_value(self, key: str, value: Any) -> str:
+        if isinstance(value, (list, tuple)):
+            rendered = self._yaml_flow_list(list(value))
+        else:
+            rendered = self._yaml_scalar(value)
+        return f"{DELIM}{DELIM}{key}: {rendered}\n"
+
+    def bond_constraint_to_yaml(self, bond_dict: dict) -> str:
+        yaml_string = self.add_title("bond")
+        yaml_string += self._constraint_key_value("atom1", bond_dict["atom1"])
+        yaml_string += self._constraint_key_value("atom2", bond_dict["atom2"])
+        return yaml_string
+
+    def pocket_constraint_to_yaml(self, pocket_dict: dict) -> str:
+        yaml_string = self.add_title("pocket")
+        yaml_string += self._constraint_key_value("binder", pocket_dict["binder"])
+        yaml_string += self._constraint_key_value("contacts", pocket_dict["contacts"])
+        if "max_distance" in pocket_dict:
+            yaml_string += self._constraint_key_value(
+                "max_distance", pocket_dict["max_distance"]
+            )
+        if "force" in pocket_dict:
+            yaml_string += self._constraint_key_value("force", pocket_dict["force"])
+        return yaml_string
+
+    def contact_constraint_to_yaml(self, contact_dict: dict) -> str:
+        yaml_string = self.add_title("contact")
+        yaml_string += self._constraint_key_value("token1", contact_dict["token1"])
+        yaml_string += self._constraint_key_value("token2", contact_dict["token2"])
+        if "max_distance" in contact_dict:
+            yaml_string += self._constraint_key_value(
+                "max_distance", contact_dict["max_distance"]
+            )
+        if "force" in contact_dict:
+            yaml_string += self._constraint_key_value("force", contact_dict["force"])
+        return yaml_string
 
     def bonded_atom_pairs_to_yaml(self, bonded_atom_pairs: list):
         yaml_string = ""
@@ -277,13 +363,23 @@ class BoltzYaml:
         if "smiles" in ligand_dict:
             yaml_string += self.add_key_and_value("smiles", ligand_dict["smiles"])
         elif "ccdCodes" in ligand_dict:
-            if isinstance(ligand_dict["ccdCodes"], str):
-                yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"])
+            ccd_codes = (
+                [ligand_dict["ccdCodes"]]
+                if isinstance(ligand_dict["ccdCodes"], str)
+                else ligand_dict["ccdCodes"]
+            )
+            if linked_id is not None:
+                self.__add_linked_ids(linked_id, ligand_dict["id"])
+            if linked_id is not None and len(ccd_codes) == 1:
+                yaml_string += self.add_key_and_value("ccd", ccd_codes[0])
+                return yaml_string
+            if len(ccd_codes) == 1:
+                smile = self.ccd_to_smiles(ccd_codes[0])
+                if smile:
+                    yaml_string += self.add_key_and_value("smiles", smile)
+                else:
+                    yaml_string += self.add_key_and_value("ccd", ccd_codes[0])
             elif isinstance(ligand_dict["ccdCodes"], list):
-                if linked_id is not None:
-
-                    self.__add_linked_ids(linked_id, ligand_dict["id"])
-
                 yaml_string += self.add_key_and_value("ccd", ligand_dict["ccdCodes"][0])
 
                 yaml_string += self.add_ligand_information(

@@ -94,8 +94,10 @@ class ChaiFasta:
                 )
                 continue
             if (
-                fasta_data[bonded_pair[0][0]] == "LIGAND_PLACEHOLDER"
-                or fasta_data[bonded_pair[1][0]] == "LIAGND_PLACEHOLDER"
+                fasta_data[bonded_pair[0][0]]
+                in {"LIGAND_PLACEHOLDER", "SMILES_PLACEHOLDER"}
+                or fasta_data[bonded_pair[1][0]]
+                in {"LIAGND_PLACEHOLDER", "SMILES_PLACEHOLDER"}
             ):
                 logger.warning(
                     "SMILES Ligand bonded paris are not implemented yet, please \
@@ -297,53 +299,60 @@ check back for updates"
         logger.info(f"CCD code found in input: {ccd_id}")
         logger.info("Chai-1 currently only supports SMILES strings for ligands")
         logger.info("Attempting to retrieve SMILES from CCD")
+        try:
+            response = requests.get(
+                f"https://data.rcsb.org/rest/v1/core/chemcomp/{ccd_id}",
+                timeout=30,
+            )
+            if response.status_code == 200:
+                descriptor = response.json().get("rcsb_chem_comp_descriptor", {})
+                ccd_data = descriptor.get("SMILES") or descriptor.get("SMILES_stereo")
+                if ccd_data:
+                    logger.info(f"SMILES retrieved from RCSB: {ccd_data}")
+                    return ccd_data
+        except requests.RequestException as exc:
+            logger.warning("RCSB lookup failed for %s: %s", ccd_id, exc)
+
         url = f"http://cactus.nci.nih.gov/chemical/structure/{ccd_id}/smiles"
-        response = requests.get(url)
+        try:
+            response = requests.get(url, timeout=30)
+        except requests.RequestException as exc:
+            logger.warning("Cactus lookup failed for %s: %s", ccd_id, exc)
+            return None
         if response.status_code == 200:
             ccd_data = response.text
-            logger.info(f"SMILES retrieved: {ccd_data}")
+            logger.info(f"SMILES retrieved from Cactus: {ccd_data}")
             return ccd_data
-        else:
-            logger.warning(f"Could not retrieve SMILES for {ccd_id}")
-            return None
+
+        logger.warning(f"Could not retrieve SMILES for {ccd_id}")
+        return None
 
     def add_ligand(self, seq: dict, fasta_data: dict):
         lig_id = seq["ligand"]["id"]
         ligand_str = ""
         if "ccdCodes" in seq["ligand"]:
-            if isinstance(lig_id, str):
-                lig_id = [lig_id]
-
-            for lig in lig_id:
-                if isinstance(seq["ligand"]["ccdCodes"], str):
-                    ccd_codes = [seq["ligand"]["ccdCodes"]]
+            lig_ids = [lig_id] if isinstance(lig_id, str) else lig_id
+            ccd_codes = (
+                [seq["ligand"]["ccdCodes"]]
+                if isinstance(seq["ligand"]["ccdCodes"], str)
+                else seq["ligand"]["ccdCodes"]
+            )
+            if len(ccd_codes) == 1:
+                smile = self.ccd_to_smiles(ccd_codes[0])
+                if smile:
+                    for lig in lig_ids:
+                        ligand_str += f">ligand|{lig}\n{smile}\n"
+                        fasta_data[lig] = "SMILES_PLACEHOLDER"
                 else:
-                    ccd_codes = seq["ligand"]["ccdCodes"]
-                ligand_str += (
-                    f">protein|{lig}\n{''.join([f'({ccd})' for ccd in ccd_codes])}\n"
-                )
-                fasta_data[lig] = "CCD-CODE_PLACEHOLDER"
-
-            # if isinstance(lig_id, list):
-            #     for i in lig_id:
-            #         ccd_code = (
-            #             seq["ligand"]["ccdCodes"][0]
-            #             if isinstance(seq["ligand"]["ccdCodes"], list)
-            #             else seq["ligand"]["ccdCodes"]
-            #         )
-
-            #         smile = self.ccd_to_smiles(ccd_code)
-            #         if smile:
-            #             ligand_str += f">ligand|{i}\n{smile}\n"
-            # else:
-            #     ccd_code = (
-            #         seq["ligand"]["ccdCodes"][0]
-            #         if isinstance(seq["ligand"]["ccdCodes"], list)
-            #         else seq["ligand"]["ccdCodes"]
-            #     )
-            #     smile = self.ccd_to_smiles(ccd_code)
-            #     if smile:
-            #         ligand_str = f">ligand|{lig_id}\n{smile}\n"
+                    for lig in lig_ids:
+                        ligand_str += f">protein|{lig}\n({ccd_codes[0]})\n"
+                        fasta_data[lig] = "CCD-CODE_PLACEHOLDER"
+            else:
+                for lig in lig_ids:
+                    ligand_str += (
+                        f">protein|{lig}\n{''.join([f'({ccd})' for ccd in ccd_codes])}\n"
+                    )
+                    fasta_data[lig] = "CCD-CODE_PLACEHOLDER"
         if "smiles" in seq["ligand"]:
             if isinstance(lig_id, list):
                 for i in seq["ligand"]["id"]:

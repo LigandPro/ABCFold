@@ -1,6 +1,9 @@
+import json
+import shutil
 import tempfile
 from pathlib import Path
 
+from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import CifFile, NpyFile, NpzFile
 from abcfold.output.utils import Af3Pae
 
@@ -57,3 +60,22 @@ def test_chai_pae_to_af3_pae(output_objs):
         assert len(pae.scores["token_res_ids"]) == len(
             comparison_af3_output["token_res_ids"]
         )
+
+
+def test_process_chai_output_does_not_rewrite_native_cif(test_data):
+    source_dir = Path(test_data.test_chai1_6BJ9_seed_1_)
+    source_cif = source_dir / "pred.model_idx_0.cif"
+    original_text = source_cif.read_text()
+
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        temp_dir = Path(temp_dir_str)
+        temp_cdir = temp_dir / source_dir.name
+        shutil.copytree(source_dir, temp_cdir)
+
+        with open(Path(test_data.test_alphafold3_6BJ9_) / "6bj9_data.json", "r") as f:
+            input_params = json.load(f)
+
+        ChaiOutput([temp_cdir], input_params, "6BJ9", test_data.config_dict)
+
+        processed_cif = temp_cdir / "pred.model_idx_0.cif"
+        assert processed_cif.read_text() == original_text
