@@ -9,8 +9,6 @@ import re
 import shutil
 from pathlib import Path
 
-import numpy as np
-
 BOLTZ_RE = re.compile(r"^(?:abc_)?(?P<id>.+)_seed-(?P<seed>\d+)_model_(?P<model>\d+)\.cif$")
 CHAI_RE = re.compile(r"^pred\.model_idx_(?P<model>\d+)\.cif$")
 SEED_DIR_RE = re.compile(r"^chai_output_seed-(?P<seed>\d+)$")
@@ -24,6 +22,8 @@ def json_str(value) -> str:
 
 
 def scalar(value):
+    import numpy as np
+
     if isinstance(value, np.ndarray):
         if value.shape == ():
             return value.item()
@@ -57,8 +57,12 @@ def prepare_dir(root: Path) -> Path:
 
 def finalize_dir(root: Path, tmp: Path) -> Path:
     final = root / "rnp_calc"
-    safe_unlink(final)
+    previous = root / "rnp_calc.__previous__"
+    safe_unlink(previous)
+    if final.exists() or final.is_symlink():
+        final.rename(previous)
     tmp.rename(final)
+    safe_unlink(previous)
     all_scores_link = root / "all_scores.csv"
     safe_unlink(all_scores_link)
     all_scores_link.symlink_to("rnp_calc/all_scores.csv")
@@ -210,7 +214,9 @@ def export_boltz(root: Path) -> tuple[int, int]:
     return case_count, pred_count
 
 
-def export_chai(root: Path) -> tuple[int, int]:
+def export_chai(root: Path, min_predictions_per_case: int = 0) -> tuple[int, int]:
+    import numpy as np
+
     outputs = root / "outputs"
     tmp = prepare_dir(root)
     compat_outputs = tmp / "outputs"
@@ -234,6 +240,7 @@ def export_chai(root: Path) -> tuple[int, int]:
         compat_backend.mkdir()
 
         case_rows: list[dict] = []
+        case_summary_rows: list[dict] = []
         case_seen = False
         for seed_dir in sorted(p for p in backend_dir.iterdir() if p.is_dir() and p.name.startswith("chai_output_seed-")):
             seed_match = SEED_DIR_RE.match(seed_dir.name)
@@ -270,17 +277,18 @@ def export_chai(root: Path) -> tuple[int, int]:
                     "source_cif_path": os.path.relpath(cif_path, root),
                     "source_score_path": os.path.relpath(score_path, root),
                 }
-                summary_rows.append(row)
+                case_summary_rows.append(row)
                 case_rows.append({
                     "seed": seed,
                     "model": model_idx,
                     "confidence_score": confidence,
                     "cif_path": os.path.relpath(cif_path, compat_backend),
                 })
-                pred_count += 1
                 case_seen = True
-        if case_seen:
+        if case_seen and len(case_rows) >= min_predictions_per_case:
             case_count += 1
+            pred_count += len(case_rows)
+            summary_rows.extend(case_summary_rows)
             case_rows.sort(key=score_sort_key, reverse=True)
             write_simple_scores(compat_backend / "all_scores.csv", case_rows)
             best = case_rows[0]
@@ -291,6 +299,8 @@ def export_chai(root: Path) -> tuple[int, int]:
                 safe_symlink(log_src, compat_backend / "timing.log")
             else:
                 touch_summary_log(compat_backend / "timing.log", "No per-case timing log found.\n")
+        else:
+            safe_unlink(case_compat)
 
     summary_rows.sort(key=lambda r: (r["id"], int(r["seed"]), int(r["model_idx"])))
     write_rows(tmp / "all_scores.csv", summary_rows)
@@ -520,12 +530,18 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=["alphafast", "boltz", "chai", "protenix"], required=True)
     parser.add_argument("--root", required=True, type=Path)
+    parser.add_argument(
+        "--min-predictions-per-case",
+        type=int,
+        default=0,
+        help="Skip cases with fewer complete predictions. Mainly useful for live Chai exports.",
+    )
     args = parser.parse_args()
     root = args.root.resolve()
     if args.backend == "boltz":
         case_count, pred_count = export_boltz(root)
     elif args.backend == "chai":
-        case_count, pred_count = export_chai(root)
+        case_count, pred_count = export_chai(root, args.min_predictions_per_case)
     elif args.backend == "alphafast":
         case_count, pred_count = export_alphafast(root)
     else:
