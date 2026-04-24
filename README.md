@@ -192,6 +192,13 @@ Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 inp
 > [!WARNING]
 > These scripts will only modify the input JSON files, I.E. they will NOT run AlphaFold3, Boltz, Chai-1, OpenFold3 and Protenix.
 
+### Scoring existing Boltz complexes and poses
+
+ABCFold also includes a Boltz2 utility for scoring existing complex coordinates
+or fixed-receptor ligand poses without running Boltz diffusion sampling. See
+[Boltz Existing-Structure Scoring](docs/boltz_existing_scoring.md) for
+confidence scoring, affinity scoring, and `--reuse_trunk` examples.
+
 ### Adding MMseqs2 MSAs and templates
 
 To add MMseqs2 MSAs and templates to the AlphaFold3 input JSON, you can use the `mmseqs2msa`:
