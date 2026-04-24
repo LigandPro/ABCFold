@@ -238,6 +238,11 @@ def chai_argparse_util(parser):
         action="store_true",
         help="Run Chai-1",
     )
+    parser.add_argument(
+        "--chai_fast",
+        action="store_true",
+        help=dedent("[optional] Run Chai-1 through the persistent fast worker."),
+    )
     return parser
 
 
