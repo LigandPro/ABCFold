@@ -81,6 +81,7 @@ def run_protenix(
                 if test:
                     logger.info("Skipping Protenix backend execution in test mode")
                     continue
+                assert env is not None
                 env.run(cmd)
             except subprocess.CalledProcessError as e:
                 stderr = e.stderr or ""
@@ -157,7 +158,7 @@ def generate_protenix_command(
         "--use_msa",
         str(use_msa),
         "--need_atom_confidence",
-        "True"
+        "True",
     ]
 
 
