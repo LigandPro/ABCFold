@@ -16,7 +16,6 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
-
 SUMMARY_KEYS = [
     "confidence_score",
     "ptm",
@@ -157,18 +156,13 @@ def _import_boltz() -> dict[str, Any]:
     import torch
     from boltz.data import const
     from boltz.data.feature.featurizerv2 import Boltz2Featurizer
-    from boltz.data.mol import load_canonicals, load_molecules
     from boltz.data.module.inferencev2 import collate
+    from boltz.data.mol import load_canonicals, load_molecules
     from boltz.data.parse.schema import parse_boltz_schema
     from boltz.data.tokenize.boltz2 import Boltz2Tokenizer
     from boltz.data.types import Coords, Input
-    from boltz.main import (
-        Boltz2DiffusionParams,
-        BoltzSteeringParams,
-        MSAModuleArgs,
-        PairformerArgsV2,
-        download_boltz2,
-    )
+    from boltz.main import (Boltz2DiffusionParams, BoltzSteeringParams,
+                            MSAModuleArgs, PairformerArgsV2, download_boltz2)
     from boltz.model.models.boltz2 import Boltz2
 
     return {
@@ -1042,10 +1036,11 @@ def score_existing_complexes(args: argparse.Namespace) -> list[dict[str, Any]]:
     with torch.inference_mode():
         for input_path in args.structures:
             input_path = input_path.expanduser().resolve()
+            feature_inputs: list[Path | LigandPose]
             if receptor_structure is None:
-                feature_inputs: list[Path | LigandPose] = [input_path]
+                feature_inputs = [input_path]
             else:
-                feature_inputs = _read_sdf_poses(input_path)
+                feature_inputs = list(_read_sdf_poses(input_path))
 
             for feature_input in feature_inputs:
                 source_path = (
