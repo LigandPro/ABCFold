@@ -199,6 +199,14 @@ or fixed-receptor ligand poses without running Boltz diffusion sampling. See
 [Boltz Existing-Structure Scoring](docs/boltz_existing_scoring.md) for
 confidence scoring, affinity scoring, and `--reuse_trunk` examples.
 
+### Docking ligand SMILES into a crystal pocket with Boltz
+
+ABCFold also includes a Boltz-native docking wrapper for the case where a
+crystal receptor and pocket are known, but the ligand pose should be generated
+from SMILES by Boltz. See
+[Boltz Crystal-Pocket Docking](docs/boltz_crystal_docking.md) for crystal
+template, pocket constraint, reference-ligand, and affinity examples.
+
 ### Adding MMseqs2 MSAs and templates
 
 To add MMseqs2 MSAs and templates to the AlphaFold3 input JSON, you can use the `mmseqs2msa`:
