@@ -12,7 +12,7 @@ toward the crystal template and the ligand is guided into the pocket.
 ## Explicit Pocket Residues
 
 ```bash
-python -m abcfold.boltz.dock_crystal \
+abcfold-dock-crystal \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --protein_chain A \
@@ -34,7 +34,7 @@ If the receptor PDB still contains a reference ligand chain, the wrapper can
 infer pocket residues by distance:
 
 ```bash
-python -m abcfold.boltz.dock_crystal \
+abcfold-dock-crystal \
   crystal_complex.pdb \
   "CCOc1ccc(...)" \
   --protein_chain A \
@@ -61,7 +61,7 @@ These settings keep the protein close to the crystal receptor and steer the
 ligand into the pocket. They can be relaxed:
 
 ```bash
-python -m abcfold.boltz.dock_crystal \
+abcfold-dock-crystal \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --pocket_residue A:145 \
@@ -86,7 +86,7 @@ default docking settings use:
 For a quick dry run that only writes the Boltz YAML and command:
 
 ```bash
-python -m abcfold.boltz.dock_crystal \
+abcfold-dock-crystal \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --pocket_residue A:145 \
@@ -101,3 +101,9 @@ The output directory contains:
 
 Use `--use_msa_server` to let Boltz fetch MSAs. Without it, the wrapper writes
 `msa: empty` for speed and offline execution.
+
+For development checkouts, the equivalent module command is:
+
+```bash
+python -m abcfold.boltz.dock_crystal --help
+```

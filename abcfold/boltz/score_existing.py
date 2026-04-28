@@ -52,7 +52,7 @@ def _safe_id(path: Path) -> str:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="python -m abcfold.boltz.score_existing",
+        prog="abcfold-score-existing",
         description="Score existing PDB/mmCIF complexes with Boltz2 confidence.",
     )
     parser.add_argument(

@@ -42,7 +42,7 @@ class DockingInput:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="python -m abcfold.boltz.dock_crystal",
+        prog="abcfold-dock-crystal",
         description=(
             "Dock a ligand SMILES with Boltz while constraining the protein to "
             "a crystal receptor template and the ligand to a pocket."

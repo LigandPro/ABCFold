@@ -41,7 +41,7 @@ Use this mode when each input file already contains the protein and ligand
 chains in one `.pdb`, `.cif`, or `.mmcif` file.
 
 ```bash
-python -m abcfold.boltz.score_existing \
+abcfold-score-existing \
   complex_1.cif complex_2.cif \
   --out_dir boltz_existing_scores \
   --cache ~/.boltz \
@@ -52,7 +52,7 @@ python -m abcfold.boltz.score_existing \
 For affinity estimates on the same coordinates:
 
 ```bash
-python -m abcfold.boltz.score_existing \
+abcfold-score-existing \
   complex_1.cif complex_2.cif \
   --out_dir boltz_existing_scores_affinity \
   --cache ~/.boltz \
@@ -71,7 +71,7 @@ poses are stored as SDF files. This is the format used by DEKOIS2/Matcha-style
 and HEDGEHOG-style pose scoring.
 
 ```bash
-python -m abcfold.boltz.score_existing \
+abcfold-score-existing \
   poses.sdf \
   --receptor receptor.pdb \
   --out_dir boltz_pose_scores \
@@ -83,7 +83,7 @@ python -m abcfold.boltz.score_existing \
 For confidence plus affinity:
 
 ```bash
-python -m abcfold.boltz.score_existing \
+abcfold-score-existing \
   poses.sdf \
   --receptor receptor.pdb \
   --out_dir boltz_pose_scores_affinity \
@@ -105,7 +105,7 @@ topology, for example multiple poses of the same ligand against the same
 protein.
 
 ```bash
-python -m abcfold.boltz.score_existing \
+abcfold-score-existing \
   same_ligand_poses.sdf \
   --receptor receptor.pdb \
   --out_dir boltz_pose_scores_reuse \
@@ -156,3 +156,9 @@ For `--affinity`, it must also contain:
 - `boltz2_aff.ckpt`
 
 Omit `--no_download` if the cache should be populated automatically by Boltz.
+
+For development checkouts, the equivalent module command is:
+
+```bash
+python -m abcfold.boltz.score_existing --help
+```
