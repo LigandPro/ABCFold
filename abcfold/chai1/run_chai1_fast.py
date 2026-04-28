@@ -9,9 +9,22 @@ from typing import Iterable, Union
 
 from abcfold.chai1.af3_to_chai import ChaiFasta
 from abcfold.chai1.check_install import ensure_chai_env
-from abcfold.chai1.run_chai1 import normalize_device
 
 logger = logging.getLogger("logger")
+
+
+def normalize_device(device: str | None) -> str | None:
+    if device is None:
+        return None
+    if device == "cpu":
+        return "cpu"
+    if device == "all":
+        return "cuda"
+    if "," in device:
+        device = device.split(",")[0]
+    if device.isdigit():
+        return f"cuda:{device}"
+    return device
 
 
 def normalize_devices(gpus: str | None) -> list[str | None]:
