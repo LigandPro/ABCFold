@@ -41,12 +41,11 @@ def test_boltz_crystal_mode_argparse_util():
     assert args.boltz_num_workers == 2
 
 
-def test_chai_fast_argparse_util():
+def test_chai_argparse_util():
     parser = argparse.ArgumentParser()
     parser = chai_argparse_util(parser)
-    args = parser.parse_args(["--chai1", "--chai_fast"])
+    args = parser.parse_args(["--chai1"])
     assert args.chai1
-    assert args.chai_fast
 
 
 def test_custom_template_argpase_util():
