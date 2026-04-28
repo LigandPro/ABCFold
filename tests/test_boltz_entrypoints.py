@@ -7,5 +7,5 @@ def test_boltz_console_entrypoints_are_registered():
         for entry_point in entry_points(group="console_scripts")
     }
 
-    assert scripts["abcfold-score-existing"] == "abcfold.boltz.score_existing:main"
-    assert scripts["abcfold-dock-crystal"] == "abcfold.boltz.dock_crystal:main"
+    assert scripts["boltz-score-existing"] == "abcfold.boltz.score_existing:main"
+    assert scripts["boltz-dock-crystal"] == "abcfold.boltz.dock_crystal:main"

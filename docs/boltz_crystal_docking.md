@@ -9,10 +9,24 @@ This is a Boltz-native docking/co-folding mode. It is not a classical force
 field minimizer: Boltz still runs diffusion sampling, but the protein is guided
 toward the crystal template and the ligand is guided into the pocket.
 
+## Command
+
+Installed ABCFold environments expose this as:
+
+```bash
+boltz-dock-crystal --help
+```
+
+The development-module equivalent is:
+
+```bash
+python -m abcfold.boltz.dock_crystal --help
+```
+
 ## Explicit Pocket Residues
 
 ```bash
-abcfold-dock-crystal \
+boltz-dock-crystal \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --protein_chain A \
@@ -34,7 +48,7 @@ If the receptor PDB still contains a reference ligand chain, the wrapper can
 infer pocket residues by distance:
 
 ```bash
-abcfold-dock-crystal \
+boltz-dock-crystal \
   crystal_complex.pdb \
   "CCOc1ccc(...)" \
   --protein_chain A \
@@ -61,7 +75,7 @@ These settings keep the protein close to the crystal receptor and steer the
 ligand into the pocket. They can be relaxed:
 
 ```bash
-abcfold-dock-crystal \
+boltz-dock-crystal \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --pocket_residue A:145 \
@@ -86,7 +100,7 @@ default docking settings use:
 For a quick dry run that only writes the Boltz YAML and command:
 
 ```bash
-abcfold-dock-crystal \
+boltz-dock-crystal \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --pocket_residue A:145 \
@@ -101,9 +115,3 @@ The output directory contains:
 
 Use `--use_msa_server` to let Boltz fetch MSAs. Without it, the wrapper writes
 `msa: empty` for speed and offline execution.
-
-For development checkouts, the equivalent module command is:
-
-```bash
-python -m abcfold.boltz.dock_crystal --help
-```

@@ -199,7 +199,13 @@ or fixed-receptor ligand poses without running Boltz diffusion sampling. See
 [Boltz Existing-Structure Scoring](docs/boltz_existing_scoring.md) for
 confidence scoring, affinity scoring, and `--reuse_trunk` examples.
 
-After installation, use `abcfold-score-existing` directly. The module form
+After installation, use `boltz-score-existing` directly:
+
+```bash
+boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+```
+
+The module form
 `python -m abcfold.boltz.score_existing` remains available for development
 checkouts.
 
@@ -211,7 +217,13 @@ from SMILES by Boltz. See
 [Boltz Crystal-Pocket Docking](docs/boltz_crystal_docking.md) for crystal
 template, pocket constraint, reference-ligand, and affinity examples.
 
-After installation, use `abcfold-dock-crystal` directly. The module form
+After installation, use `boltz-dock-crystal` directly:
+
+```bash
+boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+```
+
+The module form
 `python -m abcfold.boltz.dock_crystal` remains available for development
 checkouts.
 
