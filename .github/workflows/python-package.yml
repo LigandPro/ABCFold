@@ -20,7 +20,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -31,9 +31,11 @@ jobs:
         python -m pip install .
     - name: Run pre-commit hooks
       run: |
-        git fetch origin main
-        BASE_REF="$(git merge-base HEAD origin/main)"
-        pre-commit run --from-ref "$BASE_REF" --to-ref HEAD
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          pre-commit run --from-ref origin/${{ github.base_ref }} --to-ref HEAD
+        else
+          pre-commit run --from-ref HEAD~1 --to-ref HEAD
+        fi
     - name: Test with coverage
       run: |
         coverage run --source=abcfold --module pytest --verbose tests && coverage report --show-missing

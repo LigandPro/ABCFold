@@ -192,6 +192,67 @@ Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 inp
 > [!WARNING]
 > These scripts will only modify the input JSON files, I.E. they will NOT run AlphaFold3, Boltz, Chai-1, OpenFold3 and Protenix.
 
+### Scoring existing Boltz complexes and poses
+
+ABCFold also includes a Boltz2 utility for scoring existing complex coordinates
+or fixed-receptor ligand poses without running Boltz diffusion sampling. See
+[Boltz Existing-Structure Scoring](docs/boltz_existing_scoring.md) for
+confidence scoring, affinity scoring, and `--reuse_trunk` examples.
+
+After installation, use `boltz-score-existing` directly:
+
+```bash
+boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+```
+
+For a checkout managed with `uv`, either run through `uv`:
+
+```bash
+uv run boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+```
+
+or activate the project environment first:
+
+```bash
+source .venv/bin/activate
+boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+```
+
+The module form
+`python -m abcfold.boltz.score_existing` remains available for development
+checkouts.
+
+### Docking ligand SMILES into a crystal pocket with Boltz
+
+ABCFold also includes a Boltz-native docking wrapper for the case where a
+crystal receptor and pocket are known, but the ligand pose should be generated
+from SMILES by Boltz. See
+[Boltz Crystal-Pocket Docking](docs/boltz_crystal_docking.md) for crystal
+template, pocket constraint, reference-ligand, and affinity examples.
+
+After installation, use `boltz-dock-crystal` directly:
+
+```bash
+boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+```
+
+For a checkout managed with `uv`, either run through `uv`:
+
+```bash
+uv run boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+```
+
+or activate the project environment first:
+
+```bash
+source .venv/bin/activate
+boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+```
+
+The module form
+`python -m abcfold.boltz.dock_crystal` remains available for development
+checkouts.
+
 ### Adding MMseqs2 MSAs and templates
 
 To add MMseqs2 MSAs and templates to the AlphaFold3 input JSON, you can use the `mmseqs2msa`:
