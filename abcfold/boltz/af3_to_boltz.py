@@ -11,6 +11,8 @@ DELIM = "      "
 
 logger = logging.getLogger("logger")
 
+CCD_SMILES_CACHE: dict[str, str | None] = {}
+
 
 class BoltzYaml:
     """
@@ -39,6 +41,10 @@ class BoltzYaml:
 
     def ccd_to_smiles(self, ccd_id: str):
         assert isinstance(ccd_id, str), "CCD ID must be a string"
+        cache_key = ccd_id.upper()
+        if cache_key in CCD_SMILES_CACHE:
+            return CCD_SMILES_CACHE[cache_key]
+
         logger.info("Attempting to retrieve SMILES for CCD %s", ccd_id)
         try:
             response = requests.get(
@@ -50,9 +56,11 @@ class BoltzYaml:
                 ccd_data = descriptor.get("SMILES") or descriptor.get("SMILES_stereo")
                 if ccd_data:
                     logger.info("SMILES retrieved from RCSB: %s", ccd_data)
+                    CCD_SMILES_CACHE[cache_key] = ccd_data
                     return ccd_data
         except requests.RequestException as exc:
             logger.warning("RCSB lookup failed for %s: %s", ccd_id, exc)
+        CCD_SMILES_CACHE[cache_key] = None
         return None
 
     def msa_to_file(self, msa: str, file_path: Union[str, Path]):
@@ -119,8 +127,28 @@ class BoltzYaml:
         if constraints_string:
             self.yaml_string += self.add_non_indented_string("constraints")
             self.yaml_string += constraints_string
+        templates = json_dict.get("templates")
+        if isinstance(templates, list) and templates:
+            self.yaml_string += self.add_non_indented_string("templates")
+            self.yaml_string += self.templates_to_yaml(templates)
 
         return self.yaml_string
+
+    def templates_to_yaml(self, templates: list) -> str:
+        yaml_string = ""
+        for template in templates:
+            if "cif" in template:
+                path_key = "cif"
+            elif "pdb" in template:
+                path_key = "pdb"
+            else:
+                raise ValueError("Boltz template must include either 'cif' or 'pdb'.")
+
+            yaml_string += f"{DELIM}- {path_key}: {template[path_key]}\n"
+            for key in ["chain_id", "template_id", "force", "threshold"]:
+                if key in template:
+                    yaml_string += self._constraint_key_value(key, template[key])
+        return yaml_string
 
     def constraints_to_yaml(self, constraints: list) -> str:
         yaml_string = ""

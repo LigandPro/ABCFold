@@ -140,7 +140,7 @@ def run(args, config, defaults, config_file):
                 args.custom_template,
                 args.custom_template_chain,
                 output_json=run_json,
-                to_file=True
+                to_file=True,
             )
 
         successful_runs = []
@@ -170,6 +170,7 @@ def run(args, config, defaults, config_file):
             af3_success = af3_output_dir is not None
 
             if af3_success:
+                assert af3_output_dir is not None
                 ao = AlphafoldOutput(af3_output_dir, input_params, name)
                 outputs.append(ao)
                 run_json = ao.input_json
@@ -186,6 +187,19 @@ def run(args, config, defaults, config_file):
                 num_recycles=args.num_recycles,
                 gpus=args.gpus,
                 config=rt_config,
+                boltz_mode=args.boltz_mode,
+                boltz_crystal_structure=args.boltz_crystal_structure,
+                boltz_ligand_chain=args.boltz_ligand_chain,
+                boltz_template_chain_id=args.boltz_template_chain_id,
+                boltz_template_id=args.boltz_template_id,
+                boltz_template_force=args.boltz_template_force,
+                boltz_template_threshold=args.boltz_template_threshold,
+                boltz_pocket_radius=args.boltz_pocket_radius,
+                boltz_pocket_max_distance=args.boltz_pocket_max_distance,
+                boltz_pocket_force=args.boltz_pocket_force,
+                preprocessing_threads=args.boltz_preprocessing_threads,
+                num_workers=args.boltz_num_workers,
+                max_parallel_samples=args.boltz_max_parallel_samples,
             )
 
             if boltz_success:
@@ -218,7 +232,7 @@ def run(args, config, defaults, config_file):
                 chai_output_dirs = list(args.output_dir.glob("chai_output*"))
                 co = ChaiOutput(
                     chai_output_dirs, input_params, name, rt_config, args.save_input
-                    )
+                )
                 outputs.append(co)
             successful_runs.append(chai_success)
 
@@ -231,7 +245,7 @@ def run(args, config, defaults, config_file):
                 save_input=args.save_input,
                 number_of_models=args.number_of_models,
                 num_recycles=args.num_recycles,
-                config=rt_config
+                config=rt_config,
             )
 
             if protenix_success:
@@ -256,7 +270,7 @@ def run(args, config, defaults, config_file):
                 number_of_models=args.number_of_models,
                 template_hits_path=template_hits_path,
                 input_ckpt=args.inference_ckpt_path,
-                config=rt_config
+                config=rt_config,
             )
 
             if openfold_success:
@@ -338,7 +352,7 @@ def run(args, config, defaults, config_file):
                             plddt,
                             pae,
                             score_file,
-                            args.output_dir
+                            args.output_dir,
                         )
                         boltz_models["models"].append(model_data)
 
@@ -427,11 +441,11 @@ def run(args, config, defaults, config_file):
                             protenix_models["models"].append(model_data)
 
         combined_models = (
-            alphafold_models["models"] +
-            boltz_models["models"] +
-            chai_models["models"] +
-            openfold_models["models"] +
-            protenix_models["models"]
+            alphafold_models["models"]
+            + boltz_models["models"]
+            + chai_models["models"]
+            + openfold_models["models"]
+            + protenix_models["models"]
         )
 
         # Make the output directory for the models
@@ -514,10 +528,8 @@ def run(args, config, defaults, config_file):
 
         if args.no_server:
             logger.info("Server disabled")
-            logger.info(
-                "Run 'python open_output.py' in the output directory to \
-view the output pages"
-            )
+            logger.info("Run 'python open_output.py' in the output directory to \
+view the output pages")
             return
 
         try:
@@ -545,13 +557,13 @@ def main():
 
     config_parser = argparse.ArgumentParser(add_help=False)
     config_parser.add_argument(
-        '--config-file',
+        "--config-file",
         type=str,
         default=str(Path.home() / ".abcfold_config.ini"),
-        help='Path to the config file. '
-        'If not provided, a config file will be created '
-        'at ~/.abcfold_config.ini with default values. '
-        'If a config file already exists at that location, it will be used.'
+        help="Path to the config file. "
+        "If not provided, a config file will be created "
+        "at ~/.abcfold_config.ini with default values. "
+        "If a config file already exists at that location, it will be used.",
     )
     config_args, remaining = config_parser.parse_known_args()
 

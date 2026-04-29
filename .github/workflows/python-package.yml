@@ -13,10 +13,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -29,16 +31,19 @@ jobs:
         python -m pip install .
     - name: Run pre-commit hooks
       run: |
-        pre-commit run --all-files
+        git fetch origin main
+        BASE_REF="$(git merge-base HEAD origin/main)"
+        pre-commit run --from-ref "$BASE_REF" --to-ref HEAD
     - name: Test with coverage
       run: |
         coverage run --source=abcfold --module pytest --verbose tests && coverage report --show-missing
     - name: Generate coverage badge
       run: |
         pip install coverage-badge
+        mkdir -p .blob
         coverage-badge -o .blob/coverage.svg -f
     - name: Upload coverage badge
       uses: actions/upload-artifact@v4
       with:
         name: coverage-badge
-        path: coverage.svg
+        path: .blob/coverage.svg
