@@ -205,6 +205,19 @@ After installation, use `boltz-score-existing` directly:
 boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
 ```
 
+For a checkout managed with `uv`, either run through `uv`:
+
+```bash
+uv run boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+```
+
+or activate the project environment first:
+
+```bash
+source .venv/bin/activate
+boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+```
+
 The module form
 `python -m abcfold.boltz.score_existing` remains available for development
 checkouts.
@@ -220,6 +233,19 @@ template, pocket constraint, reference-ligand, and affinity examples.
 After installation, use `boltz-dock-crystal` directly:
 
 ```bash
+boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+```
+
+For a checkout managed with `uv`, either run through `uv`:
+
+```bash
+uv run boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+```
+
+or activate the project environment first:
+
+```bash
+source .venv/bin/activate
 boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
 ```
 

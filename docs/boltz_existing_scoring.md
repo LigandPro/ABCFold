@@ -16,6 +16,19 @@ Installed ABCFold environments expose this as:
 boltz-score-existing --help
 ```
 
+For a local checkout managed with `uv`, use either:
+
+```bash
+uv run boltz-score-existing --help
+```
+
+or activate the environment before using the command directly:
+
+```bash
+source .venv/bin/activate
+boltz-score-existing --help
+```
+
 The development-module equivalent is:
 
 ```bash

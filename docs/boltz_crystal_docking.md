@@ -17,6 +17,19 @@ Installed ABCFold environments expose this as:
 boltz-dock-crystal --help
 ```
 
+For a local checkout managed with `uv`, use either:
+
+```bash
+uv run boltz-dock-crystal --help
+```
+
+or activate the environment before using the command directly:
+
+```bash
+source .venv/bin/activate
+boltz-dock-crystal --help
+```
+
 The development-module equivalent is:
 
 ```bash
