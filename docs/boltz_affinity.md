@@ -1,9 +1,9 @@
-# Boltz Existing-Structure Scoring
+# Boltz Affinity Scoring
 
-`abcfold.boltz.score_existing` scores already-built complexes with Boltz2
-without running Boltz diffusion sampling. Use it when protein or complex
-coordinates already exist and you want Boltz2 confidence and, optionally,
-Boltz2 affinity estimates for those coordinates.
+`boltz-affinity` scores already-built complexes with Boltz2 without running
+Boltz diffusion sampling. Use it when protein or complex coordinates already
+exist and you want Boltz2 confidence and, optionally, Boltz2 affinity estimates
+for those coordinates.
 
 This is a scoring utility, not a structure-generation or local-minimization
 tool. It does not move the protein or ligand.
@@ -13,20 +13,20 @@ tool. It does not move the protein or ligand.
 Installed ABCFold environments expose this as:
 
 ```bash
-boltz-score-existing --help
+boltz-affinity --help
 ```
 
 For a local checkout managed with `uv`, use either:
 
 ```bash
-uv run boltz-score-existing --help
+uv run boltz-affinity --help
 ```
 
 or activate the environment before using the command directly:
 
 ```bash
 source .venv/bin/activate
-boltz-score-existing --help
+boltz-affinity --help
 ```
 
 The development-module equivalent is:
@@ -68,9 +68,9 @@ Use this mode when each input file already contains the protein and ligand
 chains in one `.pdb`, `.cif`, or `.mmcif` file.
 
 ```bash
-boltz-score-existing \
+boltz-affinity \
   complex_1.cif complex_2.cif \
-  --out_dir boltz_existing_scores \
+  --out_dir boltz_affinity_scores \
   --cache ~/.boltz \
   --device cuda \
   --no_download
@@ -79,9 +79,9 @@ boltz-score-existing \
 For affinity estimates on the same coordinates:
 
 ```bash
-boltz-score-existing \
+boltz-affinity \
   complex_1.cif complex_2.cif \
-  --out_dir boltz_existing_scores_affinity \
+  --out_dir boltz_affinity_scores \
   --cache ~/.boltz \
   --device cuda \
   --no_download \
@@ -98,7 +98,7 @@ poses are stored as SDF files. This is the format used by DEKOIS2/Matcha-style
 and HEDGEHOG-style pose scoring.
 
 ```bash
-boltz-score-existing \
+boltz-affinity \
   poses.sdf \
   --receptor receptor.pdb \
   --out_dir boltz_pose_scores \
@@ -110,7 +110,7 @@ boltz-score-existing \
 For confidence plus affinity:
 
 ```bash
-boltz-score-existing \
+boltz-affinity \
   poses.sdf \
   --receptor receptor.pdb \
   --out_dir boltz_pose_scores_affinity \
@@ -132,7 +132,7 @@ topology, for example multiple poses of the same ligand against the same
 protein.
 
 ```bash
-boltz-score-existing \
+boltz-affinity \
   same_ligand_poses.sdf \
   --receptor receptor.pdb \
   --out_dir boltz_pose_scores_reuse \
@@ -161,10 +161,15 @@ The output directory contains:
 
 ## Runtime Notes
 
-The command avoids the expensive Boltz diffusion sampling path, so it is faster
-than full Boltz structure prediction. It still loads the Boltz2 checkpoint and
-runs the trunk, so the first score is not instantaneous. On GPU, scoring
-additional poses in the same process is much cheaper than the cold start.
+The command avoids the expensive Boltz diffusion sampling path, so it is much
+faster than full Boltz structure prediction. It still loads the Boltz2
+checkpoint and runs the trunk, so the first score is not instantaneous. On GPU,
+scoring additional poses in the same process is much cheaper than the cold
+start, especially with `--reuse_trunk` for same-topology pose batches.
+
+In practice, this mode should be treated as Boltz scoring rather than Boltz
+prediction: it can rank or annotate already generated poses, but it will not
+repair geometry or move the ligand.
 
 The utility currently sets protein MSAs to `empty`, so proteins are scored in
 single-sequence mode. That is useful for fast pose screening, but confidence and

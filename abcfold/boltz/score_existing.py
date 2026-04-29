@@ -52,8 +52,11 @@ def _safe_id(path: Path) -> str:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="boltz-score-existing",
-        description="Score existing PDB/mmCIF complexes with Boltz2 confidence.",
+        prog="boltz-affinity",
+        description=(
+            "Score existing PDB/mmCIF complexes or fixed ligand poses with "
+            "Boltz2 confidence and optional affinity heads."
+        ),
     )
     parser.add_argument(
         "structures",
@@ -80,7 +83,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--out_dir",
         type=Path,
-        default=Path("boltz_existing_scores"),
+        default=Path("boltz_affinity_scores"),
         help="Directory for confidence JSON/NPZ outputs.",
     )
     parser.add_argument(

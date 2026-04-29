@@ -1,9 +1,9 @@
-# Boltz Crystal-Pocket Docking
+# Boltz Dock
 
-`abcfold.boltz.dock_crystal` runs Boltz structure generation with a fixed
-crystal receptor as a template, a ligand SMILES, and pocket constraints. Use it
-when you know the receptor structure and pocket, but want Boltz to generate the
-ligand pose instead of only scoring an existing pose.
+`boltz-dock` runs Boltz structure generation with a fixed crystal receptor as a
+template, a ligand SMILES, and pocket constraints. Use it when you know the
+receptor structure and pocket, but want Boltz to generate the ligand pose
+instead of only scoring an existing pose.
 
 This is a Boltz-native docking/co-folding mode. It is not a classical force
 field minimizer: Boltz still runs diffusion sampling, but the protein is guided
@@ -14,20 +14,20 @@ toward the crystal template and the ligand is guided into the pocket.
 Installed ABCFold environments expose this as:
 
 ```bash
-boltz-dock-crystal --help
+boltz-dock --help
 ```
 
 For a local checkout managed with `uv`, use either:
 
 ```bash
-uv run boltz-dock-crystal --help
+uv run boltz-dock --help
 ```
 
 or activate the environment before using the command directly:
 
 ```bash
 source .venv/bin/activate
-boltz-dock-crystal --help
+boltz-dock --help
 ```
 
 The development-module equivalent is:
@@ -39,14 +39,14 @@ python -m abcfold.boltz.dock_crystal --help
 ## Explicit Pocket Residues
 
 ```bash
-boltz-dock-crystal \
+boltz-dock \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --protein_chain A \
   --pocket_residue A:145 \
   --pocket_residue A:146 \
   --pocket_residue A:189 \
-  --out_dir boltz_crystal_dock \
+  --out_dir boltz_dock \
   --affinity
 ```
 
@@ -61,13 +61,13 @@ If the receptor PDB still contains a reference ligand chain, the wrapper can
 infer pocket residues by distance:
 
 ```bash
-boltz-dock-crystal \
+boltz-dock \
   crystal_complex.pdb \
   "CCOc1ccc(...)" \
   --protein_chain A \
   --reference_ligand_chain L \
   --pocket_cutoff 6.0 \
-  --out_dir boltz_crystal_dock \
+  --out_dir boltz_dock \
   --affinity
 ```
 
@@ -88,7 +88,7 @@ These settings keep the protein close to the crystal receptor and steer the
 ligand into the pocket. They can be relaxed:
 
 ```bash
-boltz-dock-crystal \
+boltz-dock \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --pocket_residue A:145 \
@@ -102,8 +102,12 @@ less constrained.
 ## Accuracy and Runtime
 
 This mode runs Boltz diffusion, so it is much slower than
-`abcfold.boltz.score_existing`, which only scores supplied coordinates. The
-default docking settings use:
+`boltz-affinity`, which only scores supplied coordinates. Compared with a fully
+unconstrained Boltz run, `boltz-dock` saves setup work by reusing the provided
+crystal receptor, writing `msa: empty` unless `--use_msa_server` is requested,
+and constraining the search to the known pocket. It is still a generative Boltz
+run, so runtime is controlled mainly by diffusion samples, recycling steps, and
+sampling steps. The default docking settings use:
 
 - `--diffusion_samples 25`
 - `--recycling_steps 10`
@@ -113,7 +117,7 @@ default docking settings use:
 For a quick dry run that only writes the Boltz YAML and command:
 
 ```bash
-boltz-dock-crystal \
+boltz-dock \
   crystal_receptor.pdb \
   "CCOc1ccc(...)" \
   --pocket_residue A:145 \
@@ -122,8 +126,8 @@ boltz-dock-crystal \
 
 The output directory contains:
 
-- `boltz_crystal_dock.yaml`
-- `boltz_crystal_dock_command.json`
+- `boltz_dock.yaml`
+- `boltz_dock_command.json`
 - Boltz prediction outputs when `--dry_run` is not used
 
 Use `--use_msa_server` to let Boltz fetch MSAs. Without it, the wrapper writes

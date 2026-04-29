@@ -204,26 +204,30 @@ Below are scripts for adding MMseqs2 MSAs and custom templates to AlphaFold3 inp
 
 ABCFold also includes a Boltz2 utility for scoring existing complex coordinates
 or fixed-receptor ligand poses without running Boltz diffusion sampling. See
-[Boltz Existing-Structure Scoring](docs/boltz_existing_scoring.md) for
+[Boltz Affinity Scoring](docs/boltz_affinity.md) for
 confidence scoring, affinity scoring, and `--reuse_trunk` examples.
 
-After installation, use `boltz-score-existing` directly:
+This is the fast Boltz path for already-built poses: it loads Boltz2 and runs
+the confidence and optional affinity heads on supplied coordinates, but skips
+the expensive diffusion structure-generation loop.
+
+After installation, use `boltz-affinity` directly:
 
 ```bash
-boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+boltz-affinity poses.sdf --receptor receptor.pdb --affinity
 ```
 
 For a checkout managed with `uv`, either run through `uv`:
 
 ```bash
-uv run boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+uv run boltz-affinity poses.sdf --receptor receptor.pdb --affinity
 ```
 
 or activate the project environment first:
 
 ```bash
 source .venv/bin/activate
-boltz-score-existing poses.sdf --receptor receptor.pdb --affinity
+boltz-affinity poses.sdf --receptor receptor.pdb --affinity
 ```
 
 The module form
@@ -235,26 +239,31 @@ checkouts.
 ABCFold also includes a Boltz-native docking wrapper for the case where a
 crystal receptor and pocket are known, but the ligand pose should be generated
 from SMILES by Boltz. See
-[Boltz Crystal-Pocket Docking](docs/boltz_crystal_docking.md) for crystal
+[Boltz Dock](docs/boltz_dock.md) for crystal
 template, pocket constraint, reference-ligand, and affinity examples.
 
-After installation, use `boltz-dock-crystal` directly:
+This mode is named `boltz-dock` because it generates a new ligand pose. It is
+not as fast as `boltz-affinity`: Boltz diffusion still runs, but the receptor is
+kept close to the provided crystal template and the ligand is steered into the
+known pocket.
+
+After installation, use `boltz-dock` directly:
 
 ```bash
-boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+boltz-dock receptor.pdb "CCO" --pocket_residue A:145 --affinity
 ```
 
 For a checkout managed with `uv`, either run through `uv`:
 
 ```bash
-uv run boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+uv run boltz-dock receptor.pdb "CCO" --pocket_residue A:145 --affinity
 ```
 
 or activate the project environment first:
 
 ```bash
 source .venv/bin/activate
-boltz-dock-crystal receptor.pdb "CCO" --pocket_residue A:145 --affinity
+boltz-dock receptor.pdb "CCO" --pocket_residue A:145 --affinity
 ```
 
 The module form
