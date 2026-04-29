@@ -1,7 +1,7 @@
 # Chai Fast Runner
 
 ABCFold runs Chai-1 through the fast runner by default when `--chai1` is set.
-There is no separate `--chai_fast` flag.
+There is no separate `--chai_fast` flag; it was intentionally removed.
 
 The fast runner prepares the same Chai FASTA, MSA directory, and constraints as
 the standard runner, then executes seed jobs through persistent worker
@@ -16,6 +16,20 @@ uv run abcfold input.json output_dir --chai1 --gpus 0,1
 
 Use `--gpus all` to let Chai choose CUDA, `--gpus cpu` for CPU execution, or a
 comma-separated list such as `--gpus 0,1` to split seed jobs across devices.
+
+## Smoke Validation
+
+Check the installed CLI without starting inference:
+
+```bash
+uv run abcfold --help
+```
+
+The help should include `--chai1` and should not include `--chai_fast`:
+
+```bash
+uv run abcfold --help | grep chai
+```
 
 ## Output Layout
 

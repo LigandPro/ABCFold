@@ -141,7 +141,8 @@ However, there you may wish to use the following flags to add run time options s
 `--chai1` uses ABCFold's persistent Chai worker by default. The worker keeps
 the same Chai quality settings as the standard runner while reducing repeated
 process setup overhead and distributing seed jobs across the requested
-`--gpus` slots. See [Chai Fast Runner](docs/chai_fast_runner.md) for details.
+`--gpus` slots. `--chai_fast` was intentionally removed; use `--chai1`.
+See [Chai Fast Runner](docs/chai_fast_runner.md) for smoke checks and details.
 
 #### Template arguments
 
