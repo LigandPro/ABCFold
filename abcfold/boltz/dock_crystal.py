@@ -42,7 +42,7 @@ class DockingInput:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="boltz-dock-crystal",
+        prog="boltz-dock",
         description=(
             "Dock a ligand SMILES with Boltz while constraining the protein to "
             "a crystal receptor template and the ligand to a pocket."
@@ -53,7 +53,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--out_dir",
         type=Path,
-        default=Path("boltz_crystal_docking"),
+        default=Path("boltz_dock"),
         help="Directory for the generated YAML and Boltz outputs.",
     )
     parser.add_argument(
@@ -530,7 +530,7 @@ def prepare_crystal_docking_input(args: argparse.Namespace) -> DockingInput:
             "--reference_ligand_chain."
         )
 
-    yaml_path = out_dir / "boltz_crystal_dock.yaml"
+    yaml_path = out_dir / "boltz_dock.yaml"
     yaml_text = _render_yaml(
         receptor,
         protein_chains,
@@ -542,7 +542,7 @@ def prepare_crystal_docking_input(args: argparse.Namespace) -> DockingInput:
     yaml_path.write_text(yaml_text)
 
     command = generate_boltz_crystal_dock_command(yaml_path, out_dir, args)
-    (out_dir / "boltz_crystal_dock_command.json").write_text(
+    (out_dir / "boltz_dock_command.json").write_text(
         json.dumps(command, indent=2) + "\n"
     )
     return DockingInput(yaml_path=yaml_path, command=command, contacts=contacts)
