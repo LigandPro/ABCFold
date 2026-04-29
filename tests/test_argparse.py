@@ -1,7 +1,7 @@
 import argparse
 
 from abcfold.argparse_utils import (alphafold_argparse_util,
-                                    boltz_argparse_util,
+                                    boltz_argparse_util, chai_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util)
 
@@ -39,6 +39,13 @@ def test_boltz_crystal_mode_argparse_util():
     assert args.boltz_ligand_chain == "L"
     assert args.boltz_preprocessing_threads == 3
     assert args.boltz_num_workers == 2
+
+
+def test_chai_argparse_util():
+    parser = argparse.ArgumentParser()
+    parser = chai_argparse_util(parser)
+    args = parser.parse_args(["--chai1"])
+    assert args.chai1
 
 
 def test_custom_template_argpase_util():

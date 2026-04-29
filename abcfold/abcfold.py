@@ -209,7 +209,7 @@ def run(args, config, defaults, config_file):
             successful_runs.append(boltz_success)
 
         if args.chai1:
-            from abcfold.chai1.run_chai1 import run_chai
+            from abcfold.chai1.run_chai1_fast import run_chai_fast as run_chai
 
             template_hits_path = None
             if args.templates and args.mmseqs2:

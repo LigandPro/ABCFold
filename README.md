@@ -136,6 +136,14 @@ However, there you may wish to use the following flags to add run time options s
 #### OpenFold3 arguments
 - `--inference_ckpt_path` [optional] Path for model checkpoint to be used for inference. If not specified, will attempt to find or download parameters in ~/.openfold3/
 
+#### Chai-1 fast runner
+
+`--chai1` uses ABCFold's persistent Chai worker by default. The worker keeps
+the same Chai quality settings as the standard runner while reducing repeated
+process setup overhead and distributing seed jobs across the requested
+`--gpus` slots. `--chai_fast` was intentionally removed; use `--chai1`.
+See [Chai Fast Runner](docs/chai_fast_runner.md) for smoke checks and details.
+
 #### Template arguments
 
 - `--templates`: Flag to enable a template search
