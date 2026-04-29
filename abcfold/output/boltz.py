@@ -69,30 +69,33 @@ class BoltzOutput:
         self.name = name
         self.save_input = save_input
 
-        parent_dir = self.output_dirs[0].parent
-        new_parent = parent_dir / f"boltz_{self.name}"
-        new_parent.mkdir(parents=True, exist_ok=True)
+        if not any(
+            self._is_batch_output_dir(output_dir) for output_dir in self.output_dirs
+        ):
+            parent_dir = self.output_dirs[0].parent
+            new_parent = parent_dir / f"boltz_{self.name}"
+            new_parent.mkdir(parents=True, exist_ok=True)
 
-        if self.save_input:
-            boltz_yaml = list(parent_dir.glob("*.yaml"))[0]
-            if boltz_yaml.exists():
-                boltz_yaml.rename(new_parent / "boltz_input.yaml")
+            if self.save_input:
+                boltz_yamls = list(parent_dir.glob("*.yaml"))
+                if boltz_yamls:
+                    boltz_yamls[0].rename(new_parent / "boltz_input.yaml")
 
-            boltz_msas = list(parent_dir.glob("*.a3m"))
-            if boltz_msas:
-                for boltz_msa in boltz_msas:
-                    if boltz_msa.exists():
-                        boltz_msa.rename(new_parent / boltz_msa.name)
+                boltz_msas = list(parent_dir.glob("*.a3m"))
+                if boltz_msas:
+                    for boltz_msa in boltz_msas:
+                        if boltz_msa.exists():
+                            boltz_msa.rename(new_parent / boltz_msa.name)
 
-        new_output_dirs = []
-        for output_dir in self.output_dirs:
-            if output_dir.name.startswith("boltz_results_"):
-                new_path = new_parent / output_dir.name
-                output_dir.rename(new_path)
-                new_output_dirs.append(new_path)
-            else:
-                new_output_dirs.append(output_dir)
-        self.output_dirs = new_output_dirs
+            new_output_dirs = []
+            for output_dir in self.output_dirs:
+                if output_dir.name.startswith("boltz_results_"):
+                    new_path = new_parent / output_dir.name
+                    output_dir.rename(new_path)
+                    new_output_dirs.append(new_path)
+                else:
+                    new_output_dirs.append(output_dir)
+            self.output_dirs = new_output_dirs
 
         self.yaml_input_obj = self.get_input_yaml()
 
@@ -134,31 +137,32 @@ class BoltzOutput:
             if seed not in file_groups:
                 file_groups[seed] = {}
 
-            for output in pathway.rglob("*"):
-                number = None
-                number_str = output.stem.split("_model_")[-1]
-                if not number_str.isdigit():
-                    continue
-                number = int(number_str)
+            for search_dir in self._prediction_dirs(pathway):
+                for output in search_dir.rglob("*"):
+                    number = None
+                    number_str = output.stem.split("_model_")[-1]
+                    if not number_str.isdigit():
+                        continue
+                    number = int(number_str)
 
-                if number is None:
-                    continue
+                    if number is None:
+                        continue
 
-                file_type = output.suffix[1:]
+                    file_type = output.suffix[1:]
 
-                file_: Union[NpzFile, CifFile, ConfidenceJsonFile]
-                if file_type == FileTypes.NPZ.value:
-                    file_ = NpzFile(str(output))
-                elif file_type == FileTypes.CIF.value:
-                    file_ = CifFile(str(output), self.input_params)
-                elif file_type == FileTypes.JSON.value:
-                    file_ = ConfidenceJsonFile(str(output))
-                else:
-                    continue
-                if number not in file_groups[seed]:
-                    file_groups[seed][number] = [file_]
-                else:
-                    file_groups[seed][number].append(file_)
+                    file_: Union[NpzFile, CifFile, ConfidenceJsonFile]
+                    if file_type == FileTypes.NPZ.value:
+                        file_ = NpzFile(str(output))
+                    elif file_type == FileTypes.CIF.value:
+                        file_ = CifFile(str(output), self.input_params)
+                    elif file_type == FileTypes.JSON.value:
+                        file_ = ConfidenceJsonFile(str(output))
+                    else:
+                        continue
+                    if number not in file_groups[seed]:
+                        file_groups[seed][number] = [file_]
+                    else:
+                        file_groups[seed][number].append(file_)
 
         seed_dict = {}
         for seed, models in file_groups.items():
@@ -189,6 +193,31 @@ class BoltzOutput:
             seed_dict[seed] = model_number_file_type_file
 
         return seed_dict
+
+    def _is_batch_output_dir(self, output_dir: Path) -> bool:
+        return (
+            output_dir.parent.name.startswith("seed-")
+            and output_dir.parent.parent.name == "boltz_batch"
+        )
+
+    def _prediction_dirs(self, output_dir: Path) -> list[Path]:
+        predictions_dir = output_dir / "predictions"
+        if not predictions_dir.exists():
+            return [output_dir]
+
+        prediction_dirs = sorted(p for p in predictions_dir.iterdir() if p.is_dir())
+        if len(prediction_dirs) <= 1:
+            return prediction_dirs or [predictions_dir]
+
+        name = self.name
+        candidates = {name, name.lower(), name.upper()}
+        candidates.update({f"abc_{candidate}" for candidate in list(candidates)})
+        selected = []
+        for prediction_dir in prediction_dirs:
+            case_name = prediction_dir.name.split("_seed-")[0]
+            if case_name in candidates:
+                selected.append(prediction_dir)
+        return selected or prediction_dirs
 
     def add_plddt_to_cif(self):
         """
@@ -240,7 +269,7 @@ class BoltzOutput:
         """
         new_pae_files: dict[str, list[ConfidenceJsonFile]] = {}
         for seed in self.seeds:
-            for (pae_file, cif_file) in zip(self.pae_files[seed], self.cif_files[seed]):
+            for pae_file, cif_file in zip(self.pae_files[seed], self.cif_files[seed]):
                 pae = Af3Pae.from_boltz(
                     pae_file.data,
                     cif_file,

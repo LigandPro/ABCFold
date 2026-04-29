@@ -132,6 +132,101 @@ def boltz_argparse_util(parser):
             help="Save the input json file",
             default=False,
         )
+    parser.add_argument(
+        "--boltz_mode",
+        choices=[
+            "default",
+            "1",
+            "2",
+            "3",
+            "template",
+            "template_dock",
+            "constrained",
+            "constrained_dock",
+        ],
+        default="default",
+        help=dedent("[optional] Boltz crystal mode. Use '2'/'template' to add a \
+        crystal protein template and optional pocket constraints. Use \
+        '3'/'constrained' to force the template and pocket constraints for \
+        ligand refinement."),
+    )
+    parser.add_argument(
+        "--boltz_crystal_structure",
+        help=dedent("[optional] PDB/mmCIF crystal structure used by --boltz_mode \
+        2 or 3 as the Boltz protein template."),
+    )
+    parser.add_argument(
+        "--boltz_ligand_chain",
+        help=dedent("[optional] Ligand chain ID in --boltz_crystal_structure. \
+        When set, ABCFold derives Boltz pocket constraints from nearby protein \
+        residues."),
+    )
+    parser.add_argument(
+        "--boltz_template_chain_id",
+        nargs="+",
+        help=dedent("[optional] Query protein chain IDs to map to the crystal \
+        template. Defaults to Boltz automatic matching."),
+    )
+    parser.add_argument(
+        "--boltz_template_id",
+        nargs="+",
+        help=dedent("[optional] Template protein chain IDs matching \
+        --boltz_template_chain_id. Defaults to Boltz automatic matching."),
+    )
+    parser.add_argument(
+        "--boltz_template_force",
+        action="store_true",
+        help=dedent("[optional] Force the Boltz template potential in mode 2. \
+        Mode 3 enables this automatically."),
+    )
+    parser.add_argument(
+        "--boltz_template_threshold",
+        type=float,
+        default=2.0,
+        help="[optional] Template force threshold in Angstroms (default: 2.0).",
+    )
+    parser.add_argument(
+        "--boltz_pocket_radius",
+        type=float,
+        default=6.0,
+        help=dedent("[optional] Radius in Angstroms used to derive pocket \
+        residues around --boltz_ligand_chain (default: 6.0)."),
+    )
+    parser.add_argument(
+        "--boltz_pocket_max_distance",
+        type=float,
+        default=6.0,
+        help=dedent("[optional] Boltz pocket max_distance in Angstroms \
+        (default: 6.0)."),
+    )
+    parser.add_argument(
+        "--boltz_pocket_force",
+        action="store_true",
+        help=dedent("[optional] Force the Boltz pocket potential in mode 2. \
+        Mode 3 enables this automatically."),
+    )
+    parser.add_argument(
+        "--boltz_preprocessing_threads",
+        type=int,
+        default=2,
+        help=(
+            "[optional] Boltz preprocessing threads for input preparation "
+            "(default: 2)."
+        ),
+    )
+    parser.add_argument(
+        "--boltz_num_workers",
+        type=int,
+        default=2,
+        help="[optional] Boltz dataloader workers during prediction (default: 2).",
+    )
+    parser.add_argument(
+        "--boltz_max_parallel_samples",
+        type=int,
+        default=None,
+        help=dedent("[optional] Boltz maximum parallel diffusion samples. Leave unset \
+        until an OOM boundary has been validated."),
+    )
 
     return parser
 
@@ -167,7 +262,7 @@ def openfold_argparse_util(parser):
         "--inference_ckpt_path",
         help=dedent("Path for model checkpoint to be used for inference. \
     If not specified, will attempt to find or download parameters to \
-     ~/.openfold3/")
+     ~/.openfold3/"),
     )
     return parser
 
@@ -290,5 +385,50 @@ def raise_argument_errors(args):
     if args.number_of_models < 1:
         logger.error("Number of models must be greater than 0")
         sys.exit(1)
+
+    if args.boltz_mode != "default" and not args.boltz:
+        logger.error("Boltz crystal modes require --boltz")
+        sys.exit(1)
+
+    if args.boltz_mode != "default" and not args.boltz_crystal_structure:
+        logger.error("--boltz_mode 2/3 requires --boltz_crystal_structure")
+        sys.exit(1)
+
+    if args.boltz_mode in {"3", "constrained", "constrained_dock"} and (
+        not args.boltz_ligand_chain
+    ):
+        logger.error("--boltz_mode 3 requires --boltz_ligand_chain")
+        sys.exit(1)
+
+    if args.boltz_template_threshold <= 0:
+        logger.error("--boltz_template_threshold must be greater than 0")
+        sys.exit(1)
+
+    if args.boltz_pocket_radius <= 0:
+        logger.error("--boltz_pocket_radius must be greater than 0")
+        sys.exit(1)
+
+    if args.boltz_pocket_max_distance <= 0:
+        logger.error("--boltz_pocket_max_distance must be greater than 0")
+        sys.exit(1)
+
+    for arg_name in [
+        "boltz_preprocessing_threads",
+        "boltz_num_workers",
+        "boltz_max_parallel_samples",
+    ]:
+        value = getattr(args, arg_name, None)
+        if value is None or value == "None":
+            setattr(args, arg_name, None)
+            continue
+        try:
+            value = int(value)
+        except ValueError:
+            logger.error("--%s must be an integer", arg_name)
+            sys.exit(1)
+        if value < 1:
+            logger.error("--%s must be greater than 0", arg_name)
+            sys.exit(1)
+        setattr(args, arg_name, value)
 
     return args

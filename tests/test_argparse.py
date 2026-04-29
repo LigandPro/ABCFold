@@ -1,6 +1,7 @@
 import argparse
 
 from abcfold.argparse_utils import (alphafold_argparse_util,
+                                    boltz_argparse_util,
                                     custom_template_argpase_util,
                                     main_argpase_util, mmseqs2_argparse_util)
 
@@ -12,6 +13,32 @@ def test_mmseqs2_argparse_util():
     args = parser.parse_args(["--templates", "--num_templates", "20"])
     assert args.templates
     assert args.num_templates == 20
+
+
+def test_boltz_crystal_mode_argparse_util():
+    parser = argparse.ArgumentParser()
+    parser = boltz_argparse_util(parser)
+    args = parser.parse_args(
+        [
+            "--boltz",
+            "--boltz_mode",
+            "3",
+            "--boltz_crystal_structure",
+            "complex.pdb",
+            "--boltz_ligand_chain",
+            "L",
+            "--boltz_preprocessing_threads",
+            "3",
+            "--boltz_num_workers",
+            "2",
+        ]
+    )
+    assert args.boltz
+    assert args.boltz_mode == "3"
+    assert args.boltz_crystal_structure == "complex.pdb"
+    assert args.boltz_ligand_chain == "L"
+    assert args.boltz_preprocessing_threads == 3
+    assert args.boltz_num_workers == 2
 
 
 def test_custom_template_argpase_util():
@@ -49,8 +76,10 @@ def test_custom_template_argpase_util_2():
         ]
     )
     assert args.target_id == ["A", "B"]
-    assert args.custom_template == ["test_data/test_6BJ9_cif",
-                                    "test_data/test_6BJ9_cif"]
+    assert args.custom_template == [
+        "test_data/test_6BJ9_cif",
+        "test_data/test_6BJ9_cif",
+    ]
     assert args.custom_template_chain == ["A", "B"]
 
 

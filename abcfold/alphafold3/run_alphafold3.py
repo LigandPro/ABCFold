@@ -167,6 +167,7 @@ def run_alphafold3(
 
     check_af3_install(config=config, interactive=False, sif_path=sif_path)
 
+    run_args: str | list[str]
     if sif_path is not None and sif_path != "None":
         cmd = generate_af3_cmd(
             input_json=input_json,
@@ -182,14 +183,8 @@ def run_alphafold3(
             gpus=gpus,
         )
         job_output_dir = output_dir
-        run_kwargs = {
-            "args": cmd,
-            "shell": True,
-            "check": True,
-            "stdout": subprocess.PIPE,
-            "stderr": subprocess.PIPE,
-            "text": True,
-        }
+        run_args = cmd
+        run_shell = True
     else:
         image = config.get("af3_docker_env", ALPHAFAST_IMAGE)
         cmd_list, job_output_dir = _build_alphafast_docker_cmd(
@@ -205,17 +200,19 @@ def run_alphafold3(
             save_distogram=save_distogram,
             image=image,
         )
-        run_kwargs = {
-            "args": cmd_list,
-            "check": True,
-            "stdout": subprocess.PIPE,
-            "stderr": subprocess.PIPE,
-            "text": True,
-        }
+        run_args = cmd_list
+        run_shell = False
 
     logger.info("Running Alphafold3")
     try:
-        subprocess.run(**run_kwargs)
+        subprocess.run(
+            run_args,
+            shell=run_shell,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
     except subprocess.CalledProcessError as exc:
         error_log = exc.stderr or ""
         logger.error(error_log)
@@ -229,11 +226,12 @@ def run_alphafold3(
     return job_output_dir
 
 
-def process_input_json(input_json: Union[str, Path]) -> Union[str, Path]:
+def process_input_json(input_json: Union[str, Path]) -> Path:
     """
     Process the input JSON file so post-translational modifications are included
     in the MSA sequence when AlphaFold-compatible one-letter codes are known.
     """
+    input_json = Path(input_json)
     with open(input_json, "r") as f:
         json_dict = json.load(f)
 
@@ -253,15 +251,11 @@ def process_input_json(input_json: Union[str, Path]) -> Union[str, Path]:
                     one_letter_code = CCD_NAME_TO_ONE_LETTER[ptm_type]
                     position = modification["ptmPosition"]
                     msa = protein.get("unpairedMsa")
-            if (
-                one_letter_code is not None
-                and position is not None
-                and msa is not None
-            ):
+            if one_letter_code is not None and position is not None and msa is not None:
                 msa_lines = msa.splitlines()
                 input_seq = msa_lines[1]
                 idx = int(position) - 1
-                input_seq = input_seq[:idx] + one_letter_code + input_seq[idx + 1 :]
+                input_seq = input_seq[:idx] + one_letter_code + input_seq[idx + 1:]
                 msa_lines[1] = input_seq
                 protein["unpairedMsa"] = "\n".join(msa_lines)
                 updated = True
