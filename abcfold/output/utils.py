@@ -328,7 +328,7 @@ class Af3Pae:
             ]
         )
 
-        pae_matrix = np.asarray(scores["pde"])
+        pae_matrix = np.asarray(scores["pae"] if "pae" in scores else scores["pde"])
         af3_scores["pae"] = pae_matrix.tolist()
         af3_scores["atom_chain_ids"] = atom_chain_ids
         af3_scores["atom_plddts"] = atom_plddts
