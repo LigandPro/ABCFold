@@ -18,6 +18,7 @@ from abcfold.argparse_utils import (alphafold_argparse_util,
                                     prediction_argparse_util,
                                     protenix_argparse_util,
                                     raise_argument_errors,
+                                    rosettafold_argparse_util,
                                     visuals_argparse_util)
 from abcfold.html.html_utils import (PORT, NoCacheHTTPRequestHandler,
                                      get_all_cif_files, get_model_data,
@@ -30,6 +31,7 @@ from abcfold.output.chai import ChaiOutput
 from abcfold.output.file_handlers import superpose_models
 from abcfold.output.openfold3 import OpenfoldOutput
 from abcfold.output.protenix import ProtenixOutput
+from abcfold.output.rosettafold3 import RosettafoldOutput
 from abcfold.output.utils import (get_gap_indicies, insert_none_by_minus_one,
                                   make_dummy_m8_file, verify_config_file)
 from abcfold.scripts.abc_script_utils import (check_input_json, make_dir,
@@ -44,7 +46,12 @@ HTML_TEMPLATE = HTML_DIR.joinpath("abcfold.html.jinja2")
 PLOTS_DIR = ".plots"
 
 ModelOutput = Union[
-    AlphafoldOutput, BoltzOutput, ChaiOutput, ProtenixOutput, OpenfoldOutput
+    AlphafoldOutput,
+    BoltzOutput,
+    ChaiOutput,
+    ProtenixOutput,
+    OpenfoldOutput,
+    RosettafoldOutput,
 ]
 
 
@@ -281,6 +288,27 @@ def run(args, config, defaults, config_file):
                 outputs.append(oo)
             successful_runs.append(openfold_success)
 
+        if args.rosettafold3:
+            from abcfold.rosettafold3.run_rosettafold3 import run_rosettafold
+
+            rosettafold_success = run_rosettafold(
+                input_json=run_json,
+                output_dir=args.output_dir,
+                save_input=args.save_input,
+                number_of_models=args.number_of_models,
+                config=rt_config,
+            )
+
+            if rosettafold_success:
+                rosettafold_output_dirs = list(
+                    args.output_dir.glob("rosettafold_results*")
+                )
+                ro = RosettafoldOutput(
+                    rosettafold_output_dirs, input_params, name, args.save_input
+                )
+                outputs.append(ro)
+            successful_runs.append(rosettafold_success)
+
         if args.no_visuals:
             logger.info("Visuals disabled")
             return
@@ -440,12 +468,41 @@ def run(args, config, defaults, config_file):
                             )
                             protenix_models["models"].append(model_data)
 
+        rosettafold_models: Dict[str, List[Dict[str, Any]]] = {"models": []}
+        if args.rosettafold3:
+            if rosettafold_success:
+                programs_run.append("RosettaFold3")
+                for seed in ro.output.keys():
+                    for idx in ro.output[seed].keys():
+                        if idx >= 0:
+                            model = ro.output[seed][idx]["cif"]
+                            model.check_clashes()
+                            score_file = ro.output[seed][idx]["scores"]
+                            plddt = model.residue_plddts
+                            pae = ro.output[seed][idx]["af3_pae"]
+                            if len(indicies) > 0:
+                                plddt = insert_none_by_minus_one(
+                                    indicies[index_counter], plddt
+                                )
+                            index_counter += 1
+                            model_data = get_model_data(
+                                model,
+                                plot_dict,
+                                "RosettaFold3",
+                                plddt,
+                                pae,
+                                score_file,
+                                args.output_dir,
+                            )
+                            rosettafold_models["models"].append(model_data)
+
         combined_models = (
             alphafold_models["models"]
             + boltz_models["models"]
             + chai_models["models"]
             + openfold_models["models"]
             + protenix_models["models"]
+            + rosettafold_models["models"]
         )
 
         # Make the output directory for the models
@@ -463,6 +520,8 @@ def run(args, config, defaults, config_file):
                 output_name = "openfold_model_" + model["model_id"][-1] + ".cif"
             elif model["model_source"] == "Protenix":
                 output_name = "protenix_model_" + model["model_id"][-1] + ".cif"
+            elif model["model_source"] == "RosettaFold3":
+                output_name = "rosettafold_model_" + model["model_id"][-1] + ".cif"
             shutil.copy(
                 cif_file,
                 args.output_dir.joinpath("output_models").joinpath(output_name),
@@ -551,7 +610,7 @@ view the output pages")
 
 def main():
     """
-    Run AlphaFold3 / Boltz / Chai-1 / OpenFold3 / Protenix
+    Run AlphaFold3 / Boltz / Chai-1 / OpenFold3 / Protenix / RosettaFold3
     """
     import argparse
 
@@ -581,7 +640,9 @@ def main():
         defaults.update(dict(config.items(section)))
 
     parser = argparse.ArgumentParser(
-        description="Run AlphaFold3 / Boltz / Chai-1 / OpenFold3 / Protenix",
+        description=(
+            "Run AlphaFold3 / Boltz / Chai-1 / OpenFold3 / Protenix / RosettaFold3"
+        ),
         parents=[config_parser],
     )
 
@@ -591,6 +652,7 @@ def main():
     parser = chai_argparse_util(parser)
     parser = openfold_argparse_util(parser)
     parser = protenix_argparse_util(parser)
+    parser = rosettafold_argparse_util(parser)
     parser = mmseqs2_argparse_util(parser)
     parser = custom_template_argpase_util(parser)
     parser = prediction_argparse_util(parser)

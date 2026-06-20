@@ -496,6 +496,16 @@ rect{
     transition: background-color 0.3s ease;
 }
 
+.btn-source6 {
+    background-color: #FFA533;
+    color: #3b3b3d;
+    border: none;
+    border-radius: 12px;
+    padding: 7px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
 .btn-default {
     background-color: rgb(199, 195, 195);
     color: white;
@@ -506,6 +516,6 @@ rect{
     transition: background-color 0.3s ease;
 }
 
-.btn-source1:hover, .btn-source2:hover, .btn-source3:hover, .btn-default:hover {
+.btn-source1:hover, .btn-source2:hover, .btn-source3:hover, .btn-source4:hover, .btn-source5:hover, .btn-source6:hover, .btn-default:hover {
     opacity: 0.8;
 }
