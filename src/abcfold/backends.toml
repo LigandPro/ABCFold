@@ -1,0 +1,69 @@
+# Read-only backend pins shipped with ABCFold.
+#
+# ABCFold never edits this file and never upgrades a backend environment while a
+# prediction runs. Environments are built explicitly with `abcfold envs build`
+# and verified (not modified) by `abcfold run`. A user config file
+# (`--config-file` / ABCFOLD_CONFIG) may override `version`, `env` or `pip` per
+# backend; the override is then used for both the build and the verification.
+#
+# Versions checked against PyPI and GitHub releases on 2026-10-16.
+
+schema = 1
+
+[boltz]
+package = "boltz"
+version = "2.2.1"
+python = "3.11"
+env = "abcfold2-boltz"
+pip = ["boltz[cuda]==2.2.1"]
+torch_backend = "cu128"
+
+[chai1]
+package = "chai_lab"
+version = "0.6.1"
+python = "3.11"
+env = "abcfold2-chai"
+# pyarrow: chai_lab reads MSAs as parquet but does not declare it
+pip = ["chai_lab==0.6.1", "pandera==0.24.0", "pyarrow==21.0.0"]
+conda = ["kalign2"]
+torch_backend = "cu128"
+# chai_lab 0.6.1 declares torch<2.7, but no torch<2.7 wheel supports Blackwell
+# (sm_120). Chai-1 runs correctly on torch 2.11 (validated on the KRAS fixture).
+overrides = ["torch==2.11.0"]
+
+[protenix]
+package = "protenix"
+version = "2.0.0"
+python = "3.11"
+env = "abcfold2-protenix"
+# protenix 2.0.0 pins torch 2.7.1 and rdkit 2025.9.3; keep rdkit pinned and
+# never install rdkit-pypi next to it (the older wheel shadows the new one).
+pip = ["protenix==2.0.0", "rdkit==2025.9.3"]
+torch_backend = "cu128"
+# protenix-v2 weights are not public (the official URL returns 403); v1.0.0 is
+# the newest public checkpoint and runs on the 2.0.0 code.
+model = "protenix_base_default_v1.0.0"
+
+[openfold3]
+package = "openfold3"
+version = "0.5.0"
+python = "3.11"
+env = "abcfold2-openfold3"
+pip = ["openfold3[cuequivariance]==0.5.0"]
+conda = ["kalign2"]
+torch_backend = "cu128"
+checkpoint = "openbind-2025-06-30-174k"
+
+[rosettafold3]
+package = "rc-foundry"
+version = "0.1.12"
+python = "3.12"
+env = "abcfold2-rosettafold3"
+pip = ["rc-foundry[rf3]==0.1.12"]
+
+[alphafold3]
+# AlphaFold 3 runs through an external container/command (see `abcfold run
+# --af3_runner`); the version is informational and reported in report.json.
+package = "alphafold3"
+version = "3.0.4"
+image = "alphafold3"

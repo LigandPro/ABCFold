@@ -1,17 +1,18 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "abcfold"
-version = "1.1.3"
-description = "Tool to run & compare AlphaFold3, Boltz, Chai-1, OpenFold3 and Protenix"
+version = "2.0.0"
+description = "Run and compare AlphaFold3, Boltz, Chai-1, OpenFold3, Protenix and RosettaFold3 on one input"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "BSD License" }
 authors = [
     { name = "Adam Simpkin", email = "hlasimpk@liverpool.ac.uk" },
-    { name = "Luc Elliott", email = "hllelli2@liverpool.ac.uk" }
+    { name = "Luc Elliott", email = "hllelli2@liverpool.ac.uk" },
+    { name = "LigandPro" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -25,82 +26,59 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
-    "numpy==1.26.4",
+    "numpy>=1.26,<3",
     "colorama",
     "tqdm",
-    "biopython==1.84",
+    "biopython>=1.84",
     "requests",
-    "types-requests",
-    "pandas==2.2.3",
+    "pandas>=2.2",
     "plotly",
     "jinja2",
-    "pyarrow==19.0.1",
-
+    "pyarrow>=19",
+    "packaging",
+    "tomli>=2; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
-lint = [
-    "ruff",
-]
-test = [
-    "pytest",
-    "pytest-cov",
-]
-dev = [
-    "ruff",
-    "pytest",
-    "pytest-cov",
-    "pre-commit",
-    "flake8",
-    "black",
-    "mypy",
-    "coverage-badge",
-    "coverage",
-]
+lint = ["ruff"]
+test = ["pytest", "pytest-cov"]
+dev = ["ruff", "pytest", "pytest-cov", "pre-commit", "mypy", "types-requests"]
+
+[dependency-groups]
+dev = ["pytest", "pytest-cov", "ruff"]
 
 [project.urls]
-homepage = "https://github.com/rigdenlab/ABCFold"
-
-[tool.setuptools]
-packages = [
-    "abcfold",
-    "abcfold.alphafold3",
-    "abcfold.boltz",
-    "abcfold.chai1",
-    "abcfold.protenix",
-    "abcfold.openfold3",
-    "abcfold.rosettafold3",
-    "abcfold.html",
-    "abcfold.output",
-    "abcfold.plots",
-    "abcfold.plots.pae-viewer-main",
-    "abcfold.plots.pae-viewer-main.src",
-    "abcfold.plots.pae-viewer-main.src.css",
-    "abcfold.plots.pae-viewer-main.src.modules",
-    "abcfold.plots.pae-viewer-main.src.templates",
-    "abcfold.plots.pae-viewer-main.standalone",
-    "abcfold.plots.pae-viewer-main.standalone.css",
-    "abcfold.plots.pae-viewer-main.standalone.js",
-    "abcfold.plots.pae-viewer-main.standalone.libs",
-    "abcfold.scripts",
-
-]
-include-package-data = true
-
-[tool.setuptools.package-data]
-abcfold = ["data/config.ini"]
+homepage = "https://github.com/LigandPro/ABCFold"
+upstream = "https://github.com/rigdenlab/ABCFold"
 
 [project.scripts]
-abcfold = "abcfold.abcfold:main"
+abcfold = "abcfold.cli:main"
 boltz-affinity = "abcfold.boltz.score_existing:main"
 boltz-dock = "abcfold.boltz.dock_crystal:main"
 mmseqs2msa = "abcfold.scripts.add_mmseqs_msa:main"
 custom_templates = "abcfold.scripts.add_custom_template:main"
 ipsae = "abcfold.scripts.ipsae:main"
 
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["abcfold*"]
+
+[tool.setuptools.package-data]
+abcfold = [
+    "backends.toml",
+    "data/*",
+    "LICENCE",
+    "html/*",
+    "html/**/*",
+    "plots/pae-viewer-main/**/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "gpu: needs a GPU and the backend environments (deselected by default)",
+]
+addopts = "-m 'not gpu'"
 
 [tool.ruff]
 line-length = 88
@@ -115,5 +93,5 @@ ignore_missing_imports = true
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["abcfold.scripts.ipsae", "abcfold.scripts.add_mmseqs2_msa", "abcfold.tests.conftest"]
+module = ["abcfold.scripts.ipsae", "abcfold.scripts.add_mmseqs_msa", "tests.conftest"]
 ignore_errors = true

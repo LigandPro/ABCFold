@@ -5,14 +5,14 @@ pre-commit:
   commands:
     ruff-format-staged:
       glob: "*.{py,pyi}"
-      run: uv run --extra lint ruff format --check {staged_files}
+      run: uv run ruff format --check {staged_files}
 
     ruff-check-staged:
       glob: "*.{py,pyi}"
-      run: uv run --extra lint ruff check {staged_files}
+      run: uv run ruff check {staged_files}
 
     af3-fast-unit-smoke:
-      run: uv run --extra test pytest tests/test_run_alphafold3.py tests/test_argparse.py -q
+      run: uv run pytest tests/test_run_alphafold3.py tests/test_argparse.py -q
 
     git-diff-check:
       run: git diff --check --cached
@@ -36,8 +36,8 @@ pre-push:
           echo "[python-quality] skipped: no Python files in push range (${range})"
           exit 0
         fi
-        uv run --extra lint ruff format --check ${python_files}
-        uv run --extra lint ruff check ${python_files}
+        uv run ruff format --check ${python_files}
+        uv run ruff check ${python_files}
 
     pytest:
-      run: uv run --extra test pytest tests/test_run_alphafold3.py tests/test_run_boltz.py tests/test_run_protenix.py tests/test_af3_to_boltz.py tests/test_af3_to_openfold.py tests/test_argparse.py tests/test_run_scripts.py tests/test_utilities.py tests/test_abcfold.py -q
+      run: uv run pytest tests/test_run_alphafold3.py tests/test_run_boltz.py tests/test_run_protenix.py tests/test_af3_to_boltz.py tests/test_af3_to_openfold.py tests/test_argparse.py tests/test_run_scripts.py tests/test_utilities.py tests/test_abcfold.py -q

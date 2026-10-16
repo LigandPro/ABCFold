@@ -1,0 +1,46 @@
+# Read-only ABCFold defaults. Override with a user config file
+# (--config-file / ABCFOLD_CONFIG), ABCFOLD_<KEY> environment variables or CLI
+# flags. ABCFold never writes this file or the user config file.
+# An empty string means "unset".
+
+[paths]
+# AlphaFold 3 weights and databases
+model_params = ""
+database_dir = ""
+af3_sif_path = ""
+# Backend weight caches (empty: the backend's own default, e.g. ~/.boltz)
+boltz_weights = ""
+openfold_weights = ""
+rosettafold_weights = ""
+protenix_root_dir = ""
+# Shared across Chai envs so a new env does not re-download ~6.5 GB of weights
+chai_downloads_dir = "~/.cache/abcfold/chai"
+# Local PDB mmCIF mirror used for template structures (OpenFold3)
+template_mirror_dir = ""
+
+[msa]
+msa_cache_dir = "~/.cache/abcfold/msa"
+msa_server_url = "https://api.colabfold.com"
+msa_user_agent = "abcfold"
+# Fail when an MSA was requested but a chain ends up with fewer rows (0 = off)
+min_msa_rows = 10
+
+[boltz]
+boltz_preprocessing_threads = 2
+boltz_num_workers = 2
+boltz_max_parallel_samples = ""
+
+[alphafold3]
+# docker | apptainer | command | alphafast
+af3_runner = "docker"
+af3_image = "alphafold3"
+af3_run_script = "run_alphafold.py"
+# Used when af3_runner = "command"; may contain {json_path} {json_dir}
+# {json_name} {output_dir} {model_dir} {db_dir} {gpu} placeholders.
+af3_command = ""
+af3_append_flags = true
+af3_docker_env = "romerolabduke/alphafast:latest"
+
+[runtime]
+# Build a missing backend env on first use (never modifies an existing env)
+build_missing_envs = false
