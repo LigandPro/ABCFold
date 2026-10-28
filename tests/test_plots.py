@@ -54,16 +54,19 @@ def test_pae_plots(output_objs):
         assert len(plot_pathways) == 10
         values = [Path(value).name for value in plot_pathways.values()]
 
-        assert "confidences_seed-1_sample-0_af3_pae_plot.html" in values
-        assert "confidences_seed-1_sample-1_af3_pae_plot.html" in values
-        assert "pae_test_mmseqs_model_0_test_mmseqs_af3_pae_plot.html" in values
-        assert "pae_test_mmseqs_model_1_test_mmseqs_af3_pae_plot.html" in values
-        assert "pae_scores_model_0_chai1_6BJ9_seed-1_af3_pae_plot.html" in values
-        assert "pae_scores_model_1_chai1_6BJ9_seed-1_af3_pae_plot.html" in values
-        assert "6BJ9_full_data_sample_0_predictions_af3_pae_plot.html" in values
-        assert "6BJ9_full_data_sample_1_predictions_af3_pae_plot.html" in values
-        assert "6BJ9_seed_1_sample_1_confidences_seed_1_af3_pae_plot.html" in values
-        assert "6BJ9_seed_1_sample_2_confidences_seed_1_af3_pae_plot.html" in values
+        # PAE is converted to a separate <model>_af3_pae.json per model (inputs are never rewritten in place).
+        assert sorted(values) == [
+            "6BJ9_sample_0_af3_pae_predictions_af3_pae_plot.html",
+            "6BJ9_sample_1_af3_pae_predictions_af3_pae_plot.html",
+            "6BJ9_seed_1_sample_1_model_fixed_af3_pae_seed_1_af3_pae_plot.html",
+            "6BJ9_seed_1_sample_2_model_fixed_af3_pae_seed_1_af3_pae_plot.html",
+            "model_af3_pae_seed-1_sample-0_af3_pae_plot.html",
+            "model_af3_pae_seed-1_sample-1_af3_pae_plot.html",
+            "pred.model_idx_0_af3_pae_chai1_6BJ9_seed-1_af3_pae_plot.html",
+            "pred.model_idx_1_af3_pae_chai1_6BJ9_seed-1_af3_pae_plot.html",
+            "test_mmseqs_model_0_af3_pae_test_mmseqs_af3_pae_plot.html",
+            "test_mmseqs_model_1_af3_pae_test_mmseqs_af3_pae_plot.html",
+        ]
 
         assert (
             any(

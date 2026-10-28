@@ -1,5 +1,6 @@
 import json
 import tempfile
+import shutil
 from pathlib import Path
 
 from abcfold.output.file_handlers import CifFile, ConfidenceJsonFile
@@ -81,9 +82,12 @@ def test_clash_checker(test_data):
     assert len(clashes) == 2
 
 
-def test_af3_pae_reorder(test_data):
-    test_cif = Path(test_data.test_alphafold3_6BJ9_).joinpath(
-        "seed-1_sample-0", "model.cif"
+def test_af3_pae_reorder(test_data, tmp_path):
+    # reorder_chains() persists to the source file, so work on a copy of the fixture.
+    test_cif = tmp_path / "model.cif"
+    shutil.copy(
+        Path(test_data.test_alphafold3_6BJ9_).joinpath("seed-1_sample-0", "model.cif"),
+        test_cif,
     )
     test_pae = Path(test_data.test_alphafold3_6BJ9_).joinpath(
         "seed-1_sample-0", "confidences.json"
@@ -113,5 +117,3 @@ def test_af3_pae_reorder(test_data):
             pae_obj.scores["token_chain_ids"][787 + 50 :]  # noqa: E203
             == pae_to_compare_tci[:51]
         )
-
-    cif.reorder_chains(["A", "B", "C", "D"])

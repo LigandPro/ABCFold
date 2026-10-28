@@ -1,6 +1,5 @@
 # mypy: ignore-errors
 
-import configparser
 import json
 import logging
 import shutil
@@ -11,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from abcfold.output.alphafold3 import AlphafoldOutput
+from abcfold.settings import load_settings
 from abcfold.output.boltz import BoltzOutput
 from abcfold.output.chai import ChaiOutput
 from abcfold.output.openfold3 import OpenfoldOutput
@@ -46,14 +46,7 @@ tests from the root of the repository or the tests directory"
         stem, suffix = test_file.stem, test_file.suffix[1:]
         d[f"test_{stem.replace('-', '_')}_{suffix}"] = str(test_file)
 
-    config_file = Path("../abcfold/data/config.ini")
-    if not config_file.exists():
-        config_file = Path("./abcfold/data/config.ini")
-    config = configparser.ConfigParser()
-    config_dict = {}
-    config.read(str(config_file))
-    for section in config.sections():
-        config_dict.update(dict(config.items(section)))
+    config_dict = load_settings(environ={}).runtime_config()
     d["config_dict"] = config_dict
 
     nt = namedtuple("TestData", d)
@@ -74,14 +67,7 @@ def output_objs():
         raise FileNotFoundError()
     d = {}
 
-    config_file = Path("../abcfold/data/config.ini")
-    if not config_file.exists():
-        config_file = Path("./abcfold/data/config.ini")
-    config = configparser.ConfigParser()
-    config_dict = {}
-    config.read(str(config_file))
-    for section in config.sections():
-        config_dict.update(dict(config.items(section)))
+    config_dict = load_settings(environ={}).runtime_config()
 
     adir = data_dir.joinpath("alphafold3_6BJ9")
     bdir = data_dir.joinpath("boltz_6BJ9_seed-1")

@@ -1,0 +1,379 @@
+import hashlib
+import json
+import logging
+import textwrap
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from typing import Dict, List, Optional, Union
+
+import numpy as _  # noqa F401
+import pandas as pd
+import pyarrow as _  # noqa F401
+import requests
+
+from abcfold.output.atoms import VANDERWALLS
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+ATOMS_NAMES = sorted(list(VANDERWALLS.keys()), key=len, reverse=True)
+
+
+class ChaiFasta:
+
+    def __init__(self,
+                 working_dir: Union[str, Path],
+                 config: dict,
+                 create_files: bool = True):
+        """
+        Object to convert an AlphaFold3 json to a fasta file compatible with CHAI-1
+
+        Args:
+            working_dir (Union[str, Path]): working directory to store the fasta file
+            config (dict): Configuration dictionary
+            create_files (bool): If True, create the fasta and constraints files
+
+        Attributes:
+            working_dir (Path): working directory to store the fasta file
+            fasta (Path): path to the fasta file
+            constraints (Path): path to the constraints file
+            msa_file (Optional[Union[str, Path]]): path to the msa file
+
+
+        """
+        self.working_dir = Path(working_dir)
+        self.fasta = Path(working_dir) / "chai1.fasta"
+        self.constraints = Path(working_dir) / "chai1_constraints.csv"
+        self.config = config
+        self.msa_file: Optional[Union[str, Path]] = None
+        self.seeds: list = [42]
+        self.__ids: List[Union[str, int]] = []
+        self.__create_files = create_files
+
+    @property
+    def chain_ids(self):
+        return self.__ids
+
+    def bonded_pairs_to_file(self, bonded_pairs, fasta_data: dict):
+        """
+        Converts bonded pairs to a csv file compatible with CHAI-1
+
+        Args:
+            bonded_pairs (list): list of bonded pairs in AF3 format
+            fasta_data (dict): dictionary with sequence data relating to IDs
+
+        Returns:
+            None
+        """
+
+        constraints_headers = [
+            "chainA",
+            "res_idxA",
+            "chainB",
+            "res_idxB",
+            "connection_type",
+            "confidence",
+            "min_distance_angstrom",
+            "max_distance_angstrom",
+            "comment",
+            "restraint_id",
+        ]
+        df = pd.DataFrame(columns=constraints_headers)
+
+        for i, bonded_pair in enumerate(bonded_pairs):
+            pair_data = []
+            if (
+                fasta_data[bonded_pair[0][0]] == "CCD-CODE_PLACEHOLDER"
+                or fasta_data[bonded_pair[1][0]] == "CCD-CODE_PLACEHOLDER"
+            ):
+                logger.warning(
+                    "Currently Chai-1 does not support most ccdcode ligands\
+ in bonded pairs. This is something that we will be keeping in mind for future\
+ updates"
+                )
+                continue
+            if (
+                fasta_data[bonded_pair[0][0]]
+                in {"LIGAND_PLACEHOLDER", "SMILES_PLACEHOLDER"}
+                or fasta_data[bonded_pair[1][0]]
+                in {"LIAGND_PLACEHOLDER", "SMILES_PLACEHOLDER"}
+            ):
+                logger.warning(
+                    "SMILES Ligand bonded paris are not implemented yet, please \
+check back for updates"
+                )
+                continue
+
+            for pair in bonded_pair:
+
+                chain_id = pair[0]
+                seq_idx = pair[1]
+                pair_data.append(chain_id)
+                res = fasta_data[chain_id][seq_idx - 1]
+
+                pair_data.append(f"{res}{seq_idx}@{pair[2]}")
+
+            row_data = [
+                pair_data[0],
+                pair_data[1],
+                pair_data[2],
+                pair_data[3],
+                "contact",
+                1.0,
+                0.0,
+                5.5,
+                "Covalent Bond",
+                f"restraint_{i}",
+            ]
+            df.loc[i] = row_data
+
+        if not df.empty and self.__create_files:
+            df.to_csv(self.constraints, sep=",", index=False)
+
+    def msa_to_file(
+        self,
+        msa: str,
+        file_path: Union[str, Path],
+        paired_msa: Optional[str] = None,
+    ):
+        """Write an A3M (plus optional paired A3M) as Chai's aligned parquet.
+
+        Paired rows carry their row index as pairing key so Chai pairs them
+        across chains; the conversion runs in-process (no backend env needed).
+        """
+        from abcfold.msa.formats import chai_msa_frame
+
+        df = chai_msa_frame(msa, paired_msa)
+        if not df.empty:
+            df.to_parquet(Path(file_path).absolute())
+            logger.debug("Wrote Chai MSA parquet to %s", file_path)
+
+    def json_to_fasta(self, json_file_or_dict: Union[dict, str, Path]):
+        """
+        Main function to convert an AlphaFold3 json to a fasta file
+        compatible with CHAI-1
+
+        Args:
+            json_file_or_dict (Union[dict, str, Path]):
+            json file or dictionary
+
+        Returns:
+            None
+        """
+        logger.info("Converting input json to a Chai-1 compatible fasta file")
+        if isinstance(json_file_or_dict, str) or isinstance(json_file_or_dict, Path):
+            with open(json_file_or_dict, "r") as f:
+                json_dict = json.load(f)
+        else:
+            json_dict = json_file_or_dict
+
+        fasta_data: Dict[str, str] = {}
+
+        with open(self.fasta, "w") as f:
+            for seq in json_dict["sequences"]:
+                if "protein" in seq:
+                    protein_str, fasta_data = self.add_protein(seq, fasta_data)
+                    f.write(protein_str)
+                if "rna" in seq:
+                    nucleotide_str, fasta_data = self.add_nucleotide(
+                        seq, "rna", fasta_data
+                    )
+                    f.write(nucleotide_str)
+                if "dna" in seq:
+                    nucleotide_str, fasta_data = self.add_nucleotide(
+                        seq, "dna", fasta_data
+                    )
+                    f.write(nucleotide_str)
+                if "ligand" in seq:
+                    ligand_str = self.add_ligand(seq, fasta_data)
+                    f.write(ligand_str)
+
+        if "bondedAtomPairs" in json_dict.keys() and self.__create_files:
+            if isinstance(json_dict["bondedAtomPairs"], list):
+                bonded_pairs = json_dict["bondedAtomPairs"]
+                self.bonded_pairs_to_file(bonded_pairs, fasta_data)
+
+        if "modelSeeds" in json_dict.keys():
+            if isinstance(json_dict["modelSeeds"], int):
+                self.seeds = [json_dict["modelSeeds"]]
+            elif isinstance(json_dict["modelSeeds"], list):
+                self.seeds = json_dict["modelSeeds"]
+
+        if not self.__create_files:
+            self.fasta.unlink()
+
+        self.__ids = list(fasta_data.keys())
+
+    def add_protein(self, seq: dict, fasta_data: dict):
+        prot_id = seq["protein"]["id"]
+        if isinstance(prot_id, list):
+            protein_str = ""
+            for i in seq["protein"]["id"]:
+                temp_prot_str, fasta_data = self._add_protein(seq, i, fasta_data)
+                protein_str += temp_prot_str
+        else:
+            protein_str, fasta_data = self._add_protein(seq, prot_id, fasta_data)
+        return protein_str, fasta_data
+
+    def _add_protein(self, seq: dict, prot_id: str, fasta_data: dict):
+        sequence = seq["protein"]["sequence"]
+        if "unpairedMsa" in seq["protein"].keys():
+            modifications = seq["protein"].get("modifications", [])
+            msa = seq["protein"]["unpairedMsa"]
+            for mod in modifications:
+                if "ptmType" in mod and "ptmPosition" in mod:
+                    msa_lines = msa.splitlines()
+                    idx = int(mod['ptmPosition']) - 1
+                    sequence = sequence[:idx] + 'X' + sequence[idx+1:]
+                    msa_lines[1] = sequence
+                    seq["protein"]['unpairedMsa'] = "\n".join(msa_lines)
+
+            seq_hash = hashlib.sha256(sequence.upper().encode()).hexdigest()
+            pqt_path = Path(self.working_dir) / f"{seq_hash}.aligned.pqt"
+
+            if self.__create_files and (msa or seq["protein"].get("pairedMsa")):
+                self.msa_to_file(
+                    msa=msa,
+                    file_path=pqt_path,
+                    paired_msa=seq["protein"].get("pairedMsa"),
+                )
+        fasta_data[prot_id] = sequence
+
+        if "modifications" in seq["protein"]:
+            sequence = self.add_modifications(sequence, seq["protein"]["modifications"])
+
+        protein_str = f">protein|{prot_id}\n{sequence}\n"
+
+        return protein_str, fasta_data
+
+    def add_nucleotide(self, seq: dict, seq_type: str, fasta_data: dict):
+        nucl_id = seq[seq_type]["id"]
+
+        if isinstance(nucl_id, list):
+            nucleotide_str = ""
+            for i in seq[seq_type]["id"]:
+                temp_nucl_str, fasta_data = self._add_nucleotide(
+                    seq, seq_type, i, fasta_data
+                )
+                nucleotide_str += temp_nucl_str
+        else:
+            nucleotide_str, fasta_data = self._add_nucleotide(
+                seq, seq_type, nucl_id, fasta_data
+            )
+
+        return nucleotide_str, fasta_data
+
+    def _add_nucleotide(self, seq: dict, seq_type: str, nucl_id: str, fasta_data: dict):
+        sequence = seq[seq_type]["sequence"]
+        fasta_data[nucl_id] = sequence
+
+        if "modifications" in seq[seq_type]:
+            sequence = self.add_modifications(
+                sequence, seq[seq_type]["modifications"]
+            )
+
+        nucleotide_str = f">{seq_type}|{nucl_id}\n{sequence}\n"
+        return nucleotide_str, fasta_data
+
+    def ccd_to_smiles(self, ccd_id: str):
+
+        assert isinstance(ccd_id, str), "CCD ID must be a string"
+        logger.info(f"CCD code found in input: {ccd_id}")
+        logger.info("Chai-1 currently only supports SMILES strings for ligands")
+        logger.info("Attempting to retrieve SMILES from CCD")
+        try:
+            response = requests.get(
+                f"https://data.rcsb.org/rest/v1/core/chemcomp/{ccd_id}",
+                timeout=30,
+            )
+            if response.status_code == 200:
+                descriptor = response.json().get("rcsb_chem_comp_descriptor", {})
+                ccd_data = descriptor.get("SMILES") or descriptor.get("SMILES_stereo")
+                if ccd_data:
+                    logger.info(f"SMILES retrieved from RCSB: {ccd_data}")
+                    return ccd_data
+        except requests.RequestException as exc:
+            logger.warning("RCSB lookup failed for %s: %s", ccd_id, exc)
+
+        url = f"http://cactus.nci.nih.gov/chemical/structure/{ccd_id}/smiles"
+        try:
+            response = requests.get(url, timeout=30)
+        except requests.RequestException as exc:
+            logger.warning("Cactus lookup failed for %s: %s", ccd_id, exc)
+            return None
+        if response.status_code == 200:
+            ccd_data = response.text
+            logger.info(f"SMILES retrieved from Cactus: {ccd_data}")
+            return ccd_data
+
+        logger.warning(f"Could not retrieve SMILES for {ccd_id}")
+        return None
+
+    def add_ligand(self, seq: dict, fasta_data: dict):
+        lig_id = seq["ligand"]["id"]
+        ligand_str = ""
+        if "ccdCodes" in seq["ligand"]:
+            lig_ids = [lig_id] if isinstance(lig_id, str) else lig_id
+            ccd_codes = (
+                [seq["ligand"]["ccdCodes"]]
+                if isinstance(seq["ligand"]["ccdCodes"], str)
+                else seq["ligand"]["ccdCodes"]
+            )
+            if len(ccd_codes) == 1:
+                smile = self.ccd_to_smiles(ccd_codes[0])
+                if smile:
+                    for lig in lig_ids:
+                        ligand_str += f">ligand|{lig}\n{smile}\n"
+                        fasta_data[lig] = "SMILES_PLACEHOLDER"
+                else:
+                    for lig in lig_ids:
+                        ligand_str += f">protein|{lig}\n({ccd_codes[0]})\n"
+                        fasta_data[lig] = "CCD-CODE_PLACEHOLDER"
+            else:
+                for lig in lig_ids:
+                    ligand_str += (
+                        f">protein|{lig}\n{''.join([f'({ccd})' for ccd in ccd_codes])}\n"
+                    )
+                    fasta_data[lig] = "CCD-CODE_PLACEHOLDER"
+        if "smiles" in seq["ligand"]:
+            if isinstance(lig_id, list):
+                for i in seq["ligand"]["id"]:
+                    ligand_str += f">ligand|{i}\n{seq['ligand']['smiles']}\n"
+                    fasta_data[i] = "SMILES_PLACEHOLDER"
+            else:
+                ligand_str = f">ligand|{lig_id}\n{seq['ligand']['smiles']}\n"
+                fasta_data[lig_id] = "SMILES_PLACEHOLDER"
+
+        return ligand_str
+
+    def add_modifications(self, sequence: str, modifications: list) -> str:
+        """
+        Add modifications to the fasta data
+
+        Args:
+            sequence (str): the sequence to add modifications to be added to
+            modifications (list): list of modifications to be added
+
+        Returns:
+            sequence (str): the sequence with modifications added
+        """
+
+        sequence_list = list(sequence)
+        for mod in modifications:
+            if "ptmType" in mod and "ptmPosition" in mod:
+                ptm_type = mod['ptmType']
+                position = int(mod['ptmPosition']) - 1
+                sequence_list[position] = f"({ptm_type})"
+            elif "modificationType" in mod and "basePosition" in mod:
+                mod_type = mod['modificationType']
+                position = int(mod['basePosition']) - 1
+                sequence_list[position] = f"({mod_type})"
+
+        return ''.join(sequence_list)
+
+    def get_atom_name(self, atom: str) -> str:
+        for name in ATOMS_NAMES:
+            if atom.startswith(name):
+                return name
+        return ""

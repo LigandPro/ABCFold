@@ -79,7 +79,7 @@ def test_af3_to_protenix_ligand(test_data):
                     {'ligand': {'ligand': 'CCD_ATP', 'count': 2}},
                     {'ligand': {'ligand': 'CC(=O)OC1C[NH+]2CCC1CC2', 'count': 1}},
                     {'ligand': {'ligand': 'CCCCCCCCCCCC(O)=O', 'count': 2}},
-                    {'ion': {'ion': 'CCD_MG', 'count': 1}}
+                    {'ligand': {'ligand': 'CCD_MG', 'count': 1}}
                 ]
             }
 
@@ -169,18 +169,17 @@ def test_protenix_output_msa(test_data):
         protenix_json = ProtenixJson(temp_dir)
 
         data = protenix_json.json_to_json(test_data.test_inputAmsa_json)
-        msa_path = (
-            data["sequences"][0]["proteinChain"]
-            .get("msa", {})
-            .get("precomputed_msa_dir")
-        )
-        # MSA directory has a random path, so just check that it exists then give
-        # it a placeholder value for comparison
-        assert msa_path is not None
-        assert Path(msa_path).exists()
-        data["sequences"][0]["proteinChain"]["msa"]["precomputed_msa_dir"] = (
-            "PRECOMPUTED_MSA_DIR"
-        )
+        chain = data["sequences"][0]["proteinChain"]
+        # Protenix >= 1.0 reads unpairedMsaPath/pairedMsaPath; the old
+        # msa.precomputed_msa_dir field is deprecated and was silently dropped.
+        assert "msa" not in chain
+        msa_path = Path(chain["unpairedMsaPath"])
+        assert msa_path.exists()
+        assert msa_path.name == "non_pairing.a3m"
+        with open(test_data.test_inputAmsa_json) as f:
+            source = json.load(f)["sequences"][0]["protein"]["unpairedMsa"]
+        assert msa_path.read_text() == source
+        chain["unpairedMsaPath"] = "UNPAIRED_MSA_PATH"
 
         reference = {
             'name': '2PV7',
@@ -199,9 +198,7 @@ def test_protenix_output_msa(test_data):
             'sequences': [
                 {'proteinChain': {'sequence': 'GMRESYANENQFGFKTINSDIHKIVIVGGYGKLGGLFARYLRASGYPISILDREDWAVAESILANADVVIVSVPINLTLETIERLKPYLTENMLLADLTSVKREPLAKMLEVHTGAVLGLHPMFGADIASMAKQVVVRCDGRFPERYEWLLEQIQIWGAKIYQTNATEHDHNMTYIQALRHFSTFANGLHLSKQPINLANLLALSSPIYRLELAMIGRLFAQDAELYADIIMDKSENLAVIETLKQTYDEALTFFENNDRQGFIDAFHKVRDWFGDYSEQFLKESRQLLQQANDLKQG',
                                   'count': 1,
-                                  'msa': {'precomputed_msa_dir': 'PRECOMPUTED_MSA_DIR',
-                                          'pairing_db': 'uniref100'
-                                          }
+                                  'unpairedMsaPath': 'UNPAIRED_MSA_PATH',
                                 }
                 }
             ]

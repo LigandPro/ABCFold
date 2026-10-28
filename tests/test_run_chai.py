@@ -90,6 +90,6 @@ def test_chai_fast_manifests_preserve_quality_settings():
         assert '"number_of_models": 5' in manifest_text
         assert '"num_recycles": 10' in manifest_text
         assert (
-            "num_diffn_timesteps=200"
+            'num_diffn_timesteps=task.get("diffusion_steps", 200)'
             in _write_worker_script(Path(temp_dir)).read_text()
         )
